@@ -10,5 +10,4 @@ class AppColors {
   static const Color armySecondary = Color(0xFF4B5320); // Olive
   static const Color armyBackground = Color(0xFF232D1B); // Darker green
   static const Color armyGold = Color(0xFFFFD700); // Gold/yellow
-  // Add more colors as needed
 }
