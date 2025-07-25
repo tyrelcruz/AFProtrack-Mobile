@@ -2,12 +2,33 @@ import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 
 import 'signup_view.dart';
+import 'home_view.dart';
 
-class LoginView extends StatelessWidget {
+class LoginView extends StatefulWidget {
   const LoginView({Key? key}) : super(key: key);
 
   @override
+  State<LoginView> createState() => _LoginViewState();
+}
+
+class _LoginViewState extends State<LoginView> {
+  bool _rememberMe = false;
+
+  @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final width = size.width;
+    final height = size.height;
+    final isSmallScreen = width < 400;
+    final horizontalPadding = width * 0.08;
+    final logoSize = width * 0.25;
+    final titleFontSize = isSmallScreen ? 24.0 : 32.0;
+    final subtitleFontSize = isSmallScreen ? 12.0 : 15.0;
+    final quoteFontSize = isSmallScreen ? 11.0 : 13.0;
+    final loginTitleFontSize = isSmallScreen ? 16.0 : 20.0;
+    final buttonFontSize = isSmallScreen ? 15.0 : 18.0;
+    final partnerFontSize = isSmallScreen ? 11.0 : 13.0;
+    final copyrightFontSize = isSmallScreen ? 10.0 : 12.0;
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SingleChildScrollView(
@@ -15,7 +36,10 @@ class LoginView extends StatelessWidget {
           children: [
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.only(top: 60, bottom: 32),
+              padding: EdgeInsets.only(
+                top: height * 0.08,
+                bottom: height * 0.04,
+              ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -47,39 +71,39 @@ class LoginView extends StatelessWidget {
                     child: Center(
                       child: Image.asset(
                         'assets/icons/App_Logo.png',
-                        width: 100,
-                        height: 100,
+                        width: logoSize,
+                        height: logoSize,
                         fit: BoxFit.contain,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  const Text(
+                  SizedBox(height: height * 0.015),
+                  Text(
                     'AFProTrack',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 32,
+                      fontSize: titleFontSize,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.2,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
+                  SizedBox(height: height * 0.005),
+                  Text(
                     'Training System App for Armed Forces of the Philippines',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white70,
-                      fontSize: 15,
+                      fontSize: subtitleFontSize,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: height * 0.01),
+                  Text(
                     '“Honor. Service. Patriotism.”',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.amber,
-                      fontSize: 13,
+                      fontSize: quoteFontSize,
                       fontStyle: FontStyle.italic,
                       fontWeight: FontWeight.w500,
                     ),
@@ -87,22 +111,22 @@ class LoginView extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 36),
+            SizedBox(height: height * 0.045),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Personnel Login',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: loginTitleFontSize,
                       fontWeight: FontWeight.bold,
                       color: AppColors.armyPrimary,
                       letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: height * 0.03),
                   Container(
                     decoration: BoxDecoration(
                       boxShadow: [
@@ -140,7 +164,7 @@ class LoginView extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: height * 0.02),
                   Container(
                     decoration: BoxDecoration(
                       boxShadow: [
@@ -179,26 +203,64 @@ class LoginView extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          color: AppColors.armyPrimary,
-                          fontWeight: FontWeight.w500,
+                  SizedBox(height: height * 0.01),
+                  Row(
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Checkbox(
+                            value: _rememberMe,
+                            onChanged: (value) {
+                              setState(() {
+                                _rememberMe = value ?? false;
+                              });
+                            },
+                            activeColor: AppColors.armyPrimary,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _rememberMe = !_rememberMe;
+                              });
+                            },
+                            child: Text(
+                              'Remember Password',
+                              style: TextStyle(
+                                color: AppColors.armyPrimary,
+                                fontWeight: FontWeight.w500,
+                                fontSize: isSmallScreen ? 12 : 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Spacer(),
+                      TextButton(
+                        onPressed: () {},
+                        child: Text(
+                          'Forgot Password?',
+                          style: TextStyle(
+                            color: AppColors.armyPrimary,
+                            fontWeight: FontWeight.w500,
+                            fontSize: isSmallScreen ? 12 : 14,
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: height * 0.03),
                   SizedBox(
                     width: double.infinity,
-                    height: 48,
+                    height: height * 0.065,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const HomeView()),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.armyPrimary,
                         shape: RoundedRectangleBorder(
@@ -207,25 +269,28 @@ class LoginView extends StatelessWidget {
                         elevation: 6,
                         shadowColor: Colors.black.withOpacity(0.2),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Login',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 18,
+                          fontSize: buttonFontSize,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.1,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: height * 0.01),
                   Center(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           "Don't have an account?",
-                          style: TextStyle(color: Colors.black54, fontSize: 14),
+                          style: TextStyle(
+                            color: Colors.black54,
+                            fontSize: isSmallScreen ? 12 : 14,
+                          ),
                         ),
                         TextButton(
                           onPressed: () {
@@ -235,44 +300,39 @@ class LoginView extends StatelessWidget {
                               ),
                             );
                           },
-                          child: const Text(
+                          child: Text(
                             'Sign up',
                             style: TextStyle(
                               color: AppColors.armyPrimary,
                               fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                              fontSize: isSmallScreen ? 12 : 14,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: height * 0.02),
                   Center(
                     child: Column(
                       children: [
-                        const SizedBox(height: 16),
-                        const Text(
+                        SizedBox(height: height * 0.02),
+                        Text(
                           'Partnered with',
                           style: TextStyle(
                             color: AppColors.armyPrimary,
-                            fontSize: 13,
+                            fontSize: partnerFontSize,
                             fontStyle: FontStyle.italic,
                             fontWeight: FontWeight.w500,
                             letterSpacing: 0.5,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        SizedBox(height: height * 0.008),
                         Image.asset(
                           'assets/icons/afp_insignia.png',
-                          width: 40,
-                          height: 40,
+                          width: logoSize * 0.4,
+                          height: logoSize * 0.4,
                           fit: BoxFit.contain,
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          '© 2025 Philippine Army',
-                          style: TextStyle(color: Colors.white38, fontSize: 12),
                         ),
                       ],
                     ),
