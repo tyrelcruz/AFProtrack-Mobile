@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../widgets/user_profile_card.dart';
 import '../widgets/stats_grid.dart';
 import '../widgets/training_program_card.dart';
-import '../widgets/bottom_nav_bar.dart';
 import '../widgets/career_progression_card.dart';
+import '../widgets/app_bar_widget.dart';
 import '../models/training_program.dart';
 import '../utils/app_colors.dart';
 
@@ -15,8 +15,6 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  int _currentIndex = 0;
-
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -66,42 +64,7 @@ class _HomeViewState extends State<HomeView> {
     ];
     return Scaffold(
       backgroundColor: Theme.of(context).cardColor,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(kToolbarHeight),
-        child: Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 4,
-                offset: Offset(0, 6),
-              ),
-            ],
-          ),
-          child: AppBar(
-            backgroundColor: AppColors.armyPrimary,
-            elevation: 0,
-            title: const Text(
-              'AFProTrack',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: AppColors.white,
-              ),
-            ),
-            automaticallyImplyLeading: false,
-            actions: [
-              IconButton(
-                icon: Icon(Icons.notifications_none, color: Colors.white),
-                onPressed: () {},
-              ),
-              IconButton(
-                icon: Icon(Icons.account_circle, color: Colors.white),
-                onPressed: () {},
-              ),
-            ],
-          ),
-        ),
-      ),
+      appBar: const AppBarWidget(),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,17 +141,9 @@ class _HomeViewState extends State<HomeView> {
                 PromotionRequirement(label: 'Staff Endorsement', passed: false),
               ],
             ),
-            SizedBox(height: 80), // For bottom nav bar spacing
+            SizedBox(height: 20), // Reduced spacing since no bottom nav bar
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: (i) {
-          setState(() {
-            _currentIndex = i;
-          });
-        },
       ),
     );
   }

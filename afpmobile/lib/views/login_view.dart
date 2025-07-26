@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 
 import 'signup_view.dart';
-import 'home_view.dart';
+import 'main_navigation_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({Key? key}) : super(key: key);
@@ -258,7 +258,9 @@ class _LoginViewState extends State<LoginView> {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const HomeView()),
+                          MaterialPageRoute(
+                            builder: (_) => const MainNavigationView(),
+                          ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
