@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_view.dart';
 import 'schedule_view.dart';
+import 'training_view.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/app_bar_widget.dart';
 
@@ -17,7 +18,7 @@ class _MainNavigationViewState extends State<MainNavigationView> {
   final List<Widget> _pages = [
     const HomeView(),
     const ScheduleView(),
-    const PlaceholderView(title: 'Training', icon: Icons.school),
+    const TrainingView(),
     const PlaceholderView(title: 'Certificates', icon: Icons.verified),
   ];
 
