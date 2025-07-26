@@ -62,7 +62,7 @@ class _HomeViewState extends State<HomeView> {
       ),
     ];
     return Scaffold(
-      backgroundColor: Theme.of(context).cardColor,
+      backgroundColor: AppColors.appBackground,
       appBar: const AppBarWidget(),
       body: SingleChildScrollView(
         child: Column(

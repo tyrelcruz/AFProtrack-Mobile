@@ -20,6 +20,10 @@ class BottomNavBar extends StatelessWidget {
       selectedItemColor: AppColors.armyPrimary,
       unselectedItemColor: Colors.black54,
       type: BottomNavigationBarType.fixed,
+      backgroundColor: AppColors.appBackground,
+      elevation: 8,
+      selectedFontSize: 12,
+      unselectedFontSize: 12,
       items: [
         BottomNavigationBarItem(
           icon: Column(

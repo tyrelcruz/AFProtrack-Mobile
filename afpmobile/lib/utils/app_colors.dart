@@ -38,6 +38,7 @@ class AppColors {
 
   // Background Colors
   static const Color trainingBackground = Color(0xFFF8F9F6); // Light background
+  static const Color appBackground = Color(0xFFF8F9F6); // App-wide background
   static const Color cardBackground = Color(
     0xFFFFFFFF,
   ); // White card background

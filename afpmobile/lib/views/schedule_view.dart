@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/app_bar_widget.dart';
+import '../utils/app_colors.dart';
 
 class ScheduleView extends StatefulWidget {
   const ScheduleView({Key? key}) : super(key: key);
@@ -14,7 +15,7 @@ class _ScheduleViewState extends State<ScheduleView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9F6),
+      backgroundColor: AppColors.appBackground,
       appBar: const AppBarWidget(title: 'Schedule', showLeading: false),
       body: Column(
         children: [
