@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/user_profile_card.dart';
 import '../widgets/stats_grid.dart';
-import '../widgets/training_program_card.dart';
 import '../widgets/career_progression_card.dart';
 import '../widgets/app_bar_widget.dart';
 import '../models/training_program.dart';
@@ -79,6 +78,27 @@ class _HomeViewState extends State<HomeView> {
               cardColor: Colors.white,
             ),
             StatsGrid(items: stats),
+            CareerProgressionCard(
+              currentRank: 'Sergeant (SGT)',
+              nextRank: 'Staff Sergeant (SSG)',
+              timeInRank: '2 years, 3 months',
+              progress: 0.7,
+              requirements: [
+                PromotionRequirement(
+                  label: 'Completed Leadership Course',
+                  passed: true,
+                ),
+                PromotionRequirement(
+                  label: 'Minimum 2 years in rank',
+                  passed: true,
+                ),
+                PromotionRequirement(
+                  label: 'Passed Physical Fitness Test',
+                  passed: false,
+                ),
+                PromotionRequirement(label: 'Staff Endorsement', passed: false),
+              ],
+            ),
             Card(
               color: Colors.white,
               margin: EdgeInsets.symmetric(
@@ -105,13 +125,135 @@ class _HomeViewState extends State<HomeView> {
                         color: Colors.black87,
                       ),
                     ),
-                    SizedBox(height: 3),
+                    SizedBox(height: 16),
                     ...programs.map(
                       (p) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: TrainingProgramCard(
-                          program: p,
-                          cardColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue[50],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.school,
+                                    color: Colors.blue[700],
+                                    size: 16,
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        p.title,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Instructor: ${p.instructor}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: _getStatusColor(
+                                      p.status,
+                                    ).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: _getStatusColor(
+                                        p.status,
+                                      ).withOpacity(0.3),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    p.status,
+                                    style: TextStyle(
+                                      color: _getStatusColor(p.status),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Text(
+                                  'Progress',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                Spacer(),
+                                Text(
+                                  '${(p.progress * 100).toInt()}%',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 3),
+                            LinearProgressIndicator(
+                              value: p.progress,
+                              minHeight: 5,
+                              backgroundColor: Colors.grey[200],
+                              color: Colors.green[700],
+                            ),
+                            SizedBox(height: 3),
+                            Row(
+                              children: [
+                                Spacer(),
+                                Text(
+                                  'Grade: ${p.grade}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (p.nextSession != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4.0),
+                                child: Text(
+                                  'Next Session: ${_formatDate(p.nextSession!)}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                            if (p != programs.last)
+                              Divider(height: 16, color: Colors.grey[300]),
+                          ],
                         ),
                       ),
                     ),
@@ -119,32 +261,41 @@ class _HomeViewState extends State<HomeView> {
                 ),
               ),
             ),
-            CareerProgressionCard(
-              currentRank: 'Sergeant (SGT)',
-              nextRank: 'Staff Sergeant (SSG)',
-
-              timeInRank: '2 years, 3 months',
-              progress: 0.7,
-              requirements: [
-                PromotionRequirement(
-                  label: 'Completed Leadership Course',
-                  passed: true,
-                ),
-                PromotionRequirement(
-                  label: 'Minimum 2 years in rank',
-                  passed: true,
-                ),
-                PromotionRequirement(
-                  label: 'Passed Physical Fitness Test',
-                  passed: false,
-                ),
-                PromotionRequirement(label: 'Staff Endorsement', passed: false),
-              ],
-            ),
             SizedBox(height: 20), // Reduced spacing since no bottom nav bar
           ],
         ),
       ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'Ongoing':
+        return Colors.blue;
+      case 'Completed':
+        return Colors.green;
+      case 'Scheduled':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year} at ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 }
