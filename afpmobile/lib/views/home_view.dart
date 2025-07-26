@@ -3,7 +3,7 @@ import '../widgets/user_profile_card.dart';
 import '../widgets/stats_grid.dart';
 import '../widgets/career_progression_card.dart';
 import '../widgets/app_bar_widget.dart';
-import '../models/training_program.dart';
+import '../models/home_training_program.dart';
 import '../utils/app_colors.dart';
 
 class HomeView extends StatefulWidget {
@@ -44,7 +44,7 @@ class _HomeViewState extends State<HomeView> {
       ),
     ];
     final programs = [
-      TrainingProgram(
+      HomeTrainingProgram(
         title: 'Advanced Combat Training',
         instructor: 'Lt. Garcia',
         progress: 0.65,
@@ -52,7 +52,7 @@ class _HomeViewState extends State<HomeView> {
         nextSession: DateTime(2025, 7, 26, 8, 0),
         status: 'Ongoing',
       ),
-      TrainingProgram(
+      HomeTrainingProgram(
         title: 'Leadership Development Course',
         instructor: 'Col. Santos',
         progress: 0.48,
@@ -127,7 +127,7 @@ class _HomeViewState extends State<HomeView> {
                     ),
                     SizedBox(height: 16),
                     ...programs.map(
-                      (p) => Padding(
+                      (HomeTrainingProgram p) => Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
