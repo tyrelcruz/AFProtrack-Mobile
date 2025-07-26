@@ -21,6 +21,16 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
       preferredSize: Size.fromHeight(kToolbarHeight),
       child: Container(
         decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF4B5320), // 0%
+              Color(0xFF3E503A), // 50%
+              Color(0xFF121B15), // 100%
+            ],
+            stops: [0.0, 0.5, 1.0],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.15),
@@ -29,37 +39,51 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
             ),
           ],
         ),
-        child: AppBar(
-          backgroundColor: AppColors.armyPrimary,
-          elevation: 0,
-          title: Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppColors.white,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.black.withOpacity(0.1),
+                Colors.black.withOpacity(0.05),
+                Colors.black.withOpacity(0.15),
+              ],
+              stops: [0.0, 0.5, 1.0],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
-          automaticallyImplyLeading: showLeading,
-          leading: leading,
-          actions:
-              actions ??
-              [
-                IconButton(
-                  icon: const Icon(
-                    Icons.notifications_none,
-                    color: Colors.white,
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: AppColors.white,
+              ),
+            ),
+            automaticallyImplyLeading: showLeading,
+            leading: leading,
+            actions:
+                actions ??
+                [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.notifications_none,
+                      color: Colors.white,
+                    ),
+                    onPressed: () {
+                      // TODO: Implement notifications
+                    },
                   ),
-                  onPressed: () {
-                    // TODO: Implement notifications
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.account_circle, color: Colors.white),
-                  onPressed: () {
-                    // TODO: Implement profile navigation
-                  },
-                ),
-              ],
+                  IconButton(
+                    icon: const Icon(Icons.account_circle, color: Colors.white),
+                    onPressed: () {
+                      // TODO: Implement profile navigation
+                    },
+                  ),
+                ],
+          ),
         ),
       ),
     );
