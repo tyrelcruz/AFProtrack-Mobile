@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
+import '../views/notification_view.dart';
 
 class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -73,7 +74,11 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
                       color: Colors.white,
                     ),
                     onPressed: () {
-                      // TODO: Implement notifications
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const NotificationView(),
+                        ),
+                      );
                     },
                   ),
                   IconButton(
