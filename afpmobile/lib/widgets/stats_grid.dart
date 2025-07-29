@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/responsive_utils.dart';
 
 class StatItem {
   final IconData icon;
@@ -25,27 +26,44 @@ class StatsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final height = MediaQuery.of(context).size.height;
 
-    // Calculate responsive values
-    final isSmallScreen = width < 360;
-    final isMediumScreen = width >= 360 && width < 600;
+    // Use responsive utils for better breakpoint handling
+    final isMobile = ResponsiveUtils.isMobile(context);
+    final isTablet = ResponsiveUtils.isTablet(context);
 
     // Adjust aspect ratio based on screen size
-    final aspectRatio = isSmallScreen ? 1.8 : (isMediumScreen ? 2.0 : 2.2);
+    final aspectRatio = isMobile ? 1.8 : (isTablet ? 2.2 : 2.5);
 
     // Adjust font sizes based on screen size
-    final labelFontSize = isSmallScreen ? 11.0 : (isMediumScreen ? 12.0 : 13.0);
-    final valueFontSize = isSmallScreen ? 16.0 : (isMediumScreen ? 17.0 : 18.0);
-    final iconSize = isSmallScreen ? 20.0 : (isMediumScreen ? 22.0 : 24.0);
+    final labelFontSize = ResponsiveUtils.getResponsiveFontSize(
+      context,
+      mobile: 11.0,
+      tablet: 13.0,
+      desktop: 14.0,
+    );
+    final valueFontSize = ResponsiveUtils.getResponsiveFontSize(
+      context,
+      mobile: 16.0,
+      tablet: 18.0,
+      desktop: 20.0,
+    );
+    final iconSize = isMobile ? 20.0 : (isTablet ? 24.0 : 28.0);
 
     // Adjust padding based on screen size
-    final horizontalPadding =
-        isSmallScreen ? 6.0 : (isMediumScreen ? 7.0 : 8.0);
-    final verticalPadding =
-        isSmallScreen ? 10.0 : (isMediumScreen ? 11.0 : 12.0);
-    final iconPadding = isSmallScreen ? 5.0 : (isMediumScreen ? 5.5 : 6.0);
-    final spacing = isSmallScreen ? 8.0 : (isMediumScreen ? 9.0 : 10.0);
+    final horizontalPadding = ResponsiveUtils.getResponsivePadding(
+      context,
+      mobile: 6.0,
+      tablet: 8.0,
+      desktop: 10.0,
+    );
+    final verticalPadding = ResponsiveUtils.getResponsivePadding(
+      context,
+      mobile: 10.0,
+      tablet: 12.0,
+      desktop: 14.0,
+    );
+    final iconPadding = isMobile ? 5.0 : (isTablet ? 6.0 : 7.0);
+    final spacing = isMobile ? 8.0 : (isTablet ? 10.0 : 12.0);
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: width * 0.04),
@@ -97,7 +115,7 @@ class StatsGrid extends StatelessWidget {
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
-                            SizedBox(height: isSmallScreen ? 2 : 4),
+                            SizedBox(height: isMobile ? 2 : 4),
                             Text(
                               item.value.toString(),
                               style: TextStyle(

@@ -5,6 +5,8 @@ import '../widgets/career_progression_card.dart';
 import '../widgets/app_bar_widget.dart';
 import '../models/home_training_program.dart';
 import '../utils/app_colors.dart';
+import '../utils/responsive_utils.dart';
+import '../widgets/responsive_test_widget.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({Key? key}) : super(key: key);
@@ -262,6 +264,40 @@ class _HomeViewState extends State<HomeView> {
               ),
             ),
             SizedBox(height: 20), // Reduced spacing since no bottom nav bar
+            // Responsive test button (for development)
+            if (ResponsiveUtils.isTablet(context) ||
+                ResponsiveUtils.isDesktop(context))
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: width * 0.04),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ResponsiveTestWidget(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: ResponsiveUtils.getResponsivePadding(context),
+                      vertical: 12,
+                    ),
+                  ),
+                  child: Text(
+                    'Test Responsive Design',
+                    style: TextStyle(
+                      fontSize: ResponsiveUtils.getResponsiveFontSize(
+                        context,
+                        mobile: 14.0,
+                        tablet: 16.0,
+                        desktop: 18.0,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

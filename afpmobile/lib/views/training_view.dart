@@ -7,6 +7,7 @@ import '../widgets/training_empty_state.dart';
 import '../models/training_program.dart';
 import '../services/training_data_service.dart';
 import '../utils/app_colors.dart';
+import '../utils/responsive_utils.dart';
 
 class TrainingView extends StatefulWidget {
   const TrainingView({Key? key}) : super(key: key);
@@ -51,7 +52,10 @@ class _TrainingViewState extends State<TrainingView> {
           // Filter Bar
           Container(
             color: AppColors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.symmetric(
+              horizontal: ResponsiveUtils.getResponsivePadding(context),
+              vertical: 12,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -61,7 +65,7 @@ class _TrainingViewState extends State<TrainingView> {
                     onTap: () => setState(() => _selectedFilterIndex = 0),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: ResponsiveUtils.isMobile(context) ? 8 : 12),
                 Expanded(
                   child: TrainingFilterButton(
                     text: 'Available',
@@ -69,7 +73,7 @@ class _TrainingViewState extends State<TrainingView> {
                     onTap: () => setState(() => _selectedFilterIndex = 1),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: ResponsiveUtils.isMobile(context) ? 8 : 12),
                 Expanded(
                   child: TrainingFilterButton(
                     text: 'In Progress',
@@ -86,8 +90,10 @@ class _TrainingViewState extends State<TrainingView> {
                 _filteredPrograms.isEmpty
                     ? TrainingEmptyState(message: _getEmptyStateMessage())
                     : ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveUtils.getResponsivePadding(
+                          context,
+                        ),
                         vertical: 12,
                       ),
                       itemCount: _filteredPrograms.length,
