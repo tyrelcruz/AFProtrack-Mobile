@@ -74,7 +74,7 @@ class _NotificationViewState extends State<NotificationView> {
         children: [
           // Tab buttons container
           Container(
-            color: Colors.white,
+            color: AppColors.appBackground,
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [

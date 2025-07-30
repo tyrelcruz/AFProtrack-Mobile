@@ -21,74 +21,45 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
     return PreferredSize(
       preferredSize: Size.fromHeight(kToolbarHeight),
       child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF4B5320), // 0%
-              Color(0xFF3E503A), // 50%
-              Color(0xFF121B15), // 100%
-            ],
-            stops: [0.0, 0.5, 1.0],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 4,
-              offset: Offset(0, 6),
+        decoration: BoxDecoration(color: AppColors.appBackground),
+        child: AppBar(
+          backgroundColor: AppColors.appBackground,
+          elevation: 0,
+          title: Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 0, 0, 0),
             ),
-          ],
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.black.withOpacity(0.1),
-                Colors.black.withOpacity(0.05),
-                Colors.black.withOpacity(0.15),
+          ),
+          automaticallyImplyLeading: showLeading,
+          leading: leading,
+          actions:
+              actions ??
+              [
+                IconButton(
+                  icon: const Icon(
+                    Icons.notifications_none,
+                    color: Color.fromARGB(255, 0, 0, 0),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const NotificationView(),
+                      ),
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.account_circle,
+                    color: Color.fromARGB(255, 0, 0, 0),
+                  ),
+                  onPressed: () {
+                    // TODO: Implement profile navigation
+                  },
+                ),
               ],
-              stops: [0.0, 0.5, 1.0],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-          child: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            title: Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: AppColors.white,
-              ),
-            ),
-            automaticallyImplyLeading: showLeading,
-            leading: leading,
-            actions:
-                actions ??
-                [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.notifications_none,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const NotificationView(),
-                        ),
-                      );
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.account_circle, color: Colors.white),
-                    onPressed: () {
-                      // TODO: Implement profile navigation
-                    },
-                  ),
-                ],
-          ),
         ),
       ),
     );
