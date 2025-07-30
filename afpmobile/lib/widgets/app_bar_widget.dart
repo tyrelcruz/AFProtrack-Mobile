@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../views/notification_view.dart';
 
-class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
+class AppBarWidget extends StatefulWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
   final bool showLeading;
@@ -17,6 +17,16 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   }) : super(key: key);
 
   @override
+  State<AppBarWidget> createState() => _AppBarWidgetState();
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+class _AppBarWidgetState extends State<AppBarWidget> {
+  bool _isNavigating = false;
+
+  @override
   Widget build(BuildContext context) {
     return PreferredSize(
       preferredSize: Size.fromHeight(kToolbarHeight),
@@ -26,29 +36,52 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
           backgroundColor: AppColors.appBackground,
           elevation: 0,
           title: Text(
-            title,
+            widget.title,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               color: Color.fromARGB(255, 0, 0, 0),
             ),
           ),
-          automaticallyImplyLeading: showLeading,
-          leading: leading,
+          automaticallyImplyLeading: widget.showLeading,
+          leading: widget.leading,
           actions:
-              actions ??
+              widget.actions ??
               [
                 IconButton(
                   icon: const Icon(
                     Icons.notifications_none,
                     color: Color.fromARGB(255, 0, 0, 0),
                   ),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const NotificationView(),
-                      ),
-                    );
-                  },
+                  onPressed:
+                      _isNavigating
+                          ? null
+                          : () async {
+                            if (_isNavigating) return;
+
+                            // Check if we're already on the notification screen
+                            final currentRoute = ModalRoute.of(context);
+                            if (currentRoute?.settings.name ==
+                                '/notifications') {
+                              return; // Already on notification screen, do nothing
+                            }
+
+                            setState(() {
+                              _isNavigating = true;
+                            });
+
+                            await Navigator.of(context).push(
+                              MaterialPageRoute(
+                                settings: const RouteSettings(
+                                  name: '/notifications',
+                                ),
+                                builder: (context) => const NotificationView(),
+                              ),
+                            );
+
+                            setState(() {
+                              _isNavigating = false;
+                            });
+                          },
                 ),
                 IconButton(
                   icon: const Icon(
