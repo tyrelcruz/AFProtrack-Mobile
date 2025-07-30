@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'home_view.dart';
 import 'schedule_view.dart';
 import 'training_view.dart';
+import 'certificate_view.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/app_bar_widget.dart';
 
@@ -19,7 +20,7 @@ class _MainNavigationViewState extends State<MainNavigationView> {
     const HomeView(),
     const ScheduleView(),
     const TrainingView(),
-    const PlaceholderView(title: 'Certificates', icon: Icons.verified),
+    const CertificateView(),
   ];
 
   @override
