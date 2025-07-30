@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 
-class TrainingFilterButton extends StatelessWidget {
+class CertificateFilterButton extends StatelessWidget {
   final String text;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const TrainingFilterButton({
+  const CertificateFilterButton({
     Key? key,
     required this.text,
     required this.isSelected,

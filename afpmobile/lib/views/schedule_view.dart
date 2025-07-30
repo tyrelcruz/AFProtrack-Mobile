@@ -20,7 +20,7 @@ class _ScheduleViewState extends State<ScheduleView> {
       body: Column(
         children: [
           Container(
-            color: Colors.white,
+            color: AppColors.appBackground,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
@@ -99,7 +99,10 @@ class _TabButton extends StatelessWidget {
           border:
               isSelected
                   ? null
-                  : Border.all(color: const Color(0xFF3E503A), width: 1.5),
+                  : Border.all(
+                    color: const Color(0xFFC4C4C4).withOpacity(0.4),
+                    width: 1.5,
+                  ),
           boxShadow:
               isSelected
                   ? [
@@ -197,99 +200,92 @@ class _ScheduleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Card(
       margin: const EdgeInsets.symmetric(vertical: 7),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 2,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (trainingComplete)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                'Training Complete',
-                style: TextStyle(
-                  color: Color(0xFF3E503A),
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
+      elevation: 1,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (trainingComplete)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  'Training Complete',
+                  style: TextStyle(
+                    color: Color(0xFF3E503A),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
                 ),
               ),
+            if (date.isNotEmpty)
+              Text(
+                date,
+                style: TextStyle(
+                  color: Color(0xFF0B6000),
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            if (date.isNotEmpty) SizedBox(height: 2),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.5,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+                Container(
+                  margin: const EdgeInsets.only(left: 8, top: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: badgeColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    badge,
+                    style: TextStyle(
+                      color: badgeTextColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          if (date.isNotEmpty)
+            SizedBox(height: 2),
             Text(
-              date,
+              'Instructor: $instructor',
               style: TextStyle(
-                color: Color(0xFF0B6000),
-                fontSize: 12.5,
+                color: Color(0xFF8B8B8B),
+                fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
             ),
-          if (date.isNotEmpty) SizedBox(height: 2),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16.5,
-                    color: Colors.black,
-                  ),
-                ),
+            SizedBox(height: 2),
+            Text(
+              location,
+              style: TextStyle(
+                color: Color(0xFF8B8B8B),
+                fontSize: 13,
+                fontStyle: FontStyle.italic,
               ),
-              Container(
-                margin: const EdgeInsets.only(left: 8, top: 2),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 3,
-                ),
-                decoration: BoxDecoration(
-                  color: badgeColor,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  badge,
-                  style: TextStyle(
-                    color: badgeTextColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 2),
-          Text(
-            'Instructor: $instructor',
-            style: TextStyle(
-              color: Color(0xFF8B8B8B),
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
             ),
-          ),
-          SizedBox(height: 2),
-          Text(
-            location,
-            style: TextStyle(
-              color: Color(0xFF8B8B8B),
-              fontSize: 13,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

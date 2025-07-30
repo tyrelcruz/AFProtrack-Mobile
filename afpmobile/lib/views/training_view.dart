@@ -51,7 +51,7 @@ class _TrainingViewState extends State<TrainingView> {
         children: [
           // Filter Bar
           Container(
-            color: AppColors.white,
+            color: AppColors.trainingBackground,
             padding: EdgeInsets.symmetric(
               horizontal: ResponsiveUtils.getResponsivePadding(context),
               vertical: 12,

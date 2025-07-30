@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../widgets/app_bar_widget.dart';
 import '../widgets/certificate_card.dart';
 import '../widgets/upload_certificate_widget.dart';
+import '../widgets/upload_certificate_dialog.dart';
+import '../widgets/certificate_filter_button.dart';
 import '../models/certificate.dart';
 import '../utils/app_colors.dart';
 
@@ -12,9 +14,7 @@ class CertificateView extends StatefulWidget {
   State<CertificateView> createState() => _CertificateViewState();
 }
 
-class _CertificateViewState extends State<CertificateView>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _CertificateViewState extends State<CertificateView> {
   int _currentIndex = 0;
 
   // Sample certificate data based on the image
@@ -42,23 +42,6 @@ class _CertificateViewState extends State<CertificateView>
     ),
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() {
-      setState(() {
-        _currentIndex = _tabController.index;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
   List<Certificate> get _filteredCertificates {
     switch (_currentIndex) {
       case 0: // My Certificates (all)
@@ -83,49 +66,41 @@ class _CertificateViewState extends State<CertificateView>
       appBar: const AppBarWidget(title: 'Certificates', showLeading: false),
       body: Column(
         children: [
-          // Tab Bar
+          // Filter Bar
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+            color: AppColors.appBackground,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: CertificateFilterButton(
+                    text: 'My Certificates',
+                    isSelected: _currentIndex == 0,
+                    onTap: () => setState(() => _currentIndex = 0),
+                  ),
                 ),
-              ],
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicator: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              indicatorSize: TabBarIndicatorSize.tab,
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.grey,
-              labelStyle: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-              ),
-              tabs: const [
-                Tab(text: 'My Certificates'),
-                Tab(text: 'Pending'),
-                Tab(text: 'Approved'),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: CertificateFilterButton(
+                    text: 'Pending',
+                    isSelected: _currentIndex == 1,
+                    onTap: () => setState(() => _currentIndex = 1),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: CertificateFilterButton(
+                    text: 'Approved',
+                    isSelected: _currentIndex == 2,
+                    onTap: () => setState(() => _currentIndex = 2),
+                  ),
+                ),
               ],
             ),
           ),
 
           // Upload Certificate Section
-          const UploadCertificateWidget(
-            onUpload: null, // TODO: Implement upload functionality
-          ),
+          UploadCertificateWidget(onUpload: () => _showUploadDialog()),
 
           // Certificates List
           Expanded(
@@ -189,6 +164,33 @@ class _CertificateViewState extends State<CertificateView>
           ),
         ],
       ),
+    );
+  }
+
+  void _showUploadDialog() {
+    showDialog(
+      context: context,
+      builder:
+          (context) => UploadCertificateDialog(
+            onTakePhoto: () {
+              Navigator.of(context).pop();
+              // TODO: Implement camera functionality
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Camera functionality coming soon'),
+                ),
+              );
+            },
+            onBrowseFiles: () {
+              Navigator.of(context).pop();
+              // TODO: Implement file picker functionality
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('File picker functionality coming soon'),
+                ),
+              );
+            },
+          ),
     );
   }
 
