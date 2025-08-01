@@ -14,7 +14,10 @@ class UploadCertificateWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 2),
+        border: Border.all(
+          color: const Color.fromARGB(255, 41, 106, 46).withOpacity(0.2),
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -31,7 +34,12 @@ class UploadCertificateWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: const Color.fromARGB(
+                  255,
+                  155,
+                  155,
+                  155,
+                ).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -39,11 +47,11 @@ class UploadCertificateWidget extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.description_outlined,
-                    color: AppColors.primary,
+                    color: const Color(0xFF4CAF50),
                     size: 24,
                   ),
                   const SizedBox(width: 8),
-                  Icon(Icons.upload, color: AppColors.primary, size: 20),
+                  Icon(Icons.upload, color: const Color(0xFF4CAF50), size: 20),
                 ],
               ),
             ),
@@ -57,7 +65,7 @@ class UploadCertificateWidget extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                      color: const Color(0xFF4CAF50),
                     ),
                   ),
                   const SizedBox(height: 2),
