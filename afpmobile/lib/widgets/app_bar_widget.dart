@@ -30,82 +30,80 @@ class _AppBarWidgetState extends State<AppBarWidget> {
   @override
   Widget build(BuildContext context) {
     return PreferredSize(
-      preferredSize: Size.fromHeight(kToolbarHeight),
-      child: Container(
-        decoration: BoxDecoration(color: AppColors.appBackground),
-        child: AppBar(
-          backgroundColor: AppColors.appBackground,
-          elevation: 0,
-          title: Text(
-            widget.title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 0, 0, 0),
-            ),
+      preferredSize: const Size.fromHeight(kToolbarHeight),
+      child: AppBar(
+        backgroundColor: AppColors.appBackground,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
+        title: Text(
+          widget.title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color.fromARGB(255, 0, 0, 0),
           ),
-          automaticallyImplyLeading: widget.showLeading,
-          leading: widget.leading,
-          actions:
-              widget.actions ??
-              [
-                IconButton(
-                  icon: const Icon(
-                    Icons.notifications_none,
-                    color: Color.fromARGB(255, 0, 0, 0),
-                  ),
-                  onPressed:
-                      _isNavigating
-                          ? null
-                          : () async {
-                            if (_isNavigating) return;
-
-                            // Check if we're already on the notification screen
-                            final currentRoute = ModalRoute.of(context);
-                            if (currentRoute?.settings.name ==
-                                '/notifications') {
-                              return; // Already on notification screen, do nothing
-                            }
-
-                            setState(() {
-                              _isNavigating = true;
-                            });
-
-                            await Navigator.of(context).push(
-                              MaterialPageRoute(
-                                settings: const RouteSettings(
-                                  name: '/notifications',
-                                ),
-                                builder: (context) => const NotificationView(),
-                              ),
-                            );
-
-                            setState(() {
-                              _isNavigating = false;
-                            });
-                          },
-                ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.account_circle,
-                    color: Color.fromARGB(255, 0, 0, 0),
-                  ),
-                  onPressed: () async {
-                    // Check if we're already on the profile screen
-                    final currentRoute = ModalRoute.of(context);
-                    if (currentRoute?.settings.name == '/profile') {
-                      return; // Already on profile screen, do nothing
-                    }
-
-                    await Navigator.of(context).push(
-                      MaterialPageRoute(
-                        settings: const RouteSettings(name: '/profile'),
-                        builder: (context) => const ProfileView(),
-                      ),
-                    );
-                  },
-                ),
-              ],
         ),
+        automaticallyImplyLeading: widget.showLeading,
+        leading: widget.leading,
+        actions:
+            widget.actions ??
+            [
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_none,
+                  color: Color.fromARGB(255, 0, 0, 0),
+                ),
+                onPressed:
+                    _isNavigating
+                        ? null
+                        : () async {
+                          if (_isNavigating) return;
+
+                          // Check if we're already on the notification screen
+                          final currentRoute = ModalRoute.of(context);
+                          if (currentRoute?.settings.name == '/notifications') {
+                            return; // Already on notification screen, do nothing
+                          }
+
+                          setState(() {
+                            _isNavigating = true;
+                          });
+
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              settings: const RouteSettings(
+                                name: '/notifications',
+                              ),
+                              builder: (context) => const NotificationView(),
+                            ),
+                          );
+
+                          setState(() {
+                            _isNavigating = false;
+                          });
+                        },
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.account_circle,
+                  color: Color.fromARGB(255, 0, 0, 0),
+                ),
+                onPressed: () async {
+                  // Check if we're already on the profile screen
+                  final currentRoute = ModalRoute.of(context);
+                  if (currentRoute?.settings.name == '/profile') {
+                    return; // Already on profile screen, do nothing
+                  }
+
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      settings: const RouteSettings(name: '/profile'),
+                      builder: (context) => const ProfileView(),
+                    ),
+                  );
+                },
+              ),
+            ],
       ),
     );
   }
