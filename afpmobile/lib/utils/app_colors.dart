@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
+  static const Color black = Colors.black;
   static const Color primary = Color(0xFF2C296A);
   static const Color background = Color(0xFFEFF6FB);
   static const Color white = Colors.white;
@@ -46,4 +47,5 @@ class AppColors {
   // Border and Shadow Colors
   static const Color filterBorder = Color(0xFF3E503A); // Filter button border
   static const Color cardShadow = Color(0x0D000000); // Card shadow (5% opacity)
+  static const Color cardBorder = Color(0xFFC4C4C4); // Card border
 }
