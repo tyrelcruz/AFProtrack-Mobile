@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../views/notification_view.dart';
+import '../views/profile_view.dart';
 
 class AppBarWidget extends StatefulWidget implements PreferredSizeWidget {
   final String title;
@@ -88,8 +89,19 @@ class _AppBarWidgetState extends State<AppBarWidget> {
                     Icons.account_circle,
                     color: Color.fromARGB(255, 0, 0, 0),
                   ),
-                  onPressed: () {
-                    // TODO: Implement profile navigation
+                  onPressed: () async {
+                    // Check if we're already on the profile screen
+                    final currentRoute = ModalRoute.of(context);
+                    if (currentRoute?.settings.name == '/profile') {
+                      return; // Already on profile screen, do nothing
+                    }
+
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        settings: const RouteSettings(name: '/profile'),
+                        builder: (context) => const ProfileView(),
+                      ),
+                    );
                   },
                 ),
               ],
