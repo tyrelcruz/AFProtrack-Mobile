@@ -15,6 +15,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'AFProTrack',
+      debugShowCheckedModeBanner: false, // Remove debug banner
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3E503A)),
         useMaterial3: true,
