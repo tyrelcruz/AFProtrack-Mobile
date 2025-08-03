@@ -61,16 +61,7 @@ class SignupView extends StatelessWidget {
                       letterSpacing: 1.2,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Create your account',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 15,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
+
                   const SizedBox(height: 8),
                   const Text(
                     '“Honor. Service. Patriotism.”',
@@ -92,7 +83,7 @@ class SignupView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Personnel Sign Up',
+                    'Create your Account',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -100,7 +91,15 @@ class SignupView extends StatelessWidget {
                       letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const Text(
+                    'Step 1: Personal Information',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: AppColors.grayText,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 22),
                   // Name field
                   Container(
                     decoration: BoxDecoration(
@@ -273,7 +272,7 @@ class SignupView extends StatelessWidget {
                         shadowColor: Colors.black.withOpacity(0.2),
                       ),
                       child: const Text(
-                        'Sign Up',
+                        'Next',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -285,9 +284,9 @@ class SignupView extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
                   Center(
-                    child: Column(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const SizedBox(height: 16),
                         const Text(
                           'Already have an account?',
                           style: TextStyle(color: Colors.black54, fontSize: 14),
