@@ -11,9 +11,20 @@ class SignupView extends StatefulWidget {
   State<SignupView> createState() => _SignupViewState();
 }
 
-class _SignupViewState extends State<SignupView> {
+class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
   int _currentStep = 0;
   final int _totalSteps = 3;
+
+  // Animation controllers
+  late AnimationController _stepTransitionController;
+  late AnimationController _formElementsController;
+  late AnimationController _headerController;
+
+  // Animations
+  late Animation<double> _stepTransitionAnimation;
+  late Animation<double> _formElementsAnimation;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _headerAnimation;
 
   // Form controllers for Step 1
   final TextEditingController _nameController = TextEditingController();
@@ -36,7 +47,74 @@ class _SignupViewState extends State<SignupView> {
   Map<String, dynamic> _formData = {};
 
   @override
+  void initState() {
+    super.initState();
+
+    // Initialize animation controllers
+    _stepTransitionController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _formElementsController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _headerController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    // Initialize animations
+    _stepTransitionAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _stepTransitionController,
+        curve: Curves.easeInOutCubic,
+      ),
+    );
+
+    _formElementsAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _formElementsController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0.0, 0.1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _formElementsController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
+    _headerAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _headerController, curve: Curves.easeOutBack),
+    );
+
+    // Start initial animations
+    _startInitialAnimations();
+  }
+
+  void _startInitialAnimations() async {
+    // Start step transition animation immediately
+    _stepTransitionController.forward();
+
+    await Future.delayed(const Duration(milliseconds: 300));
+    _headerController.forward();
+
+    await Future.delayed(const Duration(milliseconds: 200));
+    _formElementsController.forward();
+  }
+
+  @override
   void dispose() {
+    _stepTransitionController.dispose();
+    _formElementsController.dispose();
+    _headerController.dispose();
     _nameController.dispose();
     _suffixController.dispose();
     _serviceIdController.dispose();
@@ -51,19 +129,35 @@ class _SignupViewState extends State<SignupView> {
     super.dispose();
   }
 
-  void _nextStep() {
+  void _nextStep() async {
     if (_currentStep < _totalSteps - 1) {
+      // Animate out current step
+      await _stepTransitionController.reverse();
+
       setState(() {
         _currentStep++;
       });
+
+      // Animate in new step
+      _stepTransitionController.forward();
+      _formElementsController.reset();
+      _formElementsController.forward();
     }
   }
 
-  void _previousStep() {
+  void _previousStep() async {
     if (_currentStep > 0) {
+      // Animate out current step
+      await _stepTransitionController.reverse();
+
       setState(() {
         _currentStep--;
       });
+
+      // Animate in new step
+      _stepTransitionController.forward();
+      _formElementsController.reset();
+      _formElementsController.forward();
     }
   }
 
@@ -84,270 +178,333 @@ class _SignupViewState extends State<SignupView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Create your Account',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppColors.armyPrimary,
-            letterSpacing: 0.5,
+        // Title with animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.0, -0.3),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(
+                parent: _formElementsController,
+                curve: Curves.easeOutCubic,
+              ),
+            ),
+            child: const Text(
+              'Create your Account',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.armyPrimary,
+                letterSpacing: 0.5,
+              ),
+            ),
           ),
         ),
-        Text(
-          'Step ${_currentStep + 1}: Basic Account Information',
-          style: const TextStyle(
-            fontSize: 16,
-            color: AppColors.grayText,
-            letterSpacing: 0.5,
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.0, -0.2),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(
+                parent: _formElementsController,
+                curve: Curves.easeOutCubic,
+              ),
+            ),
+            child: Text(
+              'Step ${_currentStep + 1}: Basic Account Information',
+              style: const TextStyle(
+                fontSize: 16,
+                color: AppColors.grayText,
+                letterSpacing: 0.5,
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 22),
-        // Name and Suffix fields in a row
-        Row(
-          children: [
-            // Name field (expanded)
-            Expanded(
-              flex: 2,
-              child: Container(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.10),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(
-                      Icons.person,
-                      color: AppColors.armyPrimary,
-                    ),
-                    labelText: 'Full Name',
-                    labelStyle: TextStyle(color: AppColors.armySecondary),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(
-                        color: AppColors.armyPrimary,
-                        width: 1,
+        // Name and Suffix fields with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Row(
+            children: [
+              // Name field (expanded)
+              Expanded(
+                flex: 2,
+                child: Container(
+                  decoration: BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.10),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
                       ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(
+                        Icons.person,
                         color: AppColors.armyPrimary,
-                        width: 2,
+                      ),
+                      labelText: 'Full Name',
+                      labelStyle: TextStyle(color: AppColors.armyPrimary),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: AppColors.armyPrimary,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: AppColors.armyPrimary,
+                          width: 2,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 16),
-            // Suffix field (smaller)
-            Expanded(
-              flex: 1,
-              child: Container(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.10),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  controller: _suffixController,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(
-                      Icons.text_fields,
-                      color: AppColors.armyPrimary,
-                    ),
-                    labelText: 'Suffix',
-                    hintText: 'Jr., Sr., III, etc.',
-                    labelStyle: TextStyle(color: AppColors.armySecondary),
-                    hintStyle: TextStyle(
-                      color: AppColors.grayText.withOpacity(0.6),
-                      fontSize: 12,
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 16,
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(
-                        color: AppColors.armyPrimary,
-                        width: 1,
+              const SizedBox(width: 16),
+              // Suffix field (smaller)
+              Expanded(
+                flex: 1,
+                child: Container(
+                  decoration: BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.10),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
                       ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _suffixController,
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(
+                        Icons.text_fields,
                         color: AppColors.armyPrimary,
-                        width: 2,
+                      ),
+                      labelText: 'Suffix',
+                      hintText: 'Jr., Sr., III, etc.',
+                      labelStyle: TextStyle(color: AppColors.armyPrimary),
+                      hintStyle: TextStyle(
+                        color: AppColors.armyPrimary.withOpacity(0.6),
+                        fontSize: 12,
+                      ),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 16,
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: AppColors.armyPrimary,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: AppColors.armyPrimary,
+                          width: 2,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        // Email field
-        Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.10),
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
             ],
-          ),
-          child: TextField(
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            decoration: InputDecoration(
-              prefixIcon: Icon(Icons.email, color: AppColors.armyPrimary),
-              labelText: 'Email Address',
-              labelStyle: TextStyle(color: AppColors.armySecondary),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 2),
-              ),
-            ),
           ),
         ),
         const SizedBox(height: 16),
-        // Password field
-        Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.10),
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: _passwordController,
-            obscureText: true,
-            decoration: InputDecoration(
-              prefixIcon: Icon(Icons.lock, color: AppColors.armyPrimary),
-              labelText: 'Password',
-              labelStyle: TextStyle(color: AppColors.armySecondary),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 2),
+        // Email field with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.email, color: AppColors.armyPrimary),
+                labelText: 'Email Address',
+                labelStyle: TextStyle(color: AppColors.armyPrimary),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 2,
+                  ),
+                ),
               ),
             ),
           ),
         ),
         const SizedBox(height: 16),
-        // Confirm Password field
-        Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.10),
-                blurRadius: 8,
-                offset: Offset(0, 2),
+        // Password field with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.lock, color: AppColors.armyPrimary),
+                labelText: 'Password',
+                labelStyle: TextStyle(color: AppColors.armyPrimary),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 2,
+                  ),
+                ),
               ),
-            ],
+            ),
           ),
-          child: TextField(
-            controller: _confirmPasswordController,
-            obscureText: true,
-            decoration: InputDecoration(
-              prefixIcon: Icon(
-                Icons.lock_outline,
-                color: AppColors.armyPrimary,
-              ),
-              labelText: 'Confirm Password',
-              labelStyle: TextStyle(color: AppColors.armySecondary),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 2),
+        ),
+        const SizedBox(height: 16),
+        // Confirm Password field with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _confirmPasswordController,
+              obscureText: true,
+              decoration: InputDecoration(
+                prefixIcon: Icon(
+                  Icons.lock_outline,
+                  color: AppColors.armyPrimary,
+                ),
+                labelText: 'Confirm Password',
+                labelStyle: TextStyle(color: AppColors.armyPrimary),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 2,
+                  ),
+                ),
               ),
             ),
           ),
         ),
         const SizedBox(height: 24),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            // Responsive breakpoints
-            bool isSmallScreen = constraints.maxWidth < 400;
-            bool isMediumScreen =
-                constraints.maxWidth >= 400 && constraints.maxWidth < 600;
-            bool isLargeScreen = constraints.maxWidth >= 600;
+        // Next button with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Responsive breakpoints
+              bool isSmallScreen = constraints.maxWidth < 400;
+              bool isMediumScreen =
+                  constraints.maxWidth >= 400 && constraints.maxWidth < 600;
+              bool isLargeScreen = constraints.maxWidth >= 600;
 
-            // Adjust button height and font size based on screen size
-            double buttonHeight =
-                isSmallScreen
-                    ? 44
-                    : isMediumScreen
-                    ? 48
-                    : 52;
-            double fontSize =
-                isSmallScreen
-                    ? 16
-                    : isMediumScreen
-                    ? 18
-                    : 20;
+              // Adjust button height and font size based on screen size
+              double buttonHeight =
+                  isSmallScreen
+                      ? 44
+                      : isMediumScreen
+                      ? 48
+                      : 52;
+              double fontSize =
+                  isSmallScreen
+                      ? 16
+                      : isMediumScreen
+                      ? 18
+                      : 20;
 
-            return SizedBox(
-              width: double.infinity,
-              height: buttonHeight,
-              child: ElevatedButton(
-                onPressed: _nextStep,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.armyPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+              return SizedBox(
+                width: double.infinity,
+                height: buttonHeight,
+                child: ElevatedButton(
+                  onPressed: _nextStep,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.armyPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 6,
+                    shadowColor: Colors.black.withOpacity(0.2),
                   ),
-                  elevation: 6,
-                  shadowColor: Colors.black.withOpacity(0.2),
-                ),
-                child: Text(
-                  'Next',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: fontSize,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.1,
+                  child: Text(
+                    'Next',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.1,
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ],
     );
@@ -357,297 +514,365 @@ class _SignupViewState extends State<SignupView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Create your Account',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppColors.armyPrimary,
-            letterSpacing: 0.5,
+        // Title with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: const Text(
+            'Create your Account',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.armyPrimary,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
-        Text(
-          'Step ${_currentStep + 1}: Service & Contact Information',
-          style: const TextStyle(
-            fontSize: 16,
-            color: AppColors.grayText,
-            letterSpacing: 0.5,
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Text(
+            'Step ${_currentStep + 1}: Service & Contact Information',
+            style: const TextStyle(
+              fontSize: 16,
+              color: AppColors.grayText,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
         const SizedBox(height: 22),
-        // Service ID field
-        Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.10),
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: _serviceIdController,
-            decoration: InputDecoration(
-              prefixIcon: Icon(Icons.badge, color: AppColors.armyPrimary),
-              labelText: 'Service ID',
-              labelStyle: TextStyle(color: AppColors.armySecondary),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 2),
+        // Service ID field with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _serviceIdController,
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.badge, color: AppColors.armyPrimary),
+                labelText: 'Service ID',
+                labelStyle: TextStyle(color: AppColors.armyPrimary),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 2,
+                  ),
+                ),
               ),
             ),
           ),
         ),
         const SizedBox(height: 16),
-        // Contact Number field
-        Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.10),
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: _contactNoController,
-            keyboardType: TextInputType.phone,
-            decoration: InputDecoration(
-              prefixIcon: Icon(Icons.phone, color: AppColors.armyPrimary),
-              labelText: 'Contact Number',
-              labelStyle: TextStyle(color: AppColors.armySecondary),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 2),
+        // Contact Number field with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _contactNoController,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.phone, color: AppColors.armyPrimary),
+                labelText: 'Contact Number',
+                labelStyle: TextStyle(color: AppColors.armyPrimary),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 2,
+                  ),
+                ),
               ),
             ),
           ),
         ),
         const SizedBox(height: 16),
-        // Street Address field
-        Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.10),
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: _streetAddressController,
-            maxLines: 2,
-            decoration: InputDecoration(
-              prefixIcon: Icon(Icons.location_on, color: AppColors.armyPrimary),
-              labelText: 'Street Address',
-              labelStyle: TextStyle(color: AppColors.armySecondary),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 2),
+        // Street Address field with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _streetAddressController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                prefixIcon: Icon(
+                  Icons.location_on,
+                  color: AppColors.armyPrimary,
+                ),
+                labelText: 'Street Address',
+                labelStyle: TextStyle(color: AppColors.armyPrimary),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 2,
+                  ),
+                ),
               ),
             ),
           ),
         ),
         const SizedBox(height: 16),
-        // Unit field
-        Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.10),
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: _unitController,
-            decoration: InputDecoration(
-              prefixIcon: Icon(Icons.group, color: AppColors.armyPrimary),
-              labelText: 'Unit',
-              labelStyle: TextStyle(color: AppColors.armySecondary),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 2),
+        // Unit field with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _unitController,
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.group, color: AppColors.armyPrimary),
+                labelText: 'Unit',
+                labelStyle: TextStyle(color: AppColors.armyPrimary),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 2,
+                  ),
+                ),
               ),
             ),
           ),
         ),
         const SizedBox(height: 16),
-        // Branch of Service field
-        Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.10),
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: _branchController,
-            decoration: InputDecoration(
-              prefixIcon: Icon(Icons.security, color: AppColors.armyPrimary),
-              labelText: 'Branch of Service',
-              labelStyle: TextStyle(color: AppColors.armySecondary),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 2),
+        // Branch of Service field with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _branchController,
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.security, color: AppColors.armyPrimary),
+                labelText: 'Branch of Service',
+                labelStyle: TextStyle(color: AppColors.armyPrimary),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 2,
+                  ),
+                ),
               ),
             ),
           ),
         ),
         const SizedBox(height: 16),
-        // Division field
-        Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.10),
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: _divisionController,
-            decoration: InputDecoration(
-              prefixIcon: Icon(
-                Icons.account_tree,
-                color: AppColors.armyPrimary,
-              ),
-              labelText: 'Division',
-              labelStyle: TextStyle(color: AppColors.armySecondary),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.armyPrimary, width: 2),
+        // Division field with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _divisionController,
+              decoration: InputDecoration(
+                prefixIcon: Icon(
+                  Icons.account_tree,
+                  color: AppColors.armyPrimary,
+                ),
+                labelText: 'Division',
+                labelStyle: TextStyle(color: AppColors.armyPrimary),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 2,
+                  ),
+                ),
               ),
             ),
           ),
         ),
         const SizedBox(height: 24),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            // Responsive breakpoints
-            bool isSmallScreen = constraints.maxWidth < 400;
-            bool isMediumScreen =
-                constraints.maxWidth >= 400 && constraints.maxWidth < 600;
-            bool isLargeScreen = constraints.maxWidth >= 600;
+        // Buttons with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Responsive breakpoints
+              bool isSmallScreen = constraints.maxWidth < 400;
+              bool isMediumScreen =
+                  constraints.maxWidth >= 400 && constraints.maxWidth < 600;
+              bool isLargeScreen = constraints.maxWidth >= 600;
 
-            // Adjust button height based on screen size
-            double buttonHeight =
-                isSmallScreen
-                    ? 44
-                    : isMediumScreen
-                    ? 48
-                    : 52;
-            double fontSize =
-                isSmallScreen
-                    ? 14
-                    : isMediumScreen
-                    ? 16
-                    : 18;
-            double spacing =
-                isSmallScreen
-                    ? 12
-                    : isMediumScreen
-                    ? 16
-                    : 20;
+              // Adjust button height based on screen size
+              double buttonHeight =
+                  isSmallScreen
+                      ? 44
+                      : isMediumScreen
+                      ? 48
+                      : 52;
+              double fontSize =
+                  isSmallScreen
+                      ? 14
+                      : isMediumScreen
+                      ? 16
+                      : 18;
+              double spacing =
+                  isSmallScreen
+                      ? 12
+                      : isMediumScreen
+                      ? 16
+                      : 20;
 
-            return Row(
-              children: [
-                Expanded(
-                  child: SizedBox(
-                    height: buttonHeight,
-                    child: ElevatedButton(
-                      onPressed: _previousStep,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[300],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+              return Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: buttonHeight,
+                      child: ElevatedButton(
+                        onPressed: _previousStep,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[300],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          elevation: 2,
                         ),
-                        elevation: 2,
-                      ),
-                      child: Text(
-                        'Previous',
-                        style: TextStyle(
-                          color: Colors.black87,
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.bold,
+                        child: Text(
+                          'Previous',
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontSize: fontSize,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(width: spacing),
-                Expanded(
-                  child: SizedBox(
-                    height: buttonHeight,
-                    child: ElevatedButton(
-                      onPressed: _nextStep,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.armyPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                  SizedBox(width: spacing),
+                  Expanded(
+                    child: SizedBox(
+                      height: buttonHeight,
+                      child: ElevatedButton(
+                        onPressed: _nextStep,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.armyPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          elevation: 6,
+                          shadowColor: Colors.black.withOpacity(0.2),
                         ),
-                        elevation: 6,
-                        shadowColor: Colors.black.withOpacity(0.2),
-                      ),
-                      child: Text(
-                        'Next',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.1,
+                        child: Text(
+                          'Next',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: fontSize,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.1,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ],
     );
@@ -784,170 +1009,188 @@ class _SignupViewState extends State<SignupView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Create your Account',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppColors.armyPrimary,
-            letterSpacing: 0.5,
+        // Title with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: const Text(
+            'Create your Account',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.armyPrimary,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
-        Text(
-          'Step ${_currentStep + 1}: Confirm Your Details',
-          style: const TextStyle(
-            fontSize: 16,
-            color: AppColors.grayText,
-            letterSpacing: 0.5,
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Text(
+            'Step ${_currentStep + 1}: Confirm Your Details',
+            style: const TextStyle(
+              fontSize: 16,
+              color: AppColors.grayText,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
         const SizedBox(height: 22),
-        // Confirmation Card
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.10),
-                blurRadius: 12,
-                offset: Offset(0, 4),
-              ),
-            ],
-            border: Border.all(
-              color: AppColors.armyPrimary.withOpacity(0.2),
-              width: 1,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Icon(Icons.verified, color: AppColors.armyPrimary, size: 24),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Account Details',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.armyPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              // Personal Information Section
-              _buildDetailSection('Personal Information', Icons.person, [
-                _buildDetailRow('Full Name', _nameController.text),
-                _buildDetailRow('Suffix', _suffixController.text),
-                _buildDetailRow('Email Address', _emailController.text),
-              ]),
-              const SizedBox(height: 16),
-              // Service Information Section
-              _buildDetailSection('Service Information', Icons.badge, [
-                _buildDetailRow('Service ID', _serviceIdController.text),
-                _buildDetailRow('Contact Number', _contactNoController.text),
-                _buildDetailRow(
-                  'Street Address',
-                  _streetAddressController.text,
+        // Confirmation Card with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 12,
+                  offset: Offset(0, 4),
                 ),
-                _buildDetailRow('Unit', _unitController.text),
-                _buildDetailRow('Branch of Service', _branchController.text),
-                _buildDetailRow('Division', _divisionController.text),
-              ]),
-            ],
+              ],
+              border: Border.all(
+                color: AppColors.armyPrimary.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Icon(
+                      Icons.verified,
+                      color: AppColors.armyPrimary,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Account Details',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.armyPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // Personal Information Section
+                _buildDetailSection('Personal Information', Icons.person, [
+                  _buildDetailRow('Full Name', _nameController.text),
+                  _buildDetailRow('Suffix', _suffixController.text),
+                  _buildDetailRow('Email Address', _emailController.text),
+                ]),
+                const SizedBox(height: 16),
+                // Service Information Section
+                _buildDetailSection('Service Information', Icons.badge, [
+                  _buildDetailRow('Service ID', _serviceIdController.text),
+                  _buildDetailRow('Contact Number', _contactNoController.text),
+                  _buildDetailRow(
+                    'Street Address',
+                    _streetAddressController.text,
+                  ),
+                  _buildDetailRow('Unit', _unitController.text),
+                  _buildDetailRow('Branch of Service', _branchController.text),
+                  _buildDetailRow('Division', _divisionController.text),
+                ]),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 24),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            // Responsive breakpoints
-            bool isSmallScreen = constraints.maxWidth < 400;
-            bool isMediumScreen =
-                constraints.maxWidth >= 400 && constraints.maxWidth < 600;
-            bool isLargeScreen = constraints.maxWidth >= 600;
+        // Buttons with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Responsive breakpoints
+              bool isSmallScreen = constraints.maxWidth < 400;
+              bool isMediumScreen =
+                  constraints.maxWidth >= 400 && constraints.maxWidth < 600;
+              bool isLargeScreen = constraints.maxWidth >= 600;
 
-            // Adjust button height based on screen size
-            double buttonHeight =
-                isSmallScreen
-                    ? 44
-                    : isMediumScreen
-                    ? 48
-                    : 52;
-            double fontSize =
-                isSmallScreen
-                    ? 14
-                    : isMediumScreen
-                    ? 16
-                    : 18;
-            double spacing =
-                isSmallScreen
-                    ? 12
-                    : isMediumScreen
-                    ? 16
-                    : 20;
+              // Adjust button height based on screen size
+              double buttonHeight =
+                  isSmallScreen
+                      ? 44
+                      : isMediumScreen
+                      ? 48
+                      : 52;
+              double fontSize =
+                  isSmallScreen
+                      ? 14
+                      : isMediumScreen
+                      ? 16
+                      : 18;
+              double spacing =
+                  isSmallScreen
+                      ? 12
+                      : isMediumScreen
+                      ? 16
+                      : 20;
 
-            return Row(
-              children: [
-                Expanded(
-                  child: SizedBox(
-                    height: buttonHeight,
-                    child: ElevatedButton(
-                      onPressed: _previousStep,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[300],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+              return Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: buttonHeight,
+                      child: ElevatedButton(
+                        onPressed: _previousStep,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[300],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          elevation: 2,
                         ),
-                        elevation: 2,
-                      ),
-                      child: Text(
-                        'Previous',
-                        style: TextStyle(
-                          color: Colors.black87,
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.bold,
+                        child: Text(
+                          'Previous',
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontSize: fontSize,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(width: spacing),
-                Expanded(
-                  child: SizedBox(
-                    height: buttonHeight,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // TODO: Implement final submission
-                        _submitForm();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.armyPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                  SizedBox(width: spacing),
+                  Expanded(
+                    child: SizedBox(
+                      height: buttonHeight,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // TODO: Implement final submission
+                          _submitForm();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.armyPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          elevation: 6,
+                          shadowColor: Colors.black.withOpacity(0.2),
                         ),
-                        elevation: 6,
-                        shadowColor: Colors.black.withOpacity(0.2),
-                      ),
-                      child: Text(
-                        'Create Account',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.1,
+                        child: Text(
+                          'Create Account',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: fontSize,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.1,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ],
     );
@@ -1020,97 +1263,118 @@ class _SignupViewState extends State<SignupView> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.only(top: 60, bottom: 32),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFF4B5320), // 0%
-                    Color(0xFF121B15), // 59%
-                    Color(0xFF3E503A), // 100%
-                  ],
-                  stops: [0.0, 0.59, 1.0],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+            // Header with animation
+            FadeTransition(
+              opacity: _headerAnimation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.0, -0.5),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: _headerController,
+                    curve: Curves.easeOutCubic,
+                  ),
                 ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.only(top: 60, bottom: 32),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(0xFF4B5320), // 0%
+                        Color(0xFF121B15), // 59%
+                        Color(0xFF3E503A), // 100%
+                      ],
+                      stops: [0.0, 0.59, 1.0],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(24),
+                      bottomRight: Radius.circular(24),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 24,
+                        spreadRadius: 2,
+                        offset: Offset(0, 12),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      // Logo with scale animation
+                      ScaleTransition(
+                        scale: _headerAnimation,
+                        child: Center(
+                          child: Image.asset(
+                            'assets/icons/App_Logo.png',
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'AFProTrack',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '"Honor. Service. Patriotism."',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.armyGold,
+                          fontSize: 13,
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 24,
-                    spreadRadius: 2,
-                    offset: Offset(0, 12),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  // Logo
-                  Center(
-                    child: Image.asset(
-                      'assets/icons/App_Logo.png',
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'AFProTrack',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-                  const Text(
-                    '“Honor. Service. Patriotism.”',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: AppColors.armyGold,
-                      fontSize: 13,
-                      fontStyle: FontStyle.italic,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
               ),
             ),
             const SizedBox(height: 12),
+            // Step content
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Back to Login button
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Row(
-                      children: [
-                        IconifyIcon(
-                          icon: 'lets-icons:back',
-                          color: AppColors.armyPrimary,
-                          size: 28,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Back to Login',
-                          style: TextStyle(
-                            color: AppColors.grayText,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                  // Back to Login button with fade animation
+                  FadeTransition(
+                    opacity: _formElementsAnimation,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Row(
+                        children: [
+                          IconifyIcon(
+                            icon: 'lets-icons:back',
+                            color: AppColors.armyPrimary,
+                            size: 28,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          Text(
+                            'Back to Login',
+                            style: TextStyle(
+                              color: AppColors.grayText,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 26),
@@ -1118,35 +1382,38 @@ class _SignupViewState extends State<SignupView> {
                   const SizedBox(height: 32),
                   // Show "Already have an account?" only on first step
                   if (_currentStep == 0)
-                    Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Already have an account?',
-                            style: TextStyle(
-                              color: Colors.black54,
-                              fontSize: 14,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const LoginView(),
-                                ),
-                              );
-                            },
-                            child: const Text(
-                              'Login',
+                    FadeTransition(
+                      opacity: _formElementsAnimation,
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Already have an account?',
                               style: TextStyle(
-                                color: AppColors.armyPrimary,
-                                fontWeight: FontWeight.bold,
+                                color: Colors.black54,
                                 fontSize: 14,
                               ),
                             ),
-                          ),
-                        ],
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const LoginView(),
+                                  ),
+                                );
+                              },
+                              child: const Text(
+                                'Login',
+                                style: TextStyle(
+                                  color: AppColors.armyPrimary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                 ],

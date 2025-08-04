@@ -1,0 +1,14 @@
+# Automatically normalize text files to LF in the repo
+* text=auto
+
+# Force LF for common text/code files (good for macOS and Linux tools)
+*.dart text eol=lf
+*.sh text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.cmake text eol=lf
+*.md text eol=lf
+
+# Optionally, force CRLF for Windows scripts (only if needed)
+*.bat text eol=crlf
+*.cmd text eol=crlf

@@ -11,8 +11,173 @@ class LoginView extends StatefulWidget {
   State<LoginView> createState() => _LoginViewState();
 }
 
-class _LoginViewState extends State<LoginView> {
+class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
   bool _rememberMe = false;
+  bool _isLoading = false;
+
+  // Static flag to track if this is the initial app launch
+  static bool _isInitialLaunch = true;
+
+  // Animation controllers
+  late AnimationController _logoController;
+  late AnimationController _titleController;
+  late AnimationController _formController;
+  late AnimationController _buttonController;
+
+  // Animations
+  late Animation<double> _logoAnimation;
+  late Animation<double> _titleAnimation;
+  late Animation<double> _formAnimation;
+  late Animation<double> _buttonAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize animation controllers
+    _logoController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _titleController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _formController = AnimationController(
+      duration: const Duration(milliseconds: 700),
+      vsync: this,
+    );
+    _buttonController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    // Initialize animations
+    _logoAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _logoController, curve: Curves.easeOutBack),
+    );
+
+    _titleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _titleController, curve: Curves.easeOutCubic),
+    );
+
+    _formAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _formController, curve: Curves.easeOutCubic),
+    );
+
+    _buttonAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _buttonController, curve: Curves.easeOutCubic),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0.0, 1.0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _formController, curve: Curves.easeOutCubic),
+    );
+
+    // Only start animations if this is the initial launch
+    if (_isInitialLaunch) {
+      _startAnimations();
+      // Mark that we've already done the initial launch
+      _isInitialLaunch = false;
+    } else {
+      // If not initial launch, immediately set all animations to completed state
+      _logoController.value = 1.0;
+      _titleController.value = 1.0;
+      _formController.value = 1.0;
+      _buttonController.value = 1.0;
+    }
+  }
+
+  void _startAnimations() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    _logoController.forward();
+
+    await Future.delayed(const Duration(milliseconds: 200));
+    _titleController.forward();
+
+    await Future.delayed(const Duration(milliseconds: 300));
+    _formController.forward();
+
+    await Future.delayed(const Duration(milliseconds: 200));
+    _buttonController.forward();
+  }
+
+  @override
+  void dispose() {
+    _logoController.dispose();
+    _titleController.dispose();
+    _formController.dispose();
+    _buttonController.dispose();
+    super.dispose();
+  }
+
+  // Simulated login function with animation
+  Future<void> _handleLogin() async {
+    if (_isLoading) return; // Prevent multiple calls
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Simulate API call delay
+      await Future.delayed(Duration(seconds: 2));
+
+      // Animate exit before navigation
+      await _animateExit();
+
+      // Navigate to main screen
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder:
+                (context, animation, secondaryAnimation) =>
+                    const MainNavigationView(),
+            transitionsBuilder: (
+              context,
+              animation,
+              secondaryAnimation,
+              child,
+            ) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.0, -1.0),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeInOutCubic,
+                  ),
+                ),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 800),
+          ),
+        );
+      }
+    } catch (e) {
+      // Handle error if needed
+      print('Login error: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _animateExit() async {
+    // Reverse animations in order
+    await _buttonController.reverse();
+    await _formController.reverse();
+    await _titleController.reverse();
+    await _logoController.reverse();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +199,7 @@ class _LoginViewState extends State<LoginView> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            // Header section with logo and title animations
             Container(
               width: double.infinity,
               padding: EdgeInsets.only(
@@ -66,168 +232,237 @@ class _LoginViewState extends State<LoginView> {
               ),
               child: Column(
                 children: [
-                  // Logo with shadow
-                  Container(
-                    child: Center(
-                      child: Image.asset(
-                        'assets/icons/App_Logo.png',
-                        width: logoSize,
-                        height: logoSize,
-                        fit: BoxFit.contain,
+                  // Logo with animation
+                  ScaleTransition(
+                    scale: _logoAnimation,
+                    child: Container(
+                      child: Center(
+                        child: Image.asset(
+                          'assets/icons/App_Logo.png',
+                          width: logoSize,
+                          height: logoSize,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   ),
                   SizedBox(height: height * 0.015),
-                  Text(
-                    'AFProTrack',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: titleFontSize,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
+                  // Title with animation
+                  FadeTransition(
+                    opacity: _titleAnimation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.0, -0.5),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: _titleController,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      ),
+                      child: Text(
+                        'AFProTrack',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: titleFontSize,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(height: height * 0.005),
-                  Text(
-                    'Training System App for Armed Forces of the Philippines',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: subtitleFontSize,
-                      fontStyle: FontStyle.italic,
+                  FadeTransition(
+                    opacity: _titleAnimation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.0, -0.3),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: _titleController,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      ),
+                      child: Text(
+                        'Training System App for Armed Forces of the Philippines',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: subtitleFontSize,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(height: height * 0.01),
-                  Text(
-                    '“Honor. Service. Patriotism.”',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.amber,
-                      fontSize: quoteFontSize,
-                      fontStyle: FontStyle.italic,
-                      fontWeight: FontWeight.w500,
+                  FadeTransition(
+                    opacity: _titleAnimation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.0, -0.3),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: _titleController,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      ),
+                      child: Text(
+                        '"Honor. Service. Patriotism."',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.amber,
+                          fontSize: quoteFontSize,
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
             SizedBox(height: height * 0.045),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Personnel Login',
-                    style: TextStyle(
-                      fontSize: loginTitleFontSize,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.armyPrimary,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  SizedBox(height: height * 0.03),
-                  Container(
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.10),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        prefixIcon: Icon(
-                          Icons.badge,
-                          color: AppColors.armyPrimary,
-                        ),
-                        labelText: 'Service ID',
-                        labelStyle: TextStyle(color: AppColors.armySecondary),
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                            color: AppColors.armyPrimary,
-                            width: 1,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                            color: AppColors.armyPrimary,
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: height * 0.02),
-                  Container(
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.10),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        prefixIcon: Icon(
-                          Icons.lock,
-                          color: AppColors.armyPrimary,
-                        ),
-                        labelText: 'Password',
-                        labelStyle: TextStyle(color: AppColors.armySecondary),
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                            color: AppColors.armyPrimary,
-                            width: 1,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(
-                            color: AppColors.armyPrimary,
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: height * 0.01),
-                  Row(
+            // Form section with slide animation
+            SlideTransition(
+              position: _slideAnimation,
+              child: FadeTransition(
+                opacity: _formAnimation,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Checkbox(
-                            value: _rememberMe,
-                            onChanged: (value) {
-                              setState(() {
-                                _rememberMe = value ?? false;
-                              });
-                            },
-                            activeColor: AppColors.armyPrimary,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
+                      Text(
+                        'Personnel Login',
+                        style: TextStyle(
+                          fontSize: loginTitleFontSize,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.armyPrimary,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      SizedBox(height: height * 0.03),
+                      Container(
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.10),
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: TextField(
+                          decoration: InputDecoration(
+                            prefixIcon: Icon(
+                              Icons.badge,
+                              color: AppColors.armyPrimary,
+                            ),
+                            labelText: 'Service ID',
+                            labelStyle: TextStyle(
+                              color: AppColors.armySecondary,
+                            ),
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: AppColors.armyPrimary,
+                                width: 1,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: AppColors.armyPrimary,
+                                width: 2,
+                              ),
+                            ),
                           ),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _rememberMe = !_rememberMe;
-                              });
-                            },
+                        ),
+                      ),
+                      SizedBox(height: height * 0.02),
+                      Container(
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.10),
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: TextField(
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            prefixIcon: Icon(
+                              Icons.lock,
+                              color: AppColors.armyPrimary,
+                            ),
+                            labelText: 'Password',
+                            labelStyle: TextStyle(
+                              color: AppColors.armySecondary,
+                            ),
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: AppColors.armyPrimary,
+                                width: 1,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: AppColors.armyPrimary,
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: height * 0.01),
+                      Row(
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Checkbox(
+                                value: _rememberMe,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _rememberMe = value ?? false;
+                                  });
+                                },
+                                activeColor: AppColors.armyPrimary,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _rememberMe = !_rememberMe;
+                                  });
+                                },
+                                child: Text(
+                                  'Remember Password',
+                                  style: TextStyle(
+                                    color: AppColors.armyPrimary,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: isSmallScreen ? 12 : 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Spacer(),
+                          TextButton(
+                            onPressed: () {},
                             child: Text(
-                              'Remember Password',
+                              'Forgot Password?',
                               style: TextStyle(
                                 color: AppColors.armyPrimary,
                                 fontWeight: FontWeight.w500,
@@ -237,84 +472,89 @@ class _LoginViewState extends State<LoginView> {
                           ),
                         ],
                       ),
-                      Spacer(),
-                      TextButton(
-                        onPressed: () {},
-                        child: Text(
-                          'Forgot Password?',
-                          style: TextStyle(
-                            color: AppColors.armyPrimary,
-                            fontWeight: FontWeight.w500,
-                            fontSize: isSmallScreen ? 12 : 14,
+                      SizedBox(height: height * 0.03),
+                      // Login button with animation
+                      ScaleTransition(
+                        scale: _buttonAnimation,
+                        child: FadeTransition(
+                          opacity: _buttonAnimation,
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: height * 0.065,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _handleLogin,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.armyPrimary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                elevation: 6,
+                                shadowColor: Colors.black.withOpacity(0.2),
+                              ),
+                              child:
+                                  _isLoading
+                                      ? const SizedBox(
+                                        height: 24,
+                                        width: 24,
+                                        child: CircularProgressIndicator(
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                      : Text(
+                                        'Login',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: buttonFontSize,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.1,
+                                        ),
+                                      ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: height * 0.01),
+                      FadeTransition(
+                        opacity: _buttonAnimation,
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Don't have an account?",
+                                style: TextStyle(
+                                  color: Colors.black54,
+                                  fontSize: isSmallScreen ? 12 : 14,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const SignupView(),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  'Sign up',
+                                  style: TextStyle(
+                                    color: AppColors.armyPrimary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: isSmallScreen ? 12 : 14,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: height * 0.03),
-                  SizedBox(
-                    width: double.infinity,
-                    height: height * 0.065,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const MainNavigationView(),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.armyPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        elevation: 6,
-                        shadowColor: Colors.black.withOpacity(0.2),
-                      ),
-                      child: Text(
-                        'Login',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: buttonFontSize,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.1,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: height * 0.01),
-                  Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Don't have an account?",
-                          style: TextStyle(
-                            color: Colors.black54,
-                            fontSize: isSmallScreen ? 12 : 14,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const SignupView(),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            'Sign up',
-                            style: TextStyle(
-                              color: AppColors.armyPrimary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: isSmallScreen ? 12 : 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ],
