@@ -314,31 +314,6 @@ class _LoginViewState extends State<LoginView> {
                       ],
                     ),
                   ),
-                  SizedBox(height: height * 0.02),
-                  Center(
-                    child: Column(
-                      children: [
-                        SizedBox(height: height * 0.02),
-                        Text(
-                          'Partnered with',
-                          style: TextStyle(
-                            color: AppColors.armyPrimary,
-                            fontSize: partnerFontSize,
-                            fontStyle: FontStyle.italic,
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        SizedBox(height: height * 0.008),
-                        Image.asset(
-                          'assets/icons/afp_insignia.png',
-                          width: logoSize * 0.4,
-                          height: logoSize * 0.4,
-                          fit: BoxFit.contain,
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
