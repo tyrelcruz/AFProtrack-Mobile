@@ -3,6 +3,7 @@ import '../widgets/app_bar_widget.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../utils/app_colors.dart';
 import '../utils/responsive_utils.dart';
+import 'login_view.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -25,20 +26,6 @@ class _ProfileViewState extends State<ProfileView> {
             ? screenWidth * 0.8
             : 400.0;
 
-    final profileCardHeight =
-        ResponsiveUtils.isMobile(context)
-            ? screenHeight * 0.68
-            : ResponsiveUtils.isTablet(context)
-            ? screenHeight * 0.65
-            : 588.0;
-
-    final trainingCardHeight =
-        ResponsiveUtils.isMobile(context)
-            ? screenHeight * 0.15
-            : ResponsiveUtils.isTablet(context)
-            ? screenHeight * 0.12
-            : 143.0;
-
     final padding = ResponsiveUtils.getResponsivePadding(context);
     final profilePictureSize = ResponsiveUtils.isMobile(context) ? 65.0 : 75.0;
     final profileIconSize = ResponsiveUtils.isMobile(context) ? 38.0 : 43.0;
@@ -57,7 +44,6 @@ class _ProfileViewState extends State<ProfileView> {
             // Profile container
             Container(
               width: cardWidth,
-              height: profileCardHeight,
               child: Card(
                 color: Colors.white,
                 shape: RoundedRectangleBorder(
@@ -202,10 +188,11 @@ class _ProfileViewState extends State<ProfileView> {
               ),
             ),
 
+            SizedBox(height: ResponsiveUtils.isMobile(context) ? 16 : 20),
+
             //training summary
             Container(
               width: cardWidth,
-              height: trainingCardHeight,
               child: Card(
                 color: Colors.white,
                 shape: RoundedRectangleBorder(
@@ -248,102 +235,95 @@ class _ProfileViewState extends State<ProfileView> {
                         height: ResponsiveUtils.isMobile(context) ? 12 : 12,
                       ),
                       // Stats section
-                      Expanded(
-                        child: Row(
-                          children: [
-                            // Left section - Completed Programs
-                            Expanded(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    '8',
-                                    style: TextStyle(
-                                      fontSize:
-                                          ResponsiveUtils.getResponsiveFontSize(
-                                            context,
-                                            mobile: 24,
-                                            tablet: 24,
-                                            desktop: 24,
-                                          ),
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.black,
-                                    ),
+                      Row(
+                        children: [
+                          // Left section - Completed Programs
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '8',
+                                  style: TextStyle(
+                                    fontSize:
+                                        ResponsiveUtils.getResponsiveFontSize(
+                                          context,
+                                          mobile: 24,
+                                          tablet: 24,
+                                          desktop: 24,
+                                        ),
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.black,
                                   ),
-                                  SizedBox(
-                                    height:
-                                        ResponsiveUtils.isMobile(context)
-                                            ? 1
-                                            : 1,
+                                ),
+                                SizedBox(
+                                  height:
+                                      ResponsiveUtils.isMobile(context) ? 1 : 1,
+                                ),
+                                Text(
+                                  'Completed Programs',
+                                  style: TextStyle(
+                                    fontSize:
+                                        ResponsiveUtils.getResponsiveFontSize(
+                                          context,
+                                          mobile: 14,
+                                          tablet: 14,
+                                          desktop: 14,
+                                        ),
+                                    color: Colors.grey[600],
                                   ),
-                                  Text(
-                                    'Completed Programs',
-                                    style: TextStyle(
-                                      fontSize:
-                                          ResponsiveUtils.getResponsiveFontSize(
-                                            context,
-                                            mobile: 14,
-                                            tablet: 14,
-                                            desktop: 14,
-                                          ),
-                                      color: Colors.grey[600],
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
                             ),
-                            // Vertical divider
-                            Container(
-                              width: 1,
-                              height:
-                                  ResponsiveUtils.isMobile(context) ? 50 : 60,
-                              color: Colors.grey[300],
+                          ),
+                          // Vertical divider
+                          Container(
+                            width: 1,
+                            height: ResponsiveUtils.isMobile(context) ? 50 : 60,
+                            color: Colors.grey[300],
+                          ),
+                          // Right section - Certificates Earned
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '12',
+                                  style: TextStyle(
+                                    fontSize:
+                                        ResponsiveUtils.getResponsiveFontSize(
+                                          context,
+                                          mobile: 24,
+                                          tablet: 24,
+                                          desktop: 24,
+                                        ),
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.black,
+                                  ),
+                                ),
+                                SizedBox(
+                                  height:
+                                      ResponsiveUtils.isMobile(context) ? 1 : 1,
+                                ),
+                                Text(
+                                  'Certificates Earned',
+                                  style: TextStyle(
+                                    fontSize:
+                                        ResponsiveUtils.getResponsiveFontSize(
+                                          context,
+                                          mobile: 14,
+                                          tablet: 14,
+                                          desktop: 14,
+                                        ),
+                                    color: Colors.grey[600],
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
                             ),
-                            // Right section - Certificates Earned
-                            Expanded(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    '12',
-                                    style: TextStyle(
-                                      fontSize:
-                                          ResponsiveUtils.getResponsiveFontSize(
-                                            context,
-                                            mobile: 24,
-                                            tablet: 24,
-                                            desktop: 24,
-                                          ),
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.black,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height:
-                                        ResponsiveUtils.isMobile(context)
-                                            ? 1
-                                            : 1,
-                                  ),
-                                  Text(
-                                    'Certificates Earned',
-                                    style: TextStyle(
-                                      fontSize:
-                                          ResponsiveUtils.getResponsiveFontSize(
-                                            context,
-                                            mobile: 14,
-                                            tablet: 14,
-                                            desktop: 14,
-                                          ),
-                                      color: Colors.grey[600],
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -425,6 +405,9 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
               ),
             ),
+
+            // Add bottom padding to ensure content doesn't get cut off
+            SizedBox(height: ResponsiveUtils.isMobile(context) ? 20 : 30),
           ],
         ),
       ),
@@ -569,32 +552,123 @@ class _ProfileViewState extends State<ProfileView> {
   void _showLogoutDialog() {
     showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Logout'),
-          content: Text('Are you sure you want to logout?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cancel'),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 40),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                // TODO: Implement logout functionality
-                // Clear user session, navigate to login page, etc.
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[600],
-                foregroundColor: Colors.white,
-              ),
-              child: Text('Logout'),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with warning icon
+                Container(
+                  padding: const EdgeInsets.only(top: 20, bottom: 8),
+                  child: Icon(
+                    Icons.warning_amber_rounded,
+                    size: 50,
+                    color: Colors.orange[600],
+                  ),
+                ),
+
+                // Title
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    'Logout',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+
+                // Message
+                Padding(
+                  padding: const EdgeInsets.only(
+                    top: 8,
+                    bottom: 20,
+                    left: 20,
+                    right: 20,
+                  ),
+                  child: Text(
+                    'Are you sure you want to logout? You will need to sign in again to access your account.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+
+                // Divider
+                Container(height: 0.5, color: Colors.grey[300]),
+
+                // Cancel button
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    child: Text(
+                      'Cancel',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.blue[600],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Divider
+                Container(height: 0.5, color: Colors.grey[300]),
+
+                // Logout button
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _performLogout();
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    child: Text(
+                      'Logout',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red[600],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
+    );
+  }
+
+  void _performLogout() {
+    // Clear any stored user data/session here
+    // For now, we'll just navigate to login screen
+
+    // Navigate to login screen and clear the entire navigation stack
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const LoginView()),
+      (route) => false, // This removes all previous routes
     );
   }
 }
