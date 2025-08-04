@@ -46,6 +46,9 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
   // Store form data
   Map<String, dynamic> _formData = {};
 
+  // Loading state for form submission
+  bool _isSubmitting = false;
+
   @override
   void initState() {
     super.initState();
@@ -878,7 +881,12 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
     );
   }
 
-  void _submitForm() {
+  void _submitForm() async {
+    // Set loading state
+    setState(() {
+      _isSubmitting = true;
+    });
+
     // Collect all form data
     _formData = {
       'fullName': _nameController.text,
@@ -893,8 +901,16 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
       'division': _divisionController.text,
     };
 
+    // Simulate API call delay
+    await Future.delayed(const Duration(seconds: 2));
+
     // TODO: Send to backend
     print('Form data: $_formData');
+
+    // Reset loading state
+    setState(() {
+      _isSubmitting = false;
+    });
 
     // Show custom success popup
     _showSuccessDialog();
@@ -1163,27 +1179,67 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                     child: SizedBox(
                       height: buttonHeight,
                       child: ElevatedButton(
-                        onPressed: () {
-                          // TODO: Implement final submission
-                          _submitForm();
-                        },
+                        onPressed:
+                            _isSubmitting
+                                ? null
+                                : () {
+                                  // TODO: Implement final submission
+                                  _submitForm();
+                                },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.armyPrimary,
+                          backgroundColor:
+                              _isSubmitting
+                                  ? AppColors.armyPrimary.withOpacity(0.7)
+                                  : AppColors.armyPrimary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          elevation: 6,
+                          elevation: _isSubmitting ? 2 : 6,
                           shadowColor: Colors.black.withOpacity(0.2),
                         ),
-                        child: Text(
-                          'Create Account',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: fontSize,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.1,
-                          ),
-                        ),
+                        child:
+                            _isSubmitting
+                                ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: fontSize * 0.8,
+                                      height: fontSize * 0.8,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      ),
+                                    ),
+                                    SizedBox(width: fontSize * 0.5),
+                                    FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        'Creating...',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: fontSize * 0.9,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.1,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                                : FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    'Create Account',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: fontSize,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.1,
+                                    ),
+                                  ),
+                                ),
                       ),
                     ),
                   ),
@@ -1260,167 +1316,169 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Header with animation
-            FadeTransition(
-              opacity: _headerAnimation,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.0, -0.5),
-                  end: Offset.zero,
-                ).animate(
-                  CurvedAnimation(
-                    parent: _headerController,
-                    curve: Curves.easeOutCubic,
-                  ),
+      body: Column(
+        children: [
+          // Fixed Header with animation
+          FadeTransition(
+            opacity: _headerAnimation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.0, -0.5),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(
+                  parent: _headerController,
+                  curve: Curves.easeOutCubic,
                 ),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.only(top: 60, bottom: 32),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xFF4B5320), // 0%
-                        Color(0xFF121B15), // 59%
-                        Color(0xFF3E503A), // 100%
-                      ],
-                      stops: [0.0, 0.59, 1.0],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(24),
-                      bottomRight: Radius.circular(24),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 24,
-                        spreadRadius: 2,
-                        offset: Offset(0, 12),
-                      ),
+              ),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.only(top: 60, bottom: 32),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFF4B5320), // 0%
+                      Color(0xFF121B15), // 59%
+                      Color(0xFF3E503A), // 100%
                     ],
+                    stops: [0.0, 0.59, 1.0],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
-                  child: Column(
-                    children: [
-                      // Logo with scale animation
-                      ScaleTransition(
-                        scale: _headerAnimation,
-                        child: Center(
-                          child: Image.asset(
-                            'assets/icons/App_Logo.png',
-                            width: 100,
-                            height: 100,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'AFProTrack',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        '"Honor. Service. Patriotism."',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColors.armyGold,
-                          fontSize: 13,
-                          fontStyle: FontStyle.italic,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(24),
+                    bottomRight: Radius.circular(24),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 24,
+                      spreadRadius: 2,
+                      offset: Offset(0, 12),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    // Logo with scale animation
+                    ScaleTransition(
+                      scale: _headerAnimation,
+                      child: Center(
+                        child: Image.asset(
+                          'assets/icons/App_Logo.png',
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'AFProTrack',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      '"Honor. Service. Patriotism."',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.armyGold,
+                        fontSize: 13,
+                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            // Step content
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Back to Login button with fade animation
-                  FadeTransition(
-                    opacity: _formElementsAnimation,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Row(
-                        children: [
-                          IconifyIcon(
-                            icon: 'lets-icons:back',
-                            color: AppColors.armyPrimary,
-                            size: 28,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Back to Login',
-                            style: TextStyle(
-                              color: AppColors.grayText,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 26),
-                  _buildStepContent(),
-                  const SizedBox(height: 32),
-                  // Show "Already have an account?" only on first step
-                  if (_currentStep == 0)
+          ),
+          // Scrollable content below the gradient
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 12),
+                    // Back to Login button with fade animation
                     FadeTransition(
                       opacity: _formElementsAnimation,
-                      child: Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pop();
+                        },
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text(
-                              'Already have an account?',
-                              style: TextStyle(
-                                color: Colors.black54,
-                                fontSize: 14,
-                              ),
+                            IconifyIcon(
+                              icon: 'lets-icons:back',
+                              color: AppColors.armyPrimary,
+                              size: 28,
                             ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const LoginView(),
-                                  ),
-                                );
-                              },
-                              child: const Text(
-                                'Login',
-                                style: TextStyle(
-                                  color: AppColors.armyPrimary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Back to Login',
+                              style: TextStyle(
+                                color: AppColors.grayText,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                ],
+                    const SizedBox(height: 26),
+                    _buildStepContent(),
+                    const SizedBox(height: 32),
+                    // Show "Already have an account?" only on first step
+                    if (_currentStep == 0)
+                      FadeTransition(
+                        opacity: _formElementsAnimation,
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'Already have an account?',
+                                style: TextStyle(
+                                  color: Colors.black54,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const LoginView(),
+                                    ),
+                                  );
+                                },
+                                child: const Text(
+                                  'Login',
+                                  style: TextStyle(
+                                    color: AppColors.armyPrimary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

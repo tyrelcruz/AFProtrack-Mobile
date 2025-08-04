@@ -66,10 +66,13 @@ class _CertificateViewState extends State<CertificateView> {
       appBar: const AppBarWidget(title: 'Certificates', showLeading: false),
       body: Column(
         children: [
-          // Filter Bar
+          // Filter Bar (Fixed)
           Container(
             color: AppColors.appBackground,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.symmetric(
+              horizontal: MediaQuery.of(context).size.width < 360 ? 12 : 16,
+              vertical: MediaQuery.of(context).size.width < 360 ? 8 : 12,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -79,7 +82,9 @@ class _CertificateViewState extends State<CertificateView> {
                     onTap: () => setState(() => _currentIndex = 0),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width < 360 ? 6 : 8,
+                ),
                 Expanded(
                   child: CertificateFilterButton(
                     text: 'Pending',
@@ -87,7 +92,9 @@ class _CertificateViewState extends State<CertificateView> {
                     onTap: () => setState(() => _currentIndex = 1),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width < 360 ? 6 : 8,
+                ),
                 Expanded(
                   child: CertificateFilterButton(
                     text: 'Approved',
@@ -99,27 +106,33 @@ class _CertificateViewState extends State<CertificateView> {
             ),
           ),
 
-          // Upload Certificate Section
-          UploadCertificateWidget(onUpload: () => _showUploadDialog()),
-
-          // Certificates List
+          // Scrollable Content (Upload Certificate + Certificates List)
           Expanded(
-            child:
-                _filteredCertificates.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      itemCount: _filteredCertificates.length,
-                      itemBuilder: (context, index) {
-                        return CertificateCard(
-                          certificate: _filteredCertificates[index],
-                          onViewDetails:
-                              () => _showCertificateDetails(
-                                _filteredCertificates[index],
-                              ),
-                        );
-                      },
-                    ),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Upload Certificate Section
+                  UploadCertificateWidget(onUpload: () => _showUploadDialog()),
+
+                  // Certificates List
+                  _filteredCertificates.isEmpty
+                      ? _buildEmptyState()
+                      : Column(
+                        children:
+                            _filteredCertificates.map((certificate) {
+                              return CertificateCard(
+                                certificate: certificate,
+                                onViewDetails:
+                                    () => _showCertificateDetails(certificate),
+                              );
+                            }).toList(),
+                      ),
+
+                  // Bottom padding
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
           ),
         ],
       ),

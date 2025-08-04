@@ -524,26 +524,139 @@ class _ProfileViewState extends State<ProfileView> {
   void _showEditProfileDialog() {
     showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Edit Profile Settings'),
-          content: Text('This will open the edit profile settings page.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cancel'),
+        // Get screen width for responsive design
+        final screenWidth = MediaQuery.of(context).size.width;
+
+        // Calculate responsive margins and width
+        double horizontalMargin;
+        double dialogWidth;
+
+        if (screenWidth < 360) {
+          // Small phones
+          horizontalMargin = 12;
+          dialogWidth = screenWidth - 24;
+        } else if (screenWidth < 480) {
+          // Medium phones
+          horizontalMargin = 16;
+          dialogWidth = screenWidth - 32;
+        } else if (screenWidth < 600) {
+          // Large phones
+          horizontalMargin = 20;
+          dialogWidth = screenWidth - 40;
+        } else {
+          // Tablets and larger
+          horizontalMargin = 30;
+          dialogWidth = 600; // Max width for larger screens
+        }
+
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: dialogWidth,
+            margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                // TODO: Navigate to edit profile settings page
-                // Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfileView()));
-              },
-              child: Text('Continue'),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with settings icon
+                Container(
+                  padding: const EdgeInsets.only(top: 20, bottom: 8),
+                  child: Icon(
+                    Icons.settings,
+                    size: 50,
+                    color: AppColors.armyPrimary,
+                  ),
+                ),
+
+                // Title
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth < 360 ? 16 : 20,
+                  ),
+                  child: Text(
+                    'Edit Profile Settings',
+                    style: TextStyle(
+                      fontSize: screenWidth < 360 ? 16 : 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+
+                // Message
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: 8,
+                    bottom: 20,
+                    left: screenWidth < 360 ? 16 : 20,
+                    right: screenWidth < 360 ? 16 : 20,
+                  ),
+                  child: Text(
+                    'You can update your personal information, contact details, and profile picture. All changes will be saved automatically.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: screenWidth < 360 ? 13 : 14,
+                      color: Colors.black54,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+
+                // Divider
+                Container(height: 0.5, color: Colors.grey[300]),
+
+                // Cancel button
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    child: Text(
+                      'Cancel',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.blue[600],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Divider
+                Container(height: 0.5, color: Colors.grey[300]),
+
+                // Continue button
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    // TODO: Navigate to edit profile settings page
+                    // Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfileView()));
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    child: Text(
+                      'Continue',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.armyPrimary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
@@ -554,10 +667,36 @@ class _ProfileViewState extends State<ProfileView> {
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
+        // Get screen width for responsive design
+        final screenWidth = MediaQuery.of(context).size.width;
+
+        // Calculate responsive margins and width
+        double horizontalMargin;
+        double dialogWidth;
+
+        if (screenWidth < 360) {
+          // Small phones
+          horizontalMargin = 12;
+          dialogWidth = screenWidth - 24;
+        } else if (screenWidth < 480) {
+          // Medium phones
+          horizontalMargin = 16;
+          dialogWidth = screenWidth - 32;
+        } else if (screenWidth < 600) {
+          // Large phones
+          horizontalMargin = 20;
+          dialogWidth = screenWidth - 40;
+        } else {
+          // Tablets and larger
+          horizontalMargin = 30;
+          dialogWidth = 600; // Max width for larger screens
+        }
+
         return Dialog(
           backgroundColor: Colors.transparent,
           child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 40),
+            width: dialogWidth,
+            margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
@@ -577,11 +716,13 @@ class _ProfileViewState extends State<ProfileView> {
 
                 // Title
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth < 360 ? 16 : 20,
+                  ),
                   child: Text(
                     'Logout',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: screenWidth < 360 ? 16 : 18,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
@@ -590,17 +731,17 @@ class _ProfileViewState extends State<ProfileView> {
 
                 // Message
                 Padding(
-                  padding: const EdgeInsets.only(
+                  padding: EdgeInsets.only(
                     top: 8,
                     bottom: 20,
-                    left: 20,
-                    right: 20,
+                    left: screenWidth < 360 ? 16 : 20,
+                    right: screenWidth < 360 ? 16 : 20,
                   ),
                   child: Text(
                     'Are you sure you want to logout? You will need to sign in again to access your account.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: screenWidth < 360 ? 13 : 14,
                       color: Colors.black54,
                       height: 1.3,
                     ),
