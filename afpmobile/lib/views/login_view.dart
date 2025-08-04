@@ -155,7 +155,7 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
                 child: child,
               );
             },
-            transitionDuration: const Duration(milliseconds: 800),
+            transitionDuration: const Duration(milliseconds: 200),
           ),
         );
       }
@@ -172,10 +172,13 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
   }
 
   Future<void> _animateExit() async {
-    // Reverse animations in order
+    // Reverse animations in order with faster duration
     await _buttonController.reverse();
+    await Future.delayed(const Duration(milliseconds: 50));
     await _formController.reverse();
+    await Future.delayed(const Duration(milliseconds: 50));
     await _titleController.reverse();
+    await Future.delayed(const Duration(milliseconds: 50));
     await _logoController.reverse();
   }
 
