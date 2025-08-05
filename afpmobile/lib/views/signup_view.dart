@@ -292,10 +292,6 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                   child: TextField(
                     controller: _suffixController,
                     decoration: InputDecoration(
-                      prefixIcon: Icon(
-                        Icons.text_fields,
-                        color: AppColors.armyPrimary,
-                      ),
                       labelText: 'Suffix',
                       hintText: 'Jr., Sr., III, etc.',
                       labelStyle: TextStyle(color: AppColors.armyPrimary),
