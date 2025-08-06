@@ -3,6 +3,7 @@ import '../utils/app_colors.dart';
 
 import 'signup_view.dart';
 import 'main_navigation_view.dart';
+import '../widgets/forgot_password_dialog.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({Key? key}) : super(key: key);
@@ -463,7 +464,13 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
                           ),
                           Spacer(),
                           TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder:
+                                    (context) => const ForgotPasswordDialog(),
+                              );
+                            },
                             child: Text(
                               'Forgot Password?',
                               style: TextStyle(
