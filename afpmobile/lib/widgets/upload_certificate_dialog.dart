@@ -28,12 +28,74 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    // More aggressive responsive sizing for smaller screens
+    final isSmallScreen =
+        screenHeight < 700; // iPhone SE and similar small screens
+    final isMediumScreen =
+        screenHeight >= 700 && screenHeight < 850; // iPhone 12/13/14
+
+    // Calculate responsive sizes with more aggressive scaling
+    final dialogPadding =
+        isSmallScreen
+            ? 12.0
+            : (isMediumScreen ? 14.0 : (isMobile ? 16.0 : 20.0));
+    final iconSize =
+        isSmallScreen
+            ? 20.0
+            : (isMediumScreen ? 22.0 : (isMobile ? 24.0 : 32.0));
+    final iconPadding =
+        isSmallScreen
+            ? 8.0
+            : (isMediumScreen ? 10.0 : (isMobile ? 12.0 : 16.0));
+    final titleFontSize =
+        isSmallScreen
+            ? 16.0
+            : (isMediumScreen ? 17.0 : (isMobile ? 18.0 : 20.0));
+    final instructionFontSize =
+        isSmallScreen
+            ? 11.0
+            : (isMediumScreen ? 12.0 : (isMobile ? 13.0 : 14.0));
+    final spacing =
+        isSmallScreen
+            ? 8.0
+            : (isMediumScreen ? 10.0 : (isMobile ? 12.0 : 16.0));
+    final smallSpacing =
+        isSmallScreen ? 4.0 : (isMediumScreen ? 6.0 : (isMobile ? 8.0 : 12.0));
+
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      insetPadding: EdgeInsets.symmetric(
+        horizontal:
+            isSmallScreen ? 8 : (isMediumScreen ? 12 : (isMobile ? 16 : 20)),
+        vertical:
+            isSmallScreen ? 8 : (isMediumScreen ? 12 : (isMobile ? 16 : 20)),
+      ),
       child: Container(
-        padding: const EdgeInsets.all(20),
-        constraints: const BoxConstraints(maxWidth: 500, minWidth: 320),
+        padding: EdgeInsets.all(dialogPadding),
+        constraints: BoxConstraints(
+          maxWidth:
+              isSmallScreen
+                  ? screenWidth * 0.98
+                  : (isMediumScreen
+                      ? screenWidth * 0.96
+                      : (isMobile ? screenWidth * 0.95 : 500)),
+          minWidth:
+              isSmallScreen
+                  ? screenWidth * 0.95
+                  : (isMediumScreen
+                      ? screenWidth * 0.92
+                      : (isMobile ? screenWidth * 0.9 : 320)),
+          maxHeight:
+              isSmallScreen
+                  ? screenHeight * 0.95
+                  : (isMediumScreen
+                      ? screenHeight * 0.92
+                      : (isMobile ? screenHeight * 0.9 : double.infinity)),
+        ),
         decoration: BoxDecoration(
           color: const Color(0xFFF0F8F0), // Light green background
           borderRadius: BorderRadius.circular(12),
@@ -43,99 +105,106 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
             width: 1,
           ),
         ),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Upload Icon
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50),
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  child: const Icon(
-                    Icons.upload_file,
-                    color: Colors.white,
-                    size: 32,
-                  ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Upload Icon
+              Container(
+                padding: EdgeInsets.all(iconPadding),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4CAF50),
+                  borderRadius: BorderRadius.circular(50),
                 ),
-                const SizedBox(height: 16),
-
-                // Main Title
-                const Text(
-                  'Upload Certificate',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                  textAlign: TextAlign.center,
+                child: Icon(
+                  Icons.upload_file,
+                  color: Colors.white,
+                  size: iconSize,
                 ),
-                const SizedBox(height: 8),
+              ),
+              SizedBox(height: smallSpacing),
 
-                // Instructions
-                const Text(
-                  'Upload your certificate and fill in the details below.',
-                  style: TextStyle(fontSize: 14, color: Colors.black87),
-                  textAlign: TextAlign.center,
+              // Main Title
+              Text(
+                'Upload Certificate',
+                style: TextStyle(
+                  fontSize: titleFontSize,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
                 ),
-                const SizedBox(height: 20),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 4),
 
-                // Certificate Details Form
-                _buildTextField(
-                  controller: _titleController,
-                  label: 'Certificate Title',
-                  hint: 'Enter certificate title',
-                  icon: Icons.description_outlined,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter certificate title';
-                    }
-                    return null;
-                  },
+              // Instructions
+              Text(
+                'Upload your certificate and fill in the details below.',
+                style: TextStyle(
+                  fontSize: instructionFontSize,
+                  color: Colors.black87,
                 ),
-                const SizedBox(height: 16),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: spacing),
 
-                _buildTextField(
-                  controller: _instructorController,
-                  label: 'Instructor',
-                  hint: 'Enter instructor name',
-                  icon: Icons.person_outline,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter instructor name';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
+              // Certificate Details Form
+              _buildTextField(
+                controller: _titleController,
+                label: 'Certificate Title',
+                hint: 'Enter certificate title',
+                icon: Icons.description_outlined,
+                isMobile: isMobile,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter certificate title';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: spacing),
 
-                _buildTextField(
-                  controller: _certificateNumberController,
-                  label: 'Certificate Number',
-                  hint: 'Enter certificate number',
-                  icon: Icons.numbers_outlined,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter certificate number';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
+              _buildTextField(
+                controller: _instructorController,
+                label: 'Instructor',
+                hint: 'Enter instructor name',
+                icon: Icons.person_outline,
+                isMobile: isMobile,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter instructor name';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: spacing),
 
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
+              _buildTextField(
+                controller: _certificateNumberController,
+                label: 'Certificate Number',
+                hint: 'Enter certificate number',
+                icon: Icons.numbers_outlined,
+                isMobile: isMobile,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter certificate number';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: spacing),
+
+              // Responsive layout for date and grade
+              isMobile
+                  ? Column(
+                    children: [
+                      _buildTextField(
                         controller: _dateController,
                         label: 'Date Issued',
                         hint: 'MM/DD/YYYY',
                         icon: Icons.calendar_today_outlined,
                         readOnly: true,
+                        isMobile: isMobile,
                         onTap: () => _selectDate(context),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -144,14 +213,13 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
                           return null;
                         },
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildTextField(
+                      SizedBox(height: spacing),
+                      _buildTextField(
                         controller: _gradeController,
                         label: 'Grade',
                         hint: 'Enter grade (e.g., A, B+, 95%)',
                         icon: Icons.grade_outlined,
+                        isMobile: isMobile,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter grade';
@@ -159,103 +227,173 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
                           return null;
                         },
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // File Upload Section
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: Column(
+                    ],
+                  )
+                  : Row(
                     children: [
-                      const Text(
-                        'Upload Certificate File',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                      Expanded(
+                        child: _buildTextField(
+                          controller: _dateController,
+                          label: 'Date Issued',
+                          hint: 'MM/DD/YYYY',
+                          icon: Icons.calendar_today_outlined,
+                          readOnly: true,
+                          isMobile: isMobile,
+                          onTap: () => _selectDate(context),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please select date';
+                            }
+                            return null;
+                          },
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'JPEG, PNG, and PDF formats up to 50 MB.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                          fontStyle: FontStyle.italic,
+                      SizedBox(width: spacing),
+                      Expanded(
+                        child: _buildTextField(
+                          controller: _gradeController,
+                          label: 'Grade',
+                          hint: 'Enter grade (e.g., A, B+, 95%)',
+                          icon: Icons.grade_outlined,
+                          isMobile: isMobile,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter grade';
+                            }
+                            return null;
+                          },
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Action Buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _ActionButton(
-                              icon: Icons.camera_alt_outlined,
-                              text: 'Take photo',
-                              onTap: widget.onTakePhoto,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _ActionButton(
-                              icon: Icons.upload_file_outlined,
-                              text: 'Browse Files',
-                              onTap: widget.onBrowseFiles,
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 24),
+              SizedBox(height: spacing),
 
-                // Submit Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _handleSubmit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4CAF50),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+              // File Upload Section
+              Container(
+                padding: EdgeInsets.all(
+                  isSmallScreen
+                      ? 8
+                      : (isMediumScreen ? 10 : (isMobile ? 12 : 16)),
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Upload Certificate File',
+                      style: TextStyle(
+                        fontSize:
+                            isSmallScreen
+                                ? 12
+                                : (isMediumScreen ? 13 : (isMobile ? 14 : 16)),
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
                       ),
-                      elevation: 0,
                     ),
-                    child:
-                        _isLoading
-                            ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
-                            )
-                            : const Text(
-                              'Submit Certificate',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                    SizedBox(
+                      height:
+                          isSmallScreen
+                              ? 4
+                              : (isMediumScreen ? 5 : (isMobile ? 6 : 8)),
+                    ),
+                    Text(
+                      'JPEG, PNG, and PDF formats up to 50 MB.',
+                      style: TextStyle(
+                        fontSize:
+                            isSmallScreen
+                                ? 9
+                                : (isMediumScreen ? 10 : (isMobile ? 11 : 12)),
+                        color: Colors.grey,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(
+                      height:
+                          isSmallScreen
+                              ? 8
+                              : (isMediumScreen ? 10 : (isMobile ? 12 : 16)),
+                    ),
+
+                    // Action Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _ActionButton(
+                            icon: Icons.camera_alt_outlined,
+                            text: 'Take photo',
+                            isMobile: isMobile,
+                            onTap: widget.onTakePhoto,
+                          ),
+                        ),
+                        SizedBox(
+                          width:
+                              isSmallScreen
+                                  ? 6
+                                  : (isMediumScreen ? 7 : (isMobile ? 8 : 12)),
+                        ),
+                        Expanded(
+                          child: _ActionButton(
+                            icon: Icons.upload_file_outlined,
+                            text: 'Browse Files',
+                            isMobile: isMobile,
+                            onTap: widget.onBrowseFiles,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: spacing),
+
+              // Submit Button
+              SizedBox(
+                width: double.infinity,
+                height:
+                    isSmallScreen
+                        ? 38
+                        : (isMediumScreen ? 40 : (isMobile ? 44 : 48)),
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _handleSubmit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4CAF50),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 0,
+                  ),
+                  child:
+                      _isLoading
+                          ? SizedBox(
+                            height: isMobile ? 18 : 20,
+                            width: isMobile ? 18 : 20,
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
                               ),
                             ),
-                  ),
+                          )
+                          : Text(
+                            'Submit Certificate',
+                            style: TextStyle(
+                              fontSize:
+                                  isSmallScreen
+                                      ? 13
+                                      : (isMediumScreen
+                                          ? 14
+                                          : (isMobile ? 15 : 16)),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -267,22 +405,55 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
     required String label,
     required String hint,
     required IconData icon,
+    required bool isMobile,
     String? Function(String?)? validator,
     bool readOnly = false,
     VoidCallback? onTap,
   }) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenHeight < 700;
+    final isMediumScreen = screenHeight >= 700 && screenHeight < 850;
+
+    final labelFontSize =
+        isSmallScreen
+            ? 11.0
+            : (isMediumScreen ? 12.0 : (isMobile ? 13.0 : 14.0));
+    final hintFontSize =
+        isSmallScreen
+            ? 11.0
+            : (isMediumScreen ? 12.0 : (isMobile ? 13.0 : 14.0));
+    final iconSize =
+        isSmallScreen
+            ? 16.0
+            : (isMediumScreen ? 17.0 : (isMobile ? 18.0 : 20.0));
+    final fieldPadding =
+        isSmallScreen ? 8.0 : (isMediumScreen ? 9.0 : (isMobile ? 10.0 : 12.0));
+    final contentPadding =
+        isSmallScreen
+            ? const EdgeInsets.symmetric(horizontal: 10, vertical: 8)
+            : (isMediumScreen
+                ? const EdgeInsets.symmetric(horizontal: 11, vertical: 9)
+                : (isMobile
+                    ? const EdgeInsets.symmetric(horizontal: 12, vertical: 10)
+                    : const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    )));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: labelFontSize,
             fontWeight: FontWeight.w600,
             color: Colors.grey.shade700,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(
+          height: isSmallScreen ? 4 : (isMediumScreen ? 5 : (isMobile ? 6 : 8)),
+        ),
         GestureDetector(
           onTap: onTap,
           child: TextFormField(
@@ -291,8 +462,15 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
             validator: validator,
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-              prefixIcon: Icon(icon, color: Colors.grey.shade500, size: 20),
+              hintStyle: TextStyle(
+                color: Colors.grey.shade400,
+                fontSize: hintFontSize,
+              ),
+              prefixIcon: Icon(
+                icon,
+                color: Colors.grey.shade500,
+                size: iconSize,
+              ),
               filled: true,
               fillColor: Colors.white,
               border: OutlineInputBorder(
@@ -314,10 +492,7 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(color: Colors.red.shade300, width: 1),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
+              contentPadding: contentPadding,
             ),
           ),
         ),
@@ -384,31 +559,67 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
 class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String text;
+  final bool isMobile;
   final VoidCallback? onTap;
 
-  const _ActionButton({required this.icon, required this.text, this.onTap});
+  const _ActionButton({
+    required this.icon,
+    required this.text,
+    required this.isMobile,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenHeight < 700;
+    final isMediumScreen = screenHeight >= 700 && screenHeight < 850;
+
+    final iconSize =
+        isSmallScreen
+            ? 14.0
+            : (isMediumScreen ? 15.0 : (isMobile ? 16.0 : 18.0));
+    final fontSize =
+        isSmallScreen
+            ? 10.0
+            : (isMediumScreen ? 11.0 : (isMobile ? 12.0 : 13.0));
+    final padding =
+        isSmallScreen
+            ? const EdgeInsets.symmetric(vertical: 6, horizontal: 8)
+            : (isMediumScreen
+                ? const EdgeInsets.symmetric(vertical: 7, horizontal: 9)
+                : (isMobile
+                    ? const EdgeInsets.symmetric(vertical: 8, horizontal: 10)
+                    : const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 12,
+                    )));
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        padding: padding,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.withOpacity(0.3), width: 1),
+          border: Border.all(
+            color: Colors.grey.withValues(alpha: 0.3),
+            width: 1,
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 18, color: Colors.black87),
-            const SizedBox(width: 6),
+            Icon(icon, size: iconSize, color: Colors.black87),
+            SizedBox(
+              width:
+                  isSmallScreen ? 3 : (isMediumScreen ? 4 : (isMobile ? 4 : 6)),
+            ),
             Flexible(
               child: Text(
                 text,
-                style: const TextStyle(
-                  fontSize: 13,
+                style: TextStyle(
+                  fontSize: fontSize,
                   fontWeight: FontWeight.w500,
                   color: Colors.black87,
                 ),
