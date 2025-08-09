@@ -3,7 +3,9 @@ import '../widgets/app_bar_widget.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../utils/app_colors.dart';
 import '../utils/responsive_utils.dart';
+import '../models/user_profile.dart';
 import 'login_view.dart';
+import 'edit_profile_view.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -13,6 +15,15 @@ class ProfileView extends StatefulWidget {
 }
 
 class _ProfileViewState extends State<ProfileView> {
+  late UserProfile _userProfile;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with sample data - in a real app, this would come from your data service
+    _userProfile = UserProfile.sampleProfile;
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -86,7 +97,7 @@ class _ProfileViewState extends State<ProfileView> {
                           ),
                           // Name
                           Text(
-                            'Juan Dela Cruz',
+                            _userProfile.name,
                             style: TextStyle(
                               fontSize: ResponsiveUtils.getResponsiveFontSize(
                                 context,
@@ -103,7 +114,7 @@ class _ProfileViewState extends State<ProfileView> {
                           ),
                           // Rank
                           Text(
-                            'Sergeant (SGT)',
+                            _userProfile.rank,
                             style: TextStyle(
                               fontSize: ResponsiveUtils.getResponsiveFontSize(
                                 context,
@@ -120,7 +131,7 @@ class _ProfileViewState extends State<ProfileView> {
                           ),
                           // ID
                           Text(
-                            'AFP - 001234',
+                            _userProfile.serviceId,
                             style: TextStyle(
                               fontSize: ResponsiveUtils.getResponsiveFontSize(
                                 context,
@@ -143,8 +154,8 @@ class _ProfileViewState extends State<ProfileView> {
                       _buildInfoCard(
                         context,
                         icon: Icons.shield,
-                        title: 'Special Forces Regiment',
-                        detail: 'Philippine Army',
+                        title: _userProfile.unit,
+                        detail: _userProfile.branch,
                       ),
                       SizedBox(
                         height: ResponsiveUtils.isMobile(context) ? 5 : 5,
@@ -153,7 +164,7 @@ class _ProfileViewState extends State<ProfileView> {
                         context,
                         icon: Icons.location_on,
                         title: 'Current Base',
-                        detail: 'Fort Bonifacio, Taguig',
+                        detail: _userProfile.currentBase,
                       ),
                       SizedBox(
                         height: ResponsiveUtils.isMobile(context) ? 12 : 12,
@@ -162,7 +173,7 @@ class _ProfileViewState extends State<ProfileView> {
                         context,
                         icon: Icons.email,
                         title: 'Email',
-                        detail: 'j.delacruz@afp.mil.ph',
+                        detail: _userProfile.email,
                       ),
                       SizedBox(
                         height: ResponsiveUtils.isMobile(context) ? 12 : 12,
@@ -171,7 +182,7 @@ class _ProfileViewState extends State<ProfileView> {
                         context,
                         icon: Icons.phone,
                         title: 'Phone',
-                        detail: '(+63) 912-345-6789',
+                        detail: _userProfile.phone,
                       ),
                       SizedBox(
                         height: ResponsiveUtils.isMobile(context) ? 12 : 12,
@@ -180,7 +191,7 @@ class _ProfileViewState extends State<ProfileView> {
                         context,
                         icon: Icons.calendar_today,
                         title: 'Date Enlisted',
-                        detail: 'February 15, 2020',
+                        detail: _userProfile.dateEnlisted,
                       ),
                     ],
                   ),
@@ -243,7 +254,7 @@ class _ProfileViewState extends State<ProfileView> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  '8',
+                                  '${_userProfile.completedPrograms}',
                                   style: TextStyle(
                                     fontSize:
                                         ResponsiveUtils.getResponsiveFontSize(
@@ -289,7 +300,7 @@ class _ProfileViewState extends State<ProfileView> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  '12',
+                                  '${_userProfile.certificatesEarned}',
                                   style: TextStyle(
                                     fontSize:
                                         ResponsiveUtils.getResponsiveFontSize(
@@ -635,10 +646,20 @@ class _ProfileViewState extends State<ProfileView> {
 
                 // Continue button
                 InkWell(
-                  onTap: () {
+                  onTap: () async {
                     Navigator.of(context).pop();
-                    // TODO: Navigate to edit profile settings page
-                    // Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfileView()));
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => EditProfileView(profile: _userProfile),
+                      ),
+                    );
+                    if (result != null && result is UserProfile) {
+                      setState(() {
+                        _userProfile = result;
+                      });
+                    }
                   },
                   child: Container(
                     width: double.infinity,
