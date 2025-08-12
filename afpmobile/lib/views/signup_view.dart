@@ -190,7 +190,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
               onSecondary: Colors.white,
               secondary: AppColors.armyPrimary.withOpacity(0.8),
             ),
-            dialogTheme: DialogTheme(
+            dialogTheme: DialogThemeData(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
