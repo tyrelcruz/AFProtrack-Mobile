@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconify_design/iconify_design.dart';
 import '../utils/app_colors.dart';
+import '../services/api_service.dart';
 
 import 'login_view.dart';
 
@@ -33,6 +34,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+  final TextEditingController _birthdayController = TextEditingController();
 
   // Form controllers for Step 2
   final TextEditingController _emailController = TextEditingController();
@@ -123,6 +125,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
     _serviceIdController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _birthdayController.dispose();
     _emailController.dispose();
     _contactNoController.dispose();
     _streetAddressController.dispose();
@@ -161,6 +164,90 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
       _stepTransitionController.forward();
       _formElementsController.reset();
       _formElementsController.forward();
+    }
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().subtract(
+        const Duration(days: 6570),
+      ), // 18 years ago
+      firstDate: DateTime.now().subtract(
+        const Duration(days: 36500),
+      ), // 100 years ago
+      lastDate: DateTime.now().subtract(
+        const Duration(days: 6570),
+      ), // 18 years ago
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.armyPrimary,
+              onPrimary: Colors.white,
+              onSurface: AppColors.armyPrimary,
+              surface: Colors.white,
+              onSecondary: Colors.white,
+              secondary: AppColors.armyPrimary.withOpacity(0.8),
+            ),
+            dialogTheme: DialogTheme(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              elevation: 20,
+              backgroundColor: Colors.white,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.armyPrimary,
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: child!,
+            ),
+          ),
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        // Format date in a more modern way
+        final months = [
+          'January',
+          'February',
+          'March',
+          'April',
+          'May',
+          'June',
+          'July',
+          'August',
+          'September',
+          'October',
+          'November',
+          'December',
+        ];
+        _birthdayController.text =
+            "${months[picked.month - 1]} ${picked.day}, ${picked.year}";
+      });
     }
   }
 
@@ -324,6 +411,86 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                 ),
               ),
             ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Birthday field with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: GestureDetector(
+              onTap: () => _selectDate(context),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.armyPrimary, width: 1),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        color: AppColors.armyPrimary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Date of Birth',
+                              style: TextStyle(
+                                color: AppColors.armyPrimary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _birthdayController.text.isEmpty
+                                  ? 'Select your birthday'
+                                  : _birthdayController.text,
+                              style: TextStyle(
+                                color:
+                                    _birthdayController.text.isEmpty
+                                        ? AppColors.armyPrimary.withOpacity(0.6)
+                                        : AppColors.armyPrimary,
+                                fontSize: 14,
+                                fontWeight:
+                                    _birthdayController.text.isEmpty
+                                        ? FontWeight.normal
+                                        : FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_drop_down,
+                        color: AppColors.armyPrimary,
+                        size: 24,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -883,33 +1050,200 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
       _isSubmitting = true;
     });
 
-    // Collect all form data
-    _formData = {
-      'fullName': _nameController.text,
-      'suffix': _suffixController.text,
-      'serviceId': _serviceIdController.text,
-      'password': _passwordController.text,
-      'email': _emailController.text,
-      'contactNo': _contactNoController.text,
-      'streetAddress': _streetAddressController.text,
-      'unit': _unitController.text,
-      'branchOfService': _branchController.text,
-      'division': _divisionController.text,
-    };
+    try {
+      // Parse the full name into first and last name
+      final fullName = _nameController.text.trim();
+      if (fullName.isEmpty) {
+        throw Exception('Full name is required');
+      }
 
-    // Simulate API call delay
-    await Future.delayed(const Duration(seconds: 2));
+      final nameParts = fullName.split(' ');
+      String firstName, lastName;
 
-    // TODO: Send to backend
-    print('Form data: $_formData');
+      if (nameParts.length == 1) {
+        // Only one name provided, use it as first name
+        firstName = nameParts[0];
+        lastName = '';
+      } else if (nameParts.length == 2) {
+        // Two names provided
+        firstName = nameParts[0];
+        lastName = nameParts[1];
+      } else {
+        // More than two names, first is first name, rest is last name
+        firstName = nameParts[0];
+        lastName = nameParts.sublist(1).join(' ');
+      }
 
-    // Reset loading state
-    setState(() {
-      _isSubmitting = false;
-    });
+      // Parse birthday string to Date
+      DateTime? dateOfBirth;
+      if (_birthdayController.text.isNotEmpty) {
+        final parts = _birthdayController.text.split('/');
+        if (parts.length == 3) {
+          final month = int.tryParse(parts[0]) ?? 1;
+          final day = int.tryParse(parts[1]) ?? 1;
+          final year = int.tryParse(parts[2]) ?? 1990;
+          dateOfBirth = DateTime(year, month, day);
+        }
+      }
 
-    // Show custom success popup
-    _showSuccessDialog();
+      // Format data according to backend model
+      final userData = {
+        'firstName': firstName,
+        'lastName': lastName,
+        'suffix': _suffixController.text.trim(),
+        'serviceId': _serviceIdController.text.trim().toUpperCase(),
+        'email': _emailController.text.trim().toLowerCase(),
+        'unit': _unitController.text.trim(),
+        'branchOfService': _branchController.text.trim(),
+        'division': _divisionController.text.trim(),
+        'address': _streetAddressController.text.trim(),
+        'contactNumber': _contactNoController.text.trim(),
+        'dateOfBirth': dateOfBirth?.toIso8601String(),
+        'password': _passwordController.text,
+        'accountType': 'mobile', // Since this is mobile app
+        'role': 'personnel', // Default role for new signups
+      };
+
+      // Validate required fields
+      if (firstName.isEmpty) {
+        throw Exception('First name is required');
+      }
+      if (lastName.isEmpty) {
+        throw Exception('Last name is required');
+      }
+      if (_serviceIdController.text.isEmpty) {
+        throw Exception('Service ID is required');
+      }
+      if (_emailController.text.isEmpty) {
+        throw Exception('Email is required');
+      }
+      if (_passwordController.text.length < 8) {
+        throw Exception('Password must be at least 8 characters long');
+      }
+      if (_passwordController.text != _confirmPasswordController.text) {
+        throw Exception('Passwords do not match');
+      }
+      if (dateOfBirth == null) {
+        throw Exception('Date of birth is required');
+      }
+
+      // Make API call to create pending account
+      final result = await ApiService.createPendingAccount(userData);
+
+      if (result['success']) {
+        // Show success dialog
+        _showSuccessDialog();
+      } else {
+        // Show error dialog
+        _showErrorDialog(result['message'] ?? 'Failed to create account');
+      }
+    } catch (e) {
+      // Show error dialog
+      _showErrorDialog(e.toString());
+    } finally {
+      // Reset loading state
+      setState(() {
+        _isSubmitting = false;
+      });
+    }
+  }
+
+  void _showErrorDialog(String errorMessage) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Error Icon
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.error_outline, color: Colors.red, size: 50),
+                ),
+                const SizedBox(height: 20),
+
+                // Error Title
+                const Text(
+                  'Account Creation Failed',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+
+                // Error Message
+                Text(
+                  errorMessage,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.grayText,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 30),
+
+                // Try Again Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close dialog
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 4,
+                      shadowColor: Colors.black.withOpacity(0.2),
+                    ),
+                    child: const Text(
+                      'Try Again',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _showSuccessDialog() {
@@ -969,7 +1303,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
 
                 // Success Message
                 const Text(
-                  'Welcome to AFProTrack! Your account has been created successfully. You can now log in with your credentials.',
+                  'Welcome to AFProTrack! Your account has been created successfully and is pending approval. You will be notified once your account is approved.',
                   style: TextStyle(
                     fontSize: 14,
                     color: AppColors.grayText,
@@ -1094,6 +1428,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                 _buildDetailSection('Personal Information', Icons.person, [
                   _buildDetailRow('Full Name', _nameController.text),
                   _buildDetailRow('Suffix', _suffixController.text),
+                  _buildDetailRow('Date of Birth', _birthdayController.text),
                   _buildDetailRow('Email Address', _emailController.text),
                 ]),
                 const SizedBox(height: 16),

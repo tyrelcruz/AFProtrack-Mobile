@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
+import '../services/api_service.dart';
 
 import 'signup_view.dart';
 import 'main_navigation_view.dart';
@@ -15,6 +16,10 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
   bool _rememberMe = false;
   bool _isLoading = false;
+
+  // Text controllers for login form
+  final TextEditingController _serviceIdController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   // Static flag to track if this is the initial app launch
   static bool _isInitialLaunch = true;
@@ -112,57 +117,78 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
     _titleController.dispose();
     _formController.dispose();
     _buttonController.dispose();
+    _serviceIdController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  // Simulated login function with animation
+  // Login function with backend integration
   Future<void> _handleLogin() async {
     if (_isLoading) return; // Prevent multiple calls
+
+    // Validate inputs
+    if (_serviceIdController.text.trim().isEmpty) {
+      _showErrorDialog('Service ID is required');
+      return;
+    }
+    if (_passwordController.text.trim().isEmpty) {
+      _showErrorDialog('Password is required');
+      return;
+    }
 
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // Simulate API call delay
-      await Future.delayed(Duration(seconds: 2));
+      // Call backend login API
+      final result = await ApiService.login(
+        _serviceIdController.text.trim(),
+        _passwordController.text.trim(),
+      );
 
-      // Animate exit before navigation
-      await _animateExit();
+      if (result['success']) {
+        // Login successful
+        // Animate exit before navigation
+        await _animateExit();
 
-      // Navigate to main screen
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder:
-                (context, animation, secondaryAnimation) =>
-                    const MainNavigationView(),
-            transitionsBuilder: (
-              context,
-              animation,
-              secondaryAnimation,
-              child,
-            ) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.0, -1.0),
-                  end: Offset.zero,
-                ).animate(
-                  CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeInOutCubic,
+        // Navigate to main screen
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            PageRouteBuilder(
+              pageBuilder:
+                  (context, animation, secondaryAnimation) =>
+                      const MainNavigationView(),
+              transitionsBuilder: (
+                context,
+                animation,
+                secondaryAnimation,
+                child,
+              ) {
+                return SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0.0, -1.0),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeInOutCubic,
+                    ),
                   ),
-                ),
-                child: child,
-              );
-            },
-            transitionDuration: const Duration(milliseconds: 200),
-          ),
-        );
+                  child: child,
+                );
+              },
+              transitionDuration: const Duration(milliseconds: 200),
+            ),
+          );
+        }
+      } else {
+        // Login failed
+        _showErrorDialog(result['message'] ?? 'Login failed');
       }
     } catch (e) {
-      // Handle error if needed
-      print('Login error: $e');
+      // Handle error
+      _showErrorDialog('Network error: ${e.toString()}');
     } finally {
       if (mounted) {
         setState(() {
@@ -170,6 +196,26 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
         });
       }
     }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Login Failed'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _animateExit() async {
@@ -359,6 +405,7 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
                           ],
                         ),
                         child: TextField(
+                          controller: _serviceIdController,
                           decoration: InputDecoration(
                             prefixIcon: Icon(
                               Icons.badge,
@@ -399,6 +446,7 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
                           ],
                         ),
                         child: TextField(
+                          controller: _passwordController,
                           obscureText: true,
                           decoration: InputDecoration(
                             prefixIcon: Icon(
