@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
+import '../utils/responsive_utils.dart';
 
 class ForgotPasswordDialog extends StatefulWidget {
   const ForgotPasswordDialog({Key? key}) : super(key: key);
@@ -107,11 +108,16 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
               ),
               elevation: 2,
             ),
-            child: const Text(
+            child: Text(
               'Close',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: ResponsiveUtils.getResponsiveFontSize(
+                  context,
+                  mobile: 14.0,
+                  tablet: 16.0,
+                  desktop: 18.0,
+                ),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -276,7 +282,12 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
                     'Cancel',
                     style: TextStyle(
                       color: Colors.grey[600],
-                      fontSize: isSmallScreen ? 14 : 16,
+                      fontSize: ResponsiveUtils.getResponsiveFontSize(
+                        context,
+                        mobile: 14.0,
+                        tablet: 16.0,
+                        desktop: 18.0,
+                      ),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -314,7 +325,12 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
                             'Send Reset Email',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: isSmallScreen ? 13 : 14,
+                              fontSize: ResponsiveUtils.getResponsiveFontSize(
+                                context,
+                                mobile: 13.0,
+                                tablet: 14.0,
+                                desktop: 16.0,
+                              ),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
