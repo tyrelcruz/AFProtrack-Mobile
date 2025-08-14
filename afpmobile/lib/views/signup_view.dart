@@ -930,7 +930,10 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
               ],
             ),
             child: DropdownButtonFormField<String>(
+              key: const ValueKey('branch_dropdown'),
               value: _selectedBranch,
+              hint: const Text('Select Branch'),
+              isExpanded: true,
               decoration: InputDecoration(
                 prefixIcon: Icon(Icons.security, color: AppColors.armyPrimary),
                 labelText: 'Branch of Service',
@@ -963,14 +966,11 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                   MilitaryData.getBranches().map((String branch) {
                     return DropdownMenuItem<String>(
                       value: branch,
-                      child: Container(
-                        width: double.infinity,
-                        child: Text(
-                          branch,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          style: TextStyle(fontSize: 14),
-                        ),
+                      child: Text(
+                        branch,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        style: const TextStyle(fontSize: 14),
                       ),
                     );
                   }).toList(),
@@ -1003,7 +1003,10 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
               ],
             ),
             child: DropdownButtonFormField<String>(
+              key: const ValueKey('division_dropdown'),
               value: _selectedDivision,
+              hint: const Text('Select Division'),
+              isExpanded: true,
               decoration: InputDecoration(
                 prefixIcon: Icon(
                   Icons.account_tree,
@@ -1036,26 +1039,25 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                 ),
               ),
               items:
-                  _selectedBranch != null
+                  _selectedBranch != null &&
+                          MilitaryData.getDivisions(_selectedBranch!).isNotEmpty
                       ? MilitaryData.getDivisions(_selectedBranch!).map((
                         String division,
                       ) {
                         return DropdownMenuItem<String>(
                           value: division,
-                          child: Container(
-                            width: double.infinity,
-                            child: Text(
-                              division,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                              style: TextStyle(fontSize: 14),
-                            ),
+                          child: Text(
+                            division,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: const TextStyle(fontSize: 14),
                           ),
                         );
                       }).toList()
                       : [],
               onChanged:
-                  _selectedBranch != null
+                  _selectedBranch != null &&
+                          MilitaryData.getDivisions(_selectedBranch!).isNotEmpty
                       ? (String? newValue) {
                         setState(() {
                           _selectedDivision = newValue;
@@ -1085,7 +1087,10 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
               ],
             ),
             child: DropdownButtonFormField<String>(
+              key: const ValueKey('unit_dropdown'),
               value: _selectedUnit,
+              hint: const Text('Select Unit'),
+              isExpanded: true,
               decoration: InputDecoration(
                 prefixIcon: Icon(Icons.group, color: AppColors.armyPrimary),
                 labelText: 'Unit',
@@ -1115,27 +1120,34 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                 ),
               ),
               items:
-                  (_selectedBranch != null && _selectedDivision != null)
+                  (_selectedBranch != null &&
+                          _selectedDivision != null &&
+                          MilitaryData.getUnits(
+                            _selectedBranch!,
+                            _selectedDivision!,
+                          ).isNotEmpty)
                       ? MilitaryData.getUnits(
                         _selectedBranch!,
                         _selectedDivision!,
                       ).map((String unit) {
                         return DropdownMenuItem<String>(
                           value: unit,
-                          child: Container(
-                            width: double.infinity,
-                            child: Text(
-                              unit,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 2,
-                              style: TextStyle(fontSize: 14),
-                            ),
+                          child: Text(
+                            unit,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
+                            style: const TextStyle(fontSize: 14),
                           ),
                         );
                       }).toList()
                       : [],
               onChanged:
-                  (_selectedBranch != null && _selectedDivision != null)
+                  (_selectedBranch != null &&
+                          _selectedDivision != null &&
+                          MilitaryData.getUnits(
+                            _selectedBranch!,
+                            _selectedDivision!,
+                          ).isNotEmpty)
                       ? (String? newValue) {
                         setState(() {
                           _selectedUnit = newValue;
@@ -1145,28 +1157,6 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
               // Customize dropdown button icon
               icon: Icon(Icons.arrow_drop_down, color: AppColors.armyPrimary),
               iconSize: 24,
-              // Ensure the selected value text doesn't overflow
-              selectedItemBuilder: (BuildContext context) {
-                return (_selectedBranch != null && _selectedDivision != null)
-                    ? MilitaryData.getUnits(
-                      _selectedBranch!,
-                      _selectedDivision!,
-                    ).map((String unit) {
-                      return Container(
-                        width: double.infinity,
-                        child: Text(
-                          unit,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.armyPrimary,
-                          ),
-                        ),
-                      );
-                    }).toList()
-                    : [];
-              },
             ),
           ),
         ),
