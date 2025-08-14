@@ -5,6 +5,93 @@ import '../services/api_service.dart';
 
 import 'login_view.dart';
 
+// Data structure for military branches and their divisions/units
+class MilitaryData {
+  static const Map<String, Map<String, List<String>>> branches = {
+    'Philippine Army (PA)': {
+      'Infantry Divisions': [
+        '1st Infantry Division (1ID)',
+        '2nd Infantry Division (2ID)',
+        '3rd Infantry Division (3ID)',
+        '4th Infantry Division (4ID)',
+        '5th Infantry Division (5ID)',
+        '6th Infantry Division (6ID)',
+        '7th Infantry Division (7ID)',
+        '8th Infantry Division (8ID)',
+        '9th Infantry Division (9ID)',
+        '10th Infantry Division (10ID)',
+        '11th Infantry Division (11ID)',
+      ],
+      'Specialized / Support Units': [
+        'Armor "Pambato" Division (Armor Div)',
+        'Special Forces Regiment (Airborne) (SFR-A)',
+        'Scout Ranger Regiment (SRR)',
+        'Army Aviation Regiment (AAR)',
+        'Civil-Military Operations Regiment (CMOR)',
+      ],
+    },
+    'Philippine Navy (PN)': {
+      'Naval Operating Forces': [
+        'Naval Forces Northern Luzon (NFNL)',
+        'Naval Forces Southern Luzon (NFSL)',
+        'Naval Forces Western Mindanao (NFWM)',
+        'Naval Forces Eastern Mindanao (NFEM)',
+        'Naval Forces West (NFW)',
+      ],
+      'Fleet Units': [
+        'Offshore Combat Force (OCF)',
+        'Littoral Combat Force (LCF)',
+        'Sealift Amphibious Force (SAF)',
+        'Naval Air Wing (NAW)',
+      ],
+      'Naval Special Operations': [
+        'Naval Special Operations Command (NAVSOCOM)',
+      ],
+      'Philippine Marine Corps': ['Marine Special Operations Group (MARSOG)'],
+    },
+    'Philippine Air Force (PAF)': {
+      'Air Wings': [
+        '5th Fighter Wing (5FW)',
+        '15th Strike Wing (15SW)',
+        '205th Tactical Helicopter Wing (205THW)',
+        '220th Airlift Wing (220AW)',
+      ],
+      'Operational Commands': [
+        'Air Defense Command (ADC)',
+        'Air Mobility Command (AMC)',
+        'Tactical Operations Wing - Northern Luzon (TOWNL)',
+        'Tactical Operations Wing - Southern Luzon (TOWSL)',
+        'Tactical Operations Wing - Central (TOWC)',
+        'Tactical Operations Wing - Western Mindanao (TOWWM)',
+        'Tactical Operations Wing - Eastern Mindanao (TOWEM)',
+      ],
+      'Support / Training': [
+        'Air Education, Training, and Doctrine Command (AETDC)',
+        'Air Logistics Command (ALC)',
+      ],
+    },
+  };
+
+  static List<String> getBranches() {
+    return branches.keys.toList();
+  }
+
+  static List<String> getDivisions(String branch) {
+    if (branches.containsKey(branch)) {
+      return branches[branch]!.keys.toList();
+    }
+    return [];
+  }
+
+  static List<String> getUnits(String branch, String division) {
+    if (branches.containsKey(branch) &&
+        branches[branch]!.containsKey(division)) {
+      return branches[branch]![division]!;
+    }
+    return [];
+  }
+}
+
 class SignupView extends StatefulWidget {
   const SignupView({Key? key}) : super(key: key);
 
@@ -41,9 +128,11 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
   final TextEditingController _contactNoController = TextEditingController();
   final TextEditingController _streetAddressController =
       TextEditingController();
-  final TextEditingController _unitController = TextEditingController();
-  final TextEditingController _branchController = TextEditingController();
-  final TextEditingController _divisionController = TextEditingController();
+
+  // Dropdown values
+  String? _selectedBranch;
+  String? _selectedDivision;
+  String? _selectedUnit;
 
   // Store form data
   Map<String, dynamic> _formData = {};
@@ -129,9 +218,6 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
     _emailController.dispose();
     _contactNoController.dispose();
     _streetAddressController.dispose();
-    _unitController.dispose();
-    _branchController.dispose();
-    _divisionController.dispose();
     super.dispose();
   }
 
@@ -830,7 +916,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
           ),
         ),
         const SizedBox(height: 16),
-        // Unit field with fade animation
+        // Branch of Service dropdown with fade animation
         FadeTransition(
           opacity: _formElementsAnimation,
           child: Container(
@@ -843,48 +929,8 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                 ),
               ],
             ),
-            child: TextField(
-              controller: _unitController,
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.group, color: AppColors.armyPrimary),
-                labelText: 'Unit',
-                labelStyle: TextStyle(color: AppColors.armyPrimary),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: AppColors.armyPrimary,
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: AppColors.armyPrimary,
-                    width: 2,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        // Branch of Service field with fade animation
-        FadeTransition(
-          opacity: _formElementsAnimation,
-          child: Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.10),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: TextField(
-              controller: _branchController,
+            child: DropdownButtonFormField<String>(
+              value: _selectedBranch,
               decoration: InputDecoration(
                 prefixIcon: Icon(Icons.security, color: AppColors.armyPrimary),
                 labelText: 'Branch of Service',
@@ -905,12 +951,45 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                     width: 2,
                   ),
                 ),
+                // Add right padding to prevent overflow with dropdown icon
+                contentPadding: EdgeInsets.only(
+                  left: 16,
+                  right: 40, // Extra space for dropdown icon
+                  top: 16,
+                  bottom: 16,
+                ),
               ),
+              items:
+                  MilitaryData.getBranches().map((String branch) {
+                    return DropdownMenuItem<String>(
+                      value: branch,
+                      child: Container(
+                        width: double.infinity,
+                        child: Text(
+                          branch,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedBranch = newValue;
+                  _selectedDivision =
+                      null; // Reset division when branch changes
+                  _selectedUnit = null; // Reset unit when branch changes
+                });
+              },
+              // Customize dropdown button icon
+              icon: Icon(Icons.arrow_drop_down, color: AppColors.armyPrimary),
+              iconSize: 24,
             ),
           ),
         ),
         const SizedBox(height: 16),
-        // Division field with fade animation
+        // Division dropdown with fade animation
         FadeTransition(
           opacity: _formElementsAnimation,
           child: Container(
@@ -923,8 +1002,8 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                 ),
               ],
             ),
-            child: TextField(
-              controller: _divisionController,
+            child: DropdownButtonFormField<String>(
+              value: _selectedDivision,
               decoration: InputDecoration(
                 prefixIcon: Icon(
                   Icons.account_tree,
@@ -948,7 +1027,146 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                     width: 2,
                   ),
                 ),
+                // Add right padding to prevent overflow with dropdown icon
+                contentPadding: EdgeInsets.only(
+                  left: 16,
+                  right: 40, // Extra space for dropdown icon
+                  top: 16,
+                  bottom: 16,
+                ),
               ),
+              items:
+                  _selectedBranch != null
+                      ? MilitaryData.getDivisions(_selectedBranch!).map((
+                        String division,
+                      ) {
+                        return DropdownMenuItem<String>(
+                          value: division,
+                          child: Container(
+                            width: double.infinity,
+                            child: Text(
+                              division,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              style: TextStyle(fontSize: 14),
+                            ),
+                          ),
+                        );
+                      }).toList()
+                      : [],
+              onChanged:
+                  _selectedBranch != null
+                      ? (String? newValue) {
+                        setState(() {
+                          _selectedDivision = newValue;
+                          _selectedUnit =
+                              null; // Reset unit when division changes
+                        });
+                      }
+                      : null,
+              // Customize dropdown button icon
+              icon: Icon(Icons.arrow_drop_down, color: AppColors.armyPrimary),
+              iconSize: 24,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Unit dropdown with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: DropdownButtonFormField<String>(
+              value: _selectedUnit,
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.group, color: AppColors.armyPrimary),
+                labelText: 'Unit',
+                labelStyle: TextStyle(color: AppColors.armyPrimary),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 2,
+                  ),
+                ),
+                // Add right padding to prevent overflow with dropdown icon
+                contentPadding: EdgeInsets.only(
+                  left: 16,
+                  right: 40, // Extra space for dropdown icon
+                  top: 16,
+                  bottom: 16,
+                ),
+              ),
+              items:
+                  (_selectedBranch != null && _selectedDivision != null)
+                      ? MilitaryData.getUnits(
+                        _selectedBranch!,
+                        _selectedDivision!,
+                      ).map((String unit) {
+                        return DropdownMenuItem<String>(
+                          value: unit,
+                          child: Container(
+                            width: double.infinity,
+                            child: Text(
+                              unit,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
+                              style: TextStyle(fontSize: 14),
+                            ),
+                          ),
+                        );
+                      }).toList()
+                      : [],
+              onChanged:
+                  (_selectedBranch != null && _selectedDivision != null)
+                      ? (String? newValue) {
+                        setState(() {
+                          _selectedUnit = newValue;
+                        });
+                      }
+                      : null,
+              // Customize dropdown button icon
+              icon: Icon(Icons.arrow_drop_down, color: AppColors.armyPrimary),
+              iconSize: 24,
+              // Ensure the selected value text doesn't overflow
+              selectedItemBuilder: (BuildContext context) {
+                return (_selectedBranch != null && _selectedDivision != null)
+                    ? MilitaryData.getUnits(
+                      _selectedBranch!,
+                      _selectedDivision!,
+                    ).map((String unit) {
+                      return Container(
+                        width: double.infinity,
+                        child: Text(
+                          unit,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.armyPrimary,
+                          ),
+                        ),
+                      );
+                    }).toList()
+                    : [];
+              },
             ),
           ),
         ),
@@ -1093,9 +1311,9 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
         'suffix': _suffixController.text.trim(),
         'serviceId': _serviceIdController.text.trim().toUpperCase(),
         'email': _emailController.text.trim().toLowerCase(),
-        'unit': _unitController.text.trim(),
-        'branchOfService': _branchController.text.trim(),
-        'division': _divisionController.text.trim(),
+        'unit': _selectedUnit ?? '',
+        'branchOfService': _selectedBranch ?? '',
+        'division': _selectedDivision ?? '',
         'address': _streetAddressController.text.trim(),
         'contactNumber': _contactNoController.text.trim(),
         'dateOfBirth': dateOfBirth?.toIso8601String(),
@@ -1440,9 +1658,15 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                     'Street Address',
                     _streetAddressController.text,
                   ),
-                  _buildDetailRow('Unit', _unitController.text),
-                  _buildDetailRow('Branch of Service', _branchController.text),
-                  _buildDetailRow('Division', _divisionController.text),
+                  _buildDetailRow('Unit', _selectedUnit ?? 'Not selected'),
+                  _buildDetailRow(
+                    'Branch of Service',
+                    _selectedBranch ?? 'Not selected',
+                  ),
+                  _buildDetailRow(
+                    'Division',
+                    _selectedDivision ?? 'Not selected',
+                  ),
                 ]),
               ],
             ),
