@@ -79,6 +79,7 @@ class _HomeViewState extends State<HomeView> {
               readinessLevel: 97,
               cardColor: Colors.white,
             ),
+            SizedBox(height: 12),
             StatsGrid(items: stats),
             CareerProgressionCard(
               currentRank: 'Sergeant (SGT)',

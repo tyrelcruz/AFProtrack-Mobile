@@ -107,132 +107,104 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
         ),
         child: Form(
           key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Upload Icon
-              Container(
-                padding: EdgeInsets.all(iconPadding),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50),
-                  borderRadius: BorderRadius.circular(50),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Upload Icon
+                Container(
+                  padding: EdgeInsets.all(iconPadding),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50),
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  child: Icon(
+                    Icons.upload_file,
+                    color: Colors.white,
+                    size: iconSize,
+                  ),
                 ),
-                child: Icon(
-                  Icons.upload_file,
-                  color: Colors.white,
-                  size: iconSize,
+                SizedBox(height: smallSpacing),
+
+                // Main Title
+                Text(
+                  'Upload Certificate',
+                  style: TextStyle(
+                    fontSize: titleFontSize,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              SizedBox(height: smallSpacing),
+                SizedBox(height: 4),
 
-              // Main Title
-              Text(
-                'Upload Certificate',
-                style: TextStyle(
-                  fontSize: titleFontSize,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                // Instructions
+                Text(
+                  'Upload your certificate and fill in the details below.',
+                  style: TextStyle(
+                    fontSize: instructionFontSize,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 4),
+                SizedBox(height: spacing),
 
-              // Instructions
-              Text(
-                'Upload your certificate and fill in the details below.',
-                style: TextStyle(
-                  fontSize: instructionFontSize,
-                  color: Colors.black87,
+                // Certificate Details Form
+                _buildTextField(
+                  controller: _titleController,
+                  label: 'Certificate Title',
+                  hint: 'Enter certificate title',
+                  icon: Icons.description_outlined,
+                  isMobile: isMobile,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter certificate title';
+                    }
+                    return null;
+                  },
                 ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: spacing),
+                SizedBox(height: spacing),
 
-              // Certificate Details Form
-              _buildTextField(
-                controller: _titleController,
-                label: 'Certificate Title',
-                hint: 'Enter certificate title',
-                icon: Icons.description_outlined,
-                isMobile: isMobile,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter certificate title';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: spacing),
+                _buildTextField(
+                  controller: _instructorController,
+                  label: 'Instructor',
+                  hint: 'Enter instructor name',
+                  icon: Icons.person_outline,
+                  isMobile: isMobile,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter instructor name';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: spacing),
 
-              _buildTextField(
-                controller: _instructorController,
-                label: 'Instructor',
-                hint: 'Enter instructor name',
-                icon: Icons.person_outline,
-                isMobile: isMobile,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter instructor name';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: spacing),
+                _buildTextField(
+                  controller: _certificateNumberController,
+                  label: 'Certificate Number',
+                  hint: 'Enter certificate number',
+                  icon: Icons.numbers_outlined,
+                  isMobile: isMobile,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter certificate number';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: spacing),
 
-              _buildTextField(
-                controller: _certificateNumberController,
-                label: 'Certificate Number',
-                hint: 'Enter certificate number',
-                icon: Icons.numbers_outlined,
-                isMobile: isMobile,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter certificate number';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: spacing),
-
-              // Responsive layout for date and grade
-              isMobile
-                  ? Column(
-                    children: [
-                      _buildTextField(
-                        controller: _dateController,
-                        label: 'Date Issued',
-                        hint: 'MM/DD/YYYY',
-                        icon: Icons.calendar_today_outlined,
-                        readOnly: true,
-                        isMobile: isMobile,
-                        onTap: () => _selectDate(context),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select date';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: spacing),
-                      _buildTextField(
-                        controller: _gradeController,
-                        label: 'Grade',
-                        hint: 'Enter grade (e.g., A, B+, 95%)',
-                        icon: Icons.grade_outlined,
-                        isMobile: isMobile,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter grade';
-                          }
-                          return null;
-                        },
-                      ),
-                    ],
-                  )
-                  : Row(
-                    children: [
-                      Expanded(
-                        child: _buildTextField(
+                // Responsive layout for date and grade
+                isMobile
+                    ? Column(
+                      children: [
+                        _buildTextField(
                           controller: _dateController,
                           label: 'Date Issued',
                           hint: 'MM/DD/YYYY',
@@ -247,10 +219,8 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
                             return null;
                           },
                         ),
-                      ),
-                      SizedBox(width: spacing),
-                      Expanded(
-                        child: _buildTextField(
+                        SizedBox(height: spacing),
+                        _buildTextField(
                           controller: _gradeController,
                           label: 'Grade',
                           hint: 'Enter grade (e.g., A, B+, 95%)',
@@ -263,137 +233,180 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
                             return null;
                           },
                         ),
-                      ),
-                    ],
-                  ),
-              SizedBox(height: spacing),
-
-              // File Upload Section
-              Container(
-                padding: EdgeInsets.all(
-                  isSmallScreen
-                      ? 8
-                      : (isMediumScreen ? 10 : (isMobile ? 12 : 16)),
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Upload Certificate File',
-                      style: TextStyle(
-                        fontSize:
-                            isSmallScreen
-                                ? 12
-                                : (isMediumScreen ? 13 : (isMobile ? 14 : 16)),
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    SizedBox(
-                      height:
-                          isSmallScreen
-                              ? 4
-                              : (isMediumScreen ? 5 : (isMobile ? 6 : 8)),
-                    ),
-                    Text(
-                      'JPEG, PNG, and PDF formats up to 50 MB.',
-                      style: TextStyle(
-                        fontSize:
-                            isSmallScreen
-                                ? 9
-                                : (isMediumScreen ? 10 : (isMobile ? 11 : 12)),
-                        color: Colors.grey,
-                        fontStyle: FontStyle.italic,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(
-                      height:
-                          isSmallScreen
-                              ? 8
-                              : (isMediumScreen ? 10 : (isMobile ? 12 : 16)),
-                    ),
-
-                    // Action Buttons
-                    Row(
+                      ],
+                    )
+                    : Row(
                       children: [
                         Expanded(
-                          child: _ActionButton(
-                            icon: Icons.camera_alt_outlined,
-                            text: 'Take photo',
+                          child: _buildTextField(
+                            controller: _dateController,
+                            label: 'Date Issued',
+                            hint: 'MM/DD/YYYY',
+                            icon: Icons.calendar_today_outlined,
+                            readOnly: true,
                             isMobile: isMobile,
-                            onTap: widget.onTakePhoto,
+                            onTap: () => _selectDate(context),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please select date';
+                              }
+                              return null;
+                            },
                           ),
                         ),
-                        SizedBox(
-                          width:
-                              isSmallScreen
-                                  ? 6
-                                  : (isMediumScreen ? 7 : (isMobile ? 8 : 12)),
-                        ),
+                        SizedBox(width: spacing),
                         Expanded(
-                          child: _ActionButton(
-                            icon: Icons.upload_file_outlined,
-                            text: 'Browse Files',
+                          child: _buildTextField(
+                            controller: _gradeController,
+                            label: 'Grade',
+                            hint: 'Enter grade (e.g., A, B+, 95%)',
+                            icon: Icons.grade_outlined,
                             isMobile: isMobile,
-                            onTap: widget.onBrowseFiles,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter grade';
+                              }
+                              return null;
+                            },
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              SizedBox(height: spacing),
+                SizedBox(height: spacing),
 
-              // Submit Button
-              SizedBox(
-                width: double.infinity,
-                height:
+                // File Upload Section
+                Container(
+                  padding: EdgeInsets.all(
                     isSmallScreen
-                        ? 38
-                        : (isMediumScreen ? 40 : (isMobile ? 44 : 48)),
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _handleSubmit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CAF50),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 0,
+                        ? 8
+                        : (isMediumScreen ? 10 : (isMobile ? 12 : 16)),
                   ),
-                  child:
-                      _isLoading
-                          ? SizedBox(
-                            height: isMobile ? 18 : 20,
-                            width: isMobile ? 18 : 20,
-                            child: const CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                          : Text(
-                            'Submit Certificate',
-                            style: TextStyle(
-                              fontSize:
-                                  isSmallScreen
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Upload Certificate File',
+                        style: TextStyle(
+                          fontSize:
+                              isSmallScreen
+                                  ? 12
+                                  : (isMediumScreen
                                       ? 13
-                                      : (isMediumScreen
-                                          ? 14
-                                          : (isMobile ? 15 : 16)),
-                              fontWeight: FontWeight.w600,
+                                      : (isMobile ? 14 : 16)),
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      SizedBox(
+                        height:
+                            isSmallScreen
+                                ? 4
+                                : (isMediumScreen ? 5 : (isMobile ? 6 : 8)),
+                      ),
+                      Text(
+                        'JPEG, PNG, and PDF formats up to 50 MB.',
+                        style: TextStyle(
+                          fontSize:
+                              isSmallScreen
+                                  ? 9
+                                  : (isMediumScreen
+                                      ? 10
+                                      : (isMobile ? 11 : 12)),
+                          color: Colors.grey,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(
+                        height:
+                            isSmallScreen
+                                ? 8
+                                : (isMediumScreen ? 10 : (isMobile ? 12 : 16)),
+                      ),
+
+                      // Action Buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _ActionButton(
+                              icon: Icons.camera_alt_outlined,
+                              text: 'Take photo',
+                              isMobile: isMobile,
+                              onTap: widget.onTakePhoto,
                             ),
                           ),
+                          SizedBox(
+                            width:
+                                isSmallScreen
+                                    ? 6
+                                    : (isMediumScreen
+                                        ? 7
+                                        : (isMobile ? 8 : 12)),
+                          ),
+                          Expanded(
+                            child: _ActionButton(
+                              icon: Icons.upload_file_outlined,
+                              text: 'Browse Files',
+                              isMobile: isMobile,
+                              onTap: widget.onBrowseFiles,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                SizedBox(height: spacing),
+
+                // Submit Button
+                SizedBox(
+                  width: double.infinity,
+                  height:
+                      isSmallScreen
+                          ? 38
+                          : (isMediumScreen ? 40 : (isMobile ? 44 : 48)),
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _handleSubmit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4CAF50),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                    child:
+                        _isLoading
+                            ? SizedBox(
+                              height: isMobile ? 18 : 20,
+                              width: isMobile ? 18 : 20,
+                              child: const CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                            : Text(
+                              'Submit Certificate',
+                              style: TextStyle(
+                                fontSize:
+                                    isSmallScreen
+                                        ? 13
+                                        : (isMediumScreen
+                                            ? 14
+                                            : (isMobile ? 15 : 16)),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -426,8 +439,6 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
         isSmallScreen
             ? 16.0
             : (isMediumScreen ? 17.0 : (isMobile ? 18.0 : 20.0));
-    final fieldPadding =
-        isSmallScreen ? 8.0 : (isMediumScreen ? 9.0 : (isMobile ? 10.0 : 12.0));
     final contentPadding =
         isSmallScreen
             ? const EdgeInsets.symmetric(horizontal: 10, vertical: 8)
@@ -440,63 +451,50 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
                       vertical: 12,
                     )));
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
+    return GestureDetector(
+      onTap: onTap,
+      child: TextFormField(
+        controller: controller,
+        readOnly: readOnly,
+        validator: validator,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(
             fontSize: labelFontSize,
             fontWeight: FontWeight.w600,
-            color: Colors.grey.shade700,
+            color: const Color(0xFF4CAF50),
           ),
-        ),
-        SizedBox(
-          height: isSmallScreen ? 4 : (isMediumScreen ? 5 : (isMobile ? 6 : 8)),
-        ),
-        GestureDetector(
-          onTap: onTap,
-          child: TextFormField(
-            controller: controller,
-            readOnly: readOnly,
-            validator: validator,
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: TextStyle(
-                color: Colors.grey.shade400,
-                fontSize: hintFontSize,
-              ),
-              prefixIcon: Icon(
-                icon,
-                color: Colors.grey.shade500,
-                size: iconSize,
-              ),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                  color: Color(0xFF4CAF50),
-                  width: 2,
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.red.shade300, width: 1),
-              ),
-              contentPadding: contentPadding,
-            ),
+          hintText: hint,
+          hintStyle: TextStyle(
+            color: Colors.grey.shade500,
+            fontSize: hintFontSize,
           ),
+          prefixIcon: Icon(
+            icon,
+            color: const Color(0xFF4CAF50),
+            size: iconSize,
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.red.shade300, width: 1),
+          ),
+          contentPadding: contentPadding,
         ),
-      ],
+      ),
     );
   }
 

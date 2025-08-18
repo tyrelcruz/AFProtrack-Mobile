@@ -64,6 +64,7 @@ class StatsGrid extends StatelessWidget {
     );
     final iconPadding = isMobile ? 5.0 : (isTablet ? 6.0 : 7.0);
     final spacing = isMobile ? 8.0 : (isTablet ? 10.0 : 12.0);
+    final iconLeftInset = isMobile ? 6.0 : (isTablet ? 8.0 : 10.0);
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: width * 0.04),
@@ -89,6 +90,7 @@ class StatsGrid extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
+                      SizedBox(width: iconLeftInset),
                       Container(
                         decoration: BoxDecoration(
                           color: item.color.withOpacity(0.1),

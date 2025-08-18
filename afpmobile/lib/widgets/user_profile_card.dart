@@ -66,84 +66,204 @@ class UserProfileCard extends StatelessWidget {
       desktop: 24.0,
     );
 
-    return Card(
-      margin: EdgeInsets.symmetric(
-        vertical: 12,
-        horizontal:
-            ResponsiveUtils.isMobile(context) ? width * 0.04 : width * 0.02,
-      ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      color: cardColor,
-      child: Padding(
-        padding: EdgeInsets.all(cardPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              name,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: nameFontSize,
-              ),
-            ),
-            SizedBox(height: 2),
-            Text(
-              '$rank - $unit',
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: rankFontSize,
-              ),
-            ),
-            SizedBox(height: 2),
-            Text(
-              'Service ID: $serviceId',
-              style: TextStyle(
-                fontStyle: FontStyle.italic,
-                color: Colors.grey[600],
-                fontSize: serviceIdFontSize,
-              ),
-            ),
-            SizedBox(height: 14),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Column(
+      children: [
+        // User Information Header
+        Card(
+          margin: EdgeInsets.symmetric(
+            vertical: 12,
+            horizontal:
+                ResponsiveUtils.isMobile(context) ? width * 0.04 : width * 0.02,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 2,
+          color: cardColor,
+          child: Padding(
+            padding: EdgeInsets.all(cardPadding),
+            child: Row(
               children: [
-                Column(
-                  children: [
-                    Text(
-                      '$trainingProgress%',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: progressFontSize,
-                      ),
-                    ),
-                    Text(
-                      'Training Progress',
-                      style: TextStyle(fontSize: labelFontSize),
-                    ),
-                  ],
+                // Profile Picture
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.person, size: 30, color: Colors.grey[600]),
                 ),
-                Container(width: 1, height: 32, color: Colors.grey[300]),
-                Column(
-                  children: [
-                    Text(
-                      '$readinessLevel%',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: progressFontSize,
+                SizedBox(width: 16),
+                // User Details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: nameFontSize,
+                          color: Colors.black,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Readiness Level',
-                      style: TextStyle(fontSize: labelFontSize),
-                    ),
-                  ],
+                      SizedBox(height: 4),
+                      Text(
+                        rank,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: rankFontSize,
+                          color: AppColors.armyPrimary,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        unit,
+                        style: TextStyle(
+                          fontSize: serviceIdFontSize,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        serviceId,
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey[500],
+                          fontSize: serviceIdFontSize - 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Status Badge
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.green[200]!),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        'Active',
+                        style: TextStyle(
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ],
+          ),
         ),
-      ),
+
+        // Progress Tracking Section
+        Card(
+          margin: EdgeInsets.symmetric(
+            horizontal:
+                ResponsiveUtils.isMobile(context) ? width * 0.04 : width * 0.02,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 2,
+          color: cardColor,
+          child: Padding(
+            padding: EdgeInsets.all(cardPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Training Progress
+                Row(
+                  children: [
+                    Icon(Icons.school, color: AppColors.armyPrimary, size: 20),
+                    SizedBox(width: 12),
+                    Text(
+                      'Training Progress',
+                      style: TextStyle(
+                        fontSize: labelFontSize,
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Spacer(),
+                    Text(
+                      '$trainingProgress%',
+                      style: TextStyle(
+                        fontSize: labelFontSize,
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                LinearProgressIndicator(
+                  value: trainingProgress / 100,
+                  minHeight: 8,
+                  backgroundColor: Colors.grey[200],
+                  color: AppColors.armyPrimary,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                SizedBox(height: 16),
+
+                // Combat Readiness
+                Row(
+                  children: [
+                    Icon(
+                      Icons.fitness_center,
+                      color: AppColors.armyPrimary,
+                      size: 20,
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      'Combat Readiness',
+                      style: TextStyle(
+                        fontSize: labelFontSize,
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Spacer(),
+                    Text(
+                      '$readinessLevel%',
+                      style: TextStyle(
+                        fontSize: labelFontSize,
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                LinearProgressIndicator(
+                  value: readinessLevel / 100,
+                  minHeight: 8,
+                  backgroundColor: Colors.grey[200],
+                  color: AppColors.armyPrimary,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
