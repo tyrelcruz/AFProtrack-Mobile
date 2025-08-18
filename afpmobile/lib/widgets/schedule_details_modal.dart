@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 
-class ScheduleDetailsModal extends StatelessWidget {
+class ScheduleDetailsModal extends StatefulWidget {
   final String title;
   final String dateTimeRange;
   final String badge;
@@ -20,8 +20,17 @@ class ScheduleDetailsModal extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<ScheduleDetailsModal> createState() => _ScheduleDetailsModalState();
+}
+
+class _ScheduleDetailsModalState extends State<ScheduleDetailsModal> {
+  bool _isCheckedIn = false;
+  String? _checkInTimestamp;
+  bool _isLoading = false;
+
+  @override
   Widget build(BuildContext context) {
-    final bool canCheckIn = !trainingComplete;
+    final bool canCheckIn = !widget.trainingComplete && !_isCheckedIn;
 
     return Dialog(
       backgroundColor: Colors.white,
@@ -74,7 +83,7 @@ class ScheduleDetailsModal extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              dateTimeRange.isEmpty ? 'Completed' : dateTimeRange,
+              widget.dateTimeRange.isEmpty ? 'Completed' : widget.dateTimeRange,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.left,
@@ -87,7 +96,7 @@ class ScheduleDetailsModal extends StatelessWidget {
             const SizedBox(height: 20),
 
             Text(
-              title,
+              widget.title,
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
@@ -95,10 +104,10 @@ class ScheduleDetailsModal extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 1),
-            _DetailRow(label: 'Instructor', value: instructor),
+            _DetailRow(label: 'Instructor', value: widget.instructor),
             const SizedBox(height: 1),
-            _DetailRow(label: 'Location', value: location),
-            if (trainingComplete) ...[
+            _DetailRow(label: 'Location', value: widget.location),
+            if (widget.trainingComplete) ...[
               const SizedBox(height: 16),
               const Text(
                 'Training Complete',
@@ -111,48 +120,131 @@ class ScheduleDetailsModal extends StatelessWidget {
             ],
             const SizedBox(height: 20),
 
+            // Check-in status display
+            if (_isCheckedIn) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E8),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFF4CAF50), width: 1),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.check_circle,
+                      color: Color(0xFF4CAF50),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Checked In',
+                            style: TextStyle(
+                              color: Color(0xFF4CAF50),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          if (_checkInTimestamp != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              'Time: $_checkInTimestamp',
+                              style: const TextStyle(
+                                color: Color(0xFF4CAF50),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             SizedBox(
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed:
-                    canCheckIn
-                        ? () {
-                          Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Checked in successfully'),
-                            ),
-                          );
-                        }
-                        : null,
+                onPressed: canCheckIn && !_isLoading ? _handleCheckIn : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor:
-                      canCheckIn
-                          ? AppColors.trainingButtonPrimary
-                          : AppColors.trainingButtonDisabled,
+                      _isCheckedIn
+                          ? AppColors.trainingButtonDisabled
+                          : (canCheckIn
+                              ? AppColors.trainingButtonPrimary
+                              : AppColors.trainingButtonDisabled),
                   foregroundColor:
-                      canCheckIn
-                          ? AppColors.white
-                          : AppColors.trainingButtonDisabledText,
+                      _isCheckedIn
+                          ? AppColors.trainingButtonDisabledText
+                          : (canCheckIn
+                              ? AppColors.white
+                              : AppColors.trainingButtonDisabledText),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text(
-                  canCheckIn ? 'Check In' : 'Check In Unavailable',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
+                child:
+                    _isLoading
+                        ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                        : Text(
+                          _isCheckedIn
+                              ? 'Already Checked In'
+                              : (canCheckIn
+                                  ? 'Check In'
+                                  : 'Check In Unavailable'),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  void _handleCheckIn() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Simulate API call delay
+    await Future.delayed(const Duration(seconds: 1));
+
+    // Get current timestamp
+    final now = DateTime.now();
+    final hour12 =
+        now.hour == 0 ? 12 : (now.hour > 12 ? now.hour - 12 : now.hour);
+    final ampm = now.hour >= 12 ? 'PM' : 'AM';
+    final timestamp =
+        '${hour12.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} $ampm';
+
+    setState(() {
+      _isCheckedIn = true;
+      _checkInTimestamp = timestamp;
+      _isLoading = false;
+    });
+
+    // Show success message
   }
 }
 
