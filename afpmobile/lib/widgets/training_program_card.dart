@@ -39,7 +39,15 @@ class TrainingProgramCard extends StatelessWidget {
                           color: Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 12),
+                      Text(
+                        program.venue,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w400,
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
                       Text(
                         'Duration: ${program.duration}',
                         style: TextStyle(fontSize: 14, color: Colors.grey[600]),

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'login_view.dart';
+import 'main_navigation_view.dart';
 import 'dart:async';
+
+// Toggle this flag to bypass login temporarily without removing implementation
+const bool kBypassLogin = true;
 
 class SplashView extends StatefulWidget {
   const SplashView({Key? key}) : super(key: key);
@@ -14,9 +18,11 @@ class _SplashViewState extends State<SplashView> {
   void initState() {
     super.initState();
     Timer(const Duration(seconds: 2), () {
+      final Widget next =
+          kBypassLogin ? const MainNavigationView() : const LoginView();
       Navigator.of(
         context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginView()));
+      ).pushReplacement(MaterialPageRoute(builder: (_) => next));
     });
   }
 

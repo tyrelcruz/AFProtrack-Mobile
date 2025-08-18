@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../models/training_program.dart';
 import '../utils/app_colors.dart';
 
@@ -17,7 +16,7 @@ class TrainingDataService {
         isDisabled: false,
         batch: 'LDC-2025-A',
         instructor: 'Lt. Garcia',
-        laboratory: 'Conference Room - A',
+        venue: 'Conference Room - A',
         participants: '15/25',
         enrollmentDate: 'July 26, 2025',
         isEnrollmentActive: true,
@@ -34,7 +33,7 @@ class TrainingDataService {
         isDisabled: false,
         batch: 'TFE-2025-B',
         instructor: 'Col. Santos',
-        laboratory: 'Training Ground Alpha',
+        venue: 'Training Ground Alpha',
         participants: '8/20',
         enrollmentDate: 'July 27, 2025',
         isEnrollmentActive: true,
@@ -51,7 +50,7 @@ class TrainingDataService {
         isDisabled: true,
         batch: 'CQC-2025-C',
         instructor: 'Sgt. Sanchez',
-        laboratory: 'CQB Area - 1',
+        venue: 'CQB Area - 1',
         participants: '12/15',
         enrollmentDate: 'June 15, 2025',
         isEnrollmentActive: false,
@@ -68,7 +67,7 @@ class TrainingDataService {
         isDisabled: false,
         batch: 'LDC-2025-A',
         instructor: 'Sgt. Ramirez',
-        laboratory: 'Laboratory - A',
+        venue: 'Laboratory - A',
         participants: '0/40',
         enrollmentDate: 'July 30, 2025',
         isEnrollmentActive: false,

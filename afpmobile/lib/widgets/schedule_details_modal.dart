@@ -1,49 +1,69 @@
 import 'package:flutter/material.dart';
-import '../models/training_program.dart';
 import '../utils/app_colors.dart';
 
-class TrainingDetailsModal extends StatelessWidget {
-  final TrainingProgram program;
+class ScheduleDetailsModal extends StatelessWidget {
+  final String title;
+  final String dateTimeRange;
+  final String badge;
+  final String instructor;
+  final String location;
+  final bool trainingComplete;
 
-  const TrainingDetailsModal({Key? key, required this.program})
-    : super(key: key);
+  const ScheduleDetailsModal({
+    Key? key,
+    required this.title,
+    required this.dateTimeRange,
+    required this.badge,
+    required this.instructor,
+    required this.location,
+    required this.trainingComplete,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final bool canCheckIn = !trainingComplete;
+
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
+      child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with badge, duration, and close button
             Row(
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                    horizontal: 10,
+                    vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.trainingUpcomingBg,
-                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: Colors.grey[300]!),
                   ),
-                  child: Text(
-                    program.status,
-                    style: TextStyle(
-                      color: AppColors.trainingUpcomingText,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.event_available,
+                        size: 16,
+                        color: Color(0xFF3E503A),
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        'Attendance',
+                        style: TextStyle(
+                          color: Color(0xFF3E503A),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  'Duration: ${program.duration}',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
                 const Spacer(),
                 GestureDetector(
@@ -52,74 +72,67 @@ class TrainingDetailsModal extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
-
-            // Title
+            const SizedBox(height: 12),
             Text(
-              program.title,
+              dateTimeRange.isEmpty ? 'Completed' : dateTimeRange,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.left,
               style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 22,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Details
-            _DetailRow(label: 'Batch', value: program.batch),
-            const SizedBox(height: 12),
-            _DetailRow(label: 'Instructor', value: program.instructor),
-            const SizedBox(height: 12),
-            _DetailRow(label: 'Venue', value: program.venue),
-            const SizedBox(height: 24),
-
-            // Participants
-            Text(
-              'Participants: ${program.participants}',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 12),
-
-            // Progress bar
-            LinearProgressIndicator(
-              value: _getProgressValue(program.participants),
-              minHeight: 10,
-              backgroundColor: Colors.grey[200],
-              color: Colors.grey[400],
-              borderRadius: BorderRadius.circular(5),
-            ),
-            const SizedBox(height: 20),
-
-            // Enrollment date
-            Text(
-              'Enrollment Starts on ${program.enrollmentDate}',
-              style: const TextStyle(
-                fontSize: 14,
                 color: Color(0xFF0B6000),
+                fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // Enroll button
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 1),
+            _DetailRow(label: 'Instructor', value: instructor),
+            const SizedBox(height: 1),
+            _DetailRow(label: 'Location', value: location),
+            if (trainingComplete) ...[
+              const SizedBox(height: 16),
+              const Text(
+                'Training Complete',
+                style: TextStyle(
+                  color: Color(0xFF3E503A),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+            const SizedBox(height: 20),
+
             SizedBox(
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
                 onPressed:
-                    program.isEnrollmentActive
+                    canCheckIn
                         ? () {
-                          // TODO: Implement enrollment logic
                           Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Checked in successfully'),
+                            ),
+                          );
                         }
                         : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor:
-                      program.isEnrollmentActive
+                      canCheckIn
                           ? AppColors.trainingButtonPrimary
                           : AppColors.trainingButtonDisabled,
                   foregroundColor:
-                      program.isEnrollmentActive
+                      canCheckIn
                           ? AppColors.white
                           : AppColors.trainingButtonDisabledText,
                   elevation: 0,
@@ -128,7 +141,7 @@ class TrainingDetailsModal extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'Enroll',
+                  canCheckIn ? 'Check In' : 'Check In Unavailable',
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
@@ -140,16 +153,6 @@ class TrainingDetailsModal extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  double _getProgressValue(String participants) {
-    final parts = participants.split('/');
-    if (parts.length == 2) {
-      final current = int.tryParse(parts[0]) ?? 0;
-      final total = int.tryParse(parts[1]) ?? 1;
-      return current / total;
-    }
-    return 0.0;
   }
 }
 

@@ -12,7 +12,7 @@ class TrainingProgram {
   final bool isDisabled;
   final String batch;
   final String instructor;
-  final String laboratory;
+  final String venue;
   final String participants;
   final String enrollmentDate;
   final bool isEnrollmentActive;
@@ -29,7 +29,7 @@ class TrainingProgram {
     required this.isDisabled,
     required this.batch,
     required this.instructor,
-    required this.laboratory,
+    required this.venue,
     required this.participants,
     required this.enrollmentDate,
     required this.isEnrollmentActive,
