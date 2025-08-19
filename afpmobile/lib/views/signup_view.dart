@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:iconify_design/iconify_design.dart';
 import '../utils/app_colors.dart';
+import '../utils/validation_utils.dart';
 import '../services/api_service.dart';
+import '../widgets/validated_text_field.dart';
 
 import 'login_view.dart';
 
@@ -93,6 +95,11 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
   final TextEditingController _streetAddressController =
       TextEditingController();
 
+  // Focus nodes for Step 2 fields
+  final FocusNode _serviceIdFocusNode = FocusNode();
+  final FocusNode _contactFocusNode = FocusNode();
+  final FocusNode _addressFocusNode = FocusNode();
+
   // Dropdown values
   String? _selectedBranch;
   String? _selectedDivision;
@@ -103,6 +110,13 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
 
   // Loading state for form submission
   bool _isSubmitting = false;
+
+  // Step-wise validation state
+  Map<String, String?> _errorsStep1 = {};
+  Map<String, String?> _errorsStep2 = {};
+  bool _showStep1Errors = false;
+  bool _showStep2Errors = false;
+  DateTime? _selectedDOB;
 
   @override
   void initState() {
@@ -183,6 +197,9 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
     _emailController.dispose();
     _contactNoController.dispose();
     _streetAddressController.dispose();
+    _serviceIdFocusNode.dispose();
+    _contactFocusNode.dispose();
+    _addressFocusNode.dispose();
     super.dispose();
   }
 
@@ -199,6 +216,13 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
       _stepTransitionController.forward();
       _formElementsController.reset();
       _formElementsController.forward();
+
+      // After navigating, focus the first field of the step
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_currentStep == 1) {
+          FocusScope.of(context).requestFocus(_serviceIdFocusNode);
+        }
+      });
     }
   }
 
@@ -281,6 +305,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
 
     if (picked != null) {
       setState(() {
+        _selectedDOB = picked;
         // Format date in a more modern way
         final months = [
           'January',
@@ -374,41 +399,16 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
               // First Name field
               Expanded(
                 child: Container(
-                  decoration: BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.10),
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
+                  decoration: const BoxDecoration(),
+                  child: ValidatedTextField(
                     controller: _firstNameController,
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(
-                        Icons.person,
-                        color: AppColors.armyPrimary,
-                      ),
-                      labelText: 'First Name',
-                      labelStyle: TextStyle(color: AppColors.armyPrimary),
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(
-                          color: AppColors.armyPrimary,
-                          width: 1,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(
-                          color: AppColors.armyPrimary,
-                          width: 2,
-                        ),
-                      ),
-                    ),
+                    labelText: 'First Name',
+                    prefixIcon: Icons.person,
+                    validator:
+                        (value) =>
+                            ValidationUtils.validateName(value, 'First name'),
+                    showError: _showStep1Errors,
+                    errorText: _errorsStep1['firstName'],
                   ),
                 ),
               ),
@@ -416,41 +416,16 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
               // Last Name field
               Expanded(
                 child: Container(
-                  decoration: BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.10),
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
+                  decoration: const BoxDecoration(),
+                  child: ValidatedTextField(
                     controller: _lastNameController,
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(
-                        Icons.person,
-                        color: AppColors.armyPrimary,
-                      ),
-                      labelText: 'Last Name',
-                      labelStyle: TextStyle(color: AppColors.armyPrimary),
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(
-                          color: AppColors.armyPrimary,
-                          width: 1,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(
-                          color: AppColors.armyPrimary,
-                          width: 2,
-                        ),
-                      ),
-                    ),
+                    labelText: 'Last Name',
+                    prefixIcon: Icons.person,
+                    validator:
+                        (value) =>
+                            ValidationUtils.validateName(value, 'Last name'),
+                    showError: _showStep1Errors,
+                    errorText: _errorsStep1['lastName'],
                   ),
                 ),
               ),
@@ -462,46 +437,15 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
         FadeTransition(
           opacity: _formElementsAnimation,
           child: Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.10),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: TextField(
+            decoration: const BoxDecoration(),
+            child: ValidatedTextField(
               controller: _suffixController,
-              decoration: InputDecoration(
-                prefixIcon: Icon(
-                  Icons.text_fields,
-                  color: AppColors.armyPrimary,
-                ),
-                labelText: 'Suffix',
-                hintText: 'Jr., Sr., III, etc.',
-                labelStyle: TextStyle(color: AppColors.armyPrimary),
-                hintStyle: TextStyle(
-                  color: AppColors.armyPrimary.withOpacity(0.6),
-                  fontSize: 12,
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: AppColors.armyPrimary,
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: AppColors.armyPrimary,
-                    width: 2,
-                  ),
-                ),
-              ),
+              labelText: 'Suffix',
+              hintText: 'Jr., Sr., III, etc.',
+              prefixIcon: Icons.text_fields,
+              validator: ValidationUtils.validateSuffix,
+              showError: _showStep1Errors,
+              errorText: _errorsStep1['suffix'],
             ),
           ),
         ),
@@ -510,15 +454,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
         FadeTransition(
           opacity: _formElementsAnimation,
           child: Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.10),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
+            decoration: const BoxDecoration(),
             child: GestureDetector(
               onTap: () => _selectDate(context),
               child: Container(
@@ -585,44 +521,34 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
             ),
           ),
         ),
+        if (_showStep1Errors && _errorsStep1['dateOfBirth'] != null) ...[
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Text(
+              _errorsStep1['dateOfBirth']!,
+              style: const TextStyle(
+                color: Colors.red,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         // Email field with fade animation
         FadeTransition(
           opacity: _formElementsAnimation,
           child: Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.10),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: TextField(
+            decoration: const BoxDecoration(),
+            child: ValidatedTextField(
               controller: _emailController,
+              labelText: 'Email Address',
+              prefixIcon: Icons.email,
               keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.email, color: AppColors.armyPrimary),
-                labelText: 'Email Address',
-                labelStyle: TextStyle(color: AppColors.armyPrimary),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: AppColors.armyPrimary,
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: AppColors.armyPrimary,
-                    width: 2,
-                  ),
-                ),
-              ),
+              validator: ValidationUtils.validateEmail,
+              showError: _showStep1Errors,
+              errorText: _errorsStep1['email'],
             ),
           ),
         ),
@@ -631,39 +557,15 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
         FadeTransition(
           opacity: _formElementsAnimation,
           child: Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.10),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: TextField(
+            decoration: const BoxDecoration(),
+            child: ValidatedTextField(
               controller: _passwordController,
+              labelText: 'Password',
+              prefixIcon: Icons.lock,
               obscureText: true,
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.lock, color: AppColors.armyPrimary),
-                labelText: 'Password',
-                labelStyle: TextStyle(color: AppColors.armyPrimary),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: AppColors.armyPrimary,
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: AppColors.armyPrimary,
-                    width: 2,
-                  ),
-                ),
-              ),
+              validator: ValidationUtils.validatePassword,
+              showError: _showStep1Errors,
+              errorText: _errorsStep1['password'],
             ),
           ),
         ),
@@ -672,42 +574,19 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
         FadeTransition(
           opacity: _formElementsAnimation,
           child: Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.10),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: TextField(
+            decoration: const BoxDecoration(),
+            child: ValidatedTextField(
               controller: _confirmPasswordController,
+              labelText: 'Confirm Password',
+              prefixIcon: Icons.lock_outline,
               obscureText: true,
-              decoration: InputDecoration(
-                prefixIcon: Icon(
-                  Icons.lock_outline,
-                  color: AppColors.armyPrimary,
-                ),
-                labelText: 'Confirm Password',
-                labelStyle: TextStyle(color: AppColors.armyPrimary),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: AppColors.armyPrimary,
-                    width: 1,
+              validator:
+                  (value) => ValidationUtils.validateConfirmPassword(
+                    value,
+                    _passwordController.text,
                   ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: AppColors.armyPrimary,
-                    width: 2,
-                  ),
-                ),
-              ),
+              showError: _showStep1Errors,
+              errorText: _errorsStep1['confirmPassword'],
             ),
           ),
         ),
@@ -741,7 +620,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                 width: double.infinity,
                 height: buttonHeight,
                 child: ElevatedButton(
-                  onPressed: _nextStep,
+                  onPressed: _onNextFromStep1,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.armyPrimary,
                     shape: RoundedRectangleBorder(
@@ -801,38 +680,17 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
         FadeTransition(
           opacity: _formElementsAnimation,
           child: Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.10),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: TextField(
+            decoration: const BoxDecoration(),
+            child: ValidatedTextField(
               controller: _serviceIdController,
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.badge, color: AppColors.armyPrimary),
-                labelText: 'Service ID',
-                labelStyle: TextStyle(color: AppColors.armyPrimary),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: AppColors.armyPrimary,
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: AppColors.armyPrimary,
-                    width: 2,
-                  ),
-                ),
-              ),
+              labelText: 'Service ID',
+              hintText: 'AFP-2023-123',
+              prefixIcon: Icons.badge,
+              focusNode: _serviceIdFocusNode,
+              textInputAction: TextInputAction.next,
+              validator: ValidationUtils.validateServiceId,
+              showError: _showStep2Errors,
+              errorText: _errorsStep2['serviceId'],
             ),
           ),
         ),
@@ -841,39 +699,18 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
         FadeTransition(
           opacity: _formElementsAnimation,
           child: Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.10),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: TextField(
+            decoration: const BoxDecoration(),
+            child: ValidatedTextField(
               controller: _contactNoController,
+              labelText: 'Contact Number',
+              hintText: '+63 912 345 6789',
+              prefixIcon: Icons.phone,
               keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.phone, color: AppColors.armyPrimary),
-                labelText: 'Contact Number',
-                labelStyle: TextStyle(color: AppColors.armyPrimary),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: AppColors.armyPrimary,
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: AppColors.armyPrimary,
-                    width: 2,
-                  ),
-                ),
-              ),
+              focusNode: _contactFocusNode,
+              textInputAction: TextInputAction.next,
+              validator: ValidationUtils.validateContactNumber,
+              showError: _showStep2Errors,
+              errorText: _errorsStep2['contactNumber'],
             ),
           ),
         ),
@@ -891,33 +728,17 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                 ),
               ],
             ),
-            child: TextField(
+            child: ValidatedTextField(
               controller: _streetAddressController,
+              labelText: 'Street Address',
+              hintText: 'Enter your complete address',
+              prefixIcon: Icons.location_on,
               maxLines: 2,
-              decoration: InputDecoration(
-                prefixIcon: Icon(
-                  Icons.location_on,
-                  color: AppColors.armyPrimary,
-                ),
-                labelText: 'Street Address',
-                labelStyle: TextStyle(color: AppColors.armyPrimary),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: AppColors.armyPrimary,
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: AppColors.armyPrimary,
-                    width: 2,
-                  ),
-                ),
-              ),
+              focusNode: _addressFocusNode,
+              textInputAction: TextInputAction.next,
+              validator: ValidationUtils.validateAddress,
+              showError: _showStep2Errors,
+              errorText: _errorsStep2['address'],
             ),
           ),
         ),
@@ -926,15 +747,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
         FadeTransition(
           opacity: _formElementsAnimation,
           child: Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.10),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
+            decoration: const BoxDecoration(),
             child: DropdownButtonFormField<String>(
               key: const ValueKey('branch_dropdown'),
               value: _selectedBranch,
@@ -967,6 +780,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                   top: 16,
                   bottom: 16,
                 ),
+                errorText: _showStep2Errors ? _errorsStep2['branch'] : null,
               ),
               items:
                   MilitaryData.getBranches().map((String branch) {
@@ -999,15 +813,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
         FadeTransition(
           opacity: _formElementsAnimation,
           child: Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.10),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
+            decoration: const BoxDecoration(),
             child: DropdownButtonFormField<String>(
               key: const ValueKey('division_dropdown'),
               value: _selectedDivision,
@@ -1043,6 +849,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                   top: 16,
                   bottom: 16,
                 ),
+                errorText: _showStep2Errors ? _errorsStep2['division'] : null,
               ),
               items:
                   _selectedBranch != null &&
@@ -1083,15 +890,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
         FadeTransition(
           opacity: _formElementsAnimation,
           child: Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.10),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
+            decoration: const BoxDecoration(),
             child: DropdownButtonFormField<String>(
               key: const ValueKey('unit_dropdown'),
               value: _selectedUnit,
@@ -1124,6 +923,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                   top: 16,
                   bottom: 16,
                 ),
+                errorText: _showStep2Errors ? _errorsStep2['unit'] : null,
               ),
               items:
                   (_selectedBranch != null &&
@@ -1228,7 +1028,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                     child: SizedBox(
                       height: buttonHeight,
                       child: ElevatedButton(
-                        onPressed: _nextStep,
+                        onPressed: _onNextFromStep2,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.armyPrimary,
                           shape: RoundedRectangleBorder(
@@ -1327,42 +1127,27 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
         'confirmPassword': _confirmPasswordController.text,
       };
 
-      // Validate required fields
-      if (firstName.isEmpty) {
-        throw Exception('First name is required');
-      }
-      if (lastName.isEmpty) {
-        throw Exception('Last name is required');
-      }
-      if (_serviceIdController.text.isEmpty) {
-        throw Exception('Service ID is required');
-      }
-      if (_emailController.text.isEmpty) {
-        throw Exception('Email is required');
-      }
-      if (_passwordController.text.length < 8) {
-        throw Exception('Password must be at least 8 characters long');
-      }
-      if (_passwordController.text != _confirmPasswordController.text) {
-        throw Exception('Passwords do not match');
-      }
-      if (dateOfBirth == null) {
-        throw Exception('Date of birth is required');
-      }
-      if (_selectedBranch == null || _selectedBranch!.isEmpty) {
-        throw Exception('Branch of service is required');
-      }
-      if (_selectedDivision == null || _selectedDivision!.isEmpty) {
-        throw Exception('Division is required');
-      }
-      if (_selectedUnit == null || _selectedUnit!.isEmpty) {
-        throw Exception('Unit is required');
-      }
-      if (_streetAddressController.text.trim().isEmpty) {
-        throw Exception('Address is required');
-      }
-      if (_contactNoController.text.trim().isEmpty) {
-        throw Exception('Contact number is required');
+      // Validate all fields using ValidationUtils
+      final validationErrors = ValidationUtils.validateSignupForm(
+        firstName: firstName,
+        lastName: lastName,
+        suffix: _suffixController.text.trim(),
+        serviceId: _serviceIdController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        confirmPassword: _confirmPasswordController.text,
+        contactNumber: _contactNoController.text.trim(),
+        address: _streetAddressController.text.trim(),
+        dateOfBirth: dateOfBirth,
+        branch: _selectedBranch,
+        division: _selectedDivision,
+        unit: _selectedUnit,
+      );
+
+      // Check if there are any validation errors
+      if (!ValidationUtils.isFormValid(validationErrors)) {
+        final firstError = ValidationUtils.getFirstError(validationErrors);
+        throw Exception(firstError ?? 'Please check your input and try again');
       }
 
       // Make API call to create pending account
@@ -2057,5 +1842,73 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
         ],
       ),
     );
+  }
+
+  Map<String, String?> _validateStep1Fields() {
+    return {
+      'firstName': ValidationUtils.validateName(
+        _firstNameController.text.trim(),
+        'First name',
+      ),
+      'lastName': ValidationUtils.validateName(
+        _lastNameController.text.trim(),
+        'Last name',
+      ),
+      'suffix': ValidationUtils.validateSuffix(_suffixController.text.trim()),
+      'email': ValidationUtils.validateEmail(_emailController.text.trim()),
+      'password': ValidationUtils.validatePassword(_passwordController.text),
+      'confirmPassword': ValidationUtils.validateConfirmPassword(
+        _confirmPasswordController.text,
+        _passwordController.text,
+      ),
+      'dateOfBirth': ValidationUtils.validateDateOfBirth(_selectedDOB),
+    };
+  }
+
+  Map<String, String?> _validateStep2Fields() {
+    return {
+      'serviceId': ValidationUtils.validateServiceId(
+        _serviceIdController.text.trim(),
+      ),
+      'contactNumber': ValidationUtils.validateContactNumber(
+        _contactNoController.text.trim(),
+      ),
+      'address': ValidationUtils.validateAddress(
+        _streetAddressController.text.trim(),
+      ),
+      'branch': ValidationUtils.validateDropdown(
+        _selectedBranch,
+        'Branch of service',
+      ),
+      'division': ValidationUtils.validateDropdown(
+        _selectedDivision,
+        'Division',
+      ),
+      'unit': ValidationUtils.validateDropdown(_selectedUnit, 'Unit'),
+    };
+  }
+
+  Future<void> _onNextFromStep1() async {
+    final errs = _validateStep1Fields();
+    final hasError = errs.values.any((e) => e != null);
+    setState(() {
+      _errorsStep1 = errs;
+      _showStep1Errors = hasError;
+    });
+    if (!hasError) {
+      _nextStep();
+    }
+  }
+
+  Future<void> _onNextFromStep2() async {
+    final errs = _validateStep2Fields();
+    final hasError = errs.values.any((e) => e != null);
+    setState(() {
+      _errorsStep2 = errs;
+      _showStep2Errors = hasError;
+    });
+    if (!hasError) {
+      _nextStep();
+    }
   }
 }

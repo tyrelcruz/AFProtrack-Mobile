@@ -192,7 +192,7 @@ class UserProfileCard extends StatelessWidget {
                 // Training Progress
                 Row(
                   children: [
-                    Icon(Icons.school, color: AppColors.armyPrimary, size: 20),
+                    Icon(Icons.school, color: Colors.green[600], size: 20),
                     SizedBox(width: 12),
                     Text(
                       'Training Progress',
@@ -218,7 +218,7 @@ class UserProfileCard extends StatelessWidget {
                   value: trainingProgress / 100,
                   minHeight: 8,
                   backgroundColor: Colors.grey[200],
-                  color: AppColors.armyPrimary,
+                  color: Colors.green[600],
                   borderRadius: BorderRadius.circular(4),
                 ),
                 SizedBox(height: 16),
@@ -228,7 +228,7 @@ class UserProfileCard extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.fitness_center,
-                      color: AppColors.armyPrimary,
+                      color: Colors.green[600],
                       size: 20,
                     ),
                     SizedBox(width: 12),
@@ -256,7 +256,7 @@ class UserProfileCard extends StatelessWidget {
                   value: readinessLevel / 100,
                   minHeight: 8,
                   backgroundColor: Colors.grey[200],
-                  color: AppColors.armyPrimary,
+                  color: Colors.green[600],
                   borderRadius: BorderRadius.circular(4),
                 ),
               ],

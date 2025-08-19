@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/app_colors.dart';
 
 class PromotionRequirement {
   final String label;
@@ -140,7 +141,7 @@ class CareerProgressionCard extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
-                        color: Colors.green[700],
+                        color: Colors.green[600],
                       ),
                     ),
                   ],
