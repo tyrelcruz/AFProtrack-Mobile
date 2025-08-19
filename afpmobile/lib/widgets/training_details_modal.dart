@@ -42,7 +42,7 @@ class TrainingDetailsModal extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Text(
-                  'Duration: ${program.duration}',
+                  'Duration: ${program.durationDisplay}',
                   style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
                 const Spacer(),
@@ -71,6 +71,12 @@ class TrainingDetailsModal extends StatelessWidget {
             _DetailRow(label: 'Instructor', value: program.instructor),
             const SizedBox(height: 12),
             _DetailRow(label: 'Venue', value: program.venue),
+            const SizedBox(height: 12),
+            _DetailRow(
+              label: 'Time',
+              value:
+                  '${program.formattedStartTime} - ${program.formattedEndTime}',
+            ),
             const SizedBox(height: 24),
 
             // Participants

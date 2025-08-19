@@ -7,6 +7,7 @@ import '../models/home_training_program.dart';
 import '../utils/app_colors.dart';
 import '../utils/responsive_utils.dart';
 import '../widgets/responsive_test_widget.dart';
+import '../services/token_service.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({Key? key}) : super(key: key);
@@ -16,6 +17,60 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
+  Map<String, dynamic>? _userData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final userData = await TokenService.getUserData();
+      setState(() {
+        _userData = userData;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading user data: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Helper methods to extract user data with fallbacks
+  String _getUserName() {
+    if (_userData != null) {
+      return '${_userData!['firstName'] ?? ''} ${_userData!['lastName'] ?? ''}'
+          .trim();
+    }
+    return 'Juan Dela Cruz'; // Fallback
+  }
+
+  String _getUserRank() {
+    if (_userData != null) {
+      return _userData!['rank'] ?? 'Sergeant (SGT)';
+    }
+    return 'Sergeant (SGT)'; // Fallback
+  }
+
+  String _getUserUnit() {
+    if (_userData != null) {
+      return _userData!['unit'] ?? 'Special Forces Regiment';
+    }
+    return 'Special Forces Regiment'; // Fallback
+  }
+
+  String _getUserServiceId() {
+    if (_userData != null) {
+      return _userData!['serviceId'] ?? 'AFP - 001234';
+    }
+    return 'AFP - 001234'; // Fallback
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -70,15 +125,22 @@ class _HomeViewState extends State<HomeView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            UserProfileCard(
-              name: 'Juan Dela Cruz',
-              rank: 'Sergeant (SGT)',
-              unit: 'Special Forces Regiment',
-              serviceId: 'AFP - 001234',
-              trainingProgress: 80,
-              readinessLevel: 97,
-              cardColor: Colors.white,
-            ),
+            _isLoading
+                ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+                : UserProfileCard(
+                  name: _getUserName(),
+                  rank: _getUserRank(),
+                  unit: _getUserUnit(),
+                  serviceId: _getUserServiceId(),
+                  trainingProgress: 80,
+                  readinessLevel: 97,
+                  cardColor: Colors.white,
+                ),
             SizedBox(height: 12),
             StatsGrid(items: stats),
             CareerProgressionCard(

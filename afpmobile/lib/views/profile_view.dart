@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../utils/responsive_utils.dart';
 import '../models/user_profile.dart';
+import '../services/token_service.dart';
 import 'login_view.dart';
 import 'edit_profile_view.dart';
 
@@ -705,9 +706,9 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-  void _performLogout() {
-    // Clear any stored user data/session here
-    // For now, we'll just navigate to login screen
+  void _performLogout() async {
+    // Clear authentication data
+    await TokenService.clearAuthData();
 
     // Navigate to login screen and clear the entire navigation stack
     Navigator.of(context).pushAndRemoveUntil(

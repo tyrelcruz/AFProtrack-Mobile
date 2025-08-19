@@ -24,14 +24,8 @@ class ScheduleDetailsModal extends StatefulWidget {
 }
 
 class _ScheduleDetailsModalState extends State<ScheduleDetailsModal> {
-  bool _isCheckedIn = false;
-  String? _checkInTimestamp;
-  bool _isLoading = false;
-
   @override
   Widget build(BuildContext context) {
-    final bool canCheckIn = !widget.trainingComplete && !_isCheckedIn;
-
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -119,132 +113,10 @@ class _ScheduleDetailsModalState extends State<ScheduleDetailsModal> {
               ),
             ],
             const SizedBox(height: 20),
-
-            // Check-in status display
-            if (_isCheckedIn) ...[
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E8),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFF4CAF50), width: 1),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.check_circle,
-                      color: Color(0xFF4CAF50),
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Checked In',
-                            style: TextStyle(
-                              color: Color(0xFF4CAF50),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                          if (_checkInTimestamp != null) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              'Time: $_checkInTimestamp',
-                              style: const TextStyle(
-                                color: Color(0xFF4CAF50),
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: canCheckIn && !_isLoading ? _handleCheckIn : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      _isCheckedIn
-                          ? AppColors.trainingButtonDisabled
-                          : (canCheckIn
-                              ? AppColors.trainingButtonPrimary
-                              : AppColors.trainingButtonDisabled),
-                  foregroundColor:
-                      _isCheckedIn
-                          ? AppColors.trainingButtonDisabledText
-                          : (canCheckIn
-                              ? AppColors.white
-                              : AppColors.trainingButtonDisabledText),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child:
-                    _isLoading
-                        ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
-                            ),
-                          ),
-                        )
-                        : Text(
-                          _isCheckedIn
-                              ? 'Already Checked In'
-                              : (canCheckIn
-                                  ? 'Check In'
-                                  : 'Check In Unavailable'),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
-                        ),
-              ),
-            ),
           ],
         ),
       ),
     );
-  }
-
-  void _handleCheckIn() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    // Simulate API call delay
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Get current timestamp
-    final now = DateTime.now();
-    final hour12 =
-        now.hour == 0 ? 12 : (now.hour > 12 ? now.hour - 12 : now.hour);
-    final ampm = now.hour >= 12 ? 'PM' : 'AM';
-    final timestamp =
-        '${hour12.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} $ampm';
-
-    setState(() {
-      _isCheckedIn = true;
-      _checkInTimestamp = timestamp;
-      _isLoading = false;
-    });
-
-    // Show success message
   }
 }
 

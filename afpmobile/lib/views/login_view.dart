@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../services/api_service.dart';
+import '../services/token_service.dart';
 
 import 'signup_view.dart';
 import 'main_navigation_view.dart';
@@ -149,6 +150,17 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
       );
 
       if (result['success']) {
+        // Save authentication data
+        final userData = result['data'];
+        if (userData != null && userData['token'] != null) {
+          await TokenService.saveAuthData(
+            token: userData['token'],
+            refreshToken: userData['refreshToken'],
+            userId: userData['user']?['_id'] ?? userData['user']?['id'],
+            userData: userData['user'],
+          );
+        }
+
         // Login successful
         // Animate exit before navigation
         await _animateExit();

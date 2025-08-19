@@ -26,11 +26,18 @@ class AppColors {
     0xFFFFF3E0,
   ); // Light orange background
   static const Color trainingUpcomingText = Color(0xFFF57C00); // Orange text
+  static const Color trainingCompletedBg = Color(
+    0xFFE8F5E8,
+  ); // Light green background
+  static const Color trainingCompletedText = Color(0xFF2E7D32); // Green text
 
   // Button Colors
   static const Color trainingButtonPrimary = Color(
     0xFF3E503A,
   ); // Dark green button
+  static const Color trainingButtonSecondary = Color(
+    0xFF2E7D32,
+  ); // Green secondary button
   static const Color trainingButtonDisabled = Color(
     0xFFE0E0E0,
   ); // Grey disabled button

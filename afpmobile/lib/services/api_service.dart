@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../config/app_config.dart';
+import 'token_service.dart';
 
 class ApiService {
   // Get base URL from environment variables or app config
@@ -10,10 +11,19 @@ class ApiService {
   }
 
   // Headers for API requests
-  static Map<String, String> get _headers => {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  };
+  static Future<Map<String, String>> get _headers async {
+    final token = await TokenService.getToken();
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return headers;
+  }
 
   // Create pending account (signup)
   static Future<Map<String, dynamic>> createPendingAccount(
@@ -24,8 +34,9 @@ class ApiService {
       print('Making API request to: $url');
       print('Request body: ${jsonEncode(userData)}');
 
+      final headers = await _headers;
       final response = await http
-          .post(Uri.parse(url), headers: _headers, body: jsonEncode(userData))
+          .post(Uri.parse(url), headers: headers, body: jsonEncode(userData))
           .timeout(
             const Duration(seconds: 30),
             onTimeout: () {
@@ -64,9 +75,10 @@ class ApiService {
     int limit = 10,
   }) async {
     try {
+      final headers = await _headers;
       final response = await http.get(
         Uri.parse('$baseUrl/users/pending?page=$page&limit=$limit'),
-        headers: _headers,
+        headers: headers,
       );
 
       final data = jsonDecode(response.body);
@@ -113,7 +125,8 @@ class ApiService {
         '$baseUrl/users/active',
       ).replace(queryParameters: queryParams);
 
-      final response = await http.get(uri, headers: _headers);
+      final headers = await _headers;
+      final response = await http.get(uri, headers: headers);
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
@@ -148,12 +161,9 @@ class ApiService {
       print('Login with serviceId: ${emailOrServiceId.toUpperCase().trim()}');
       print('Request body: ${jsonEncode(requestBody)}');
 
+      final headers = await _headers;
       final response = await http
-          .post(
-            Uri.parse(url),
-            headers: _headers,
-            body: jsonEncode(requestBody),
-          )
+          .post(Uri.parse(url), headers: headers, body: jsonEncode(requestBody))
           .timeout(
             const Duration(seconds: 30),
             onTimeout: () {
@@ -189,9 +199,10 @@ class ApiService {
   // Health check
   static Future<Map<String, dynamic>> healthCheck() async {
     try {
+      final headers = await _headers;
       final response = await http.get(
         Uri.parse('$baseUrl/health'),
-        headers: _headers,
+        headers: headers,
       );
 
       final data = jsonDecode(response.body);
@@ -200,6 +211,33 @@ class ApiService {
         return {'success': true, 'data': data};
       } else {
         return {'success': false, 'message': 'Server is not responding'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get training programs
+  static Future<Map<String, dynamic>> getTrainingPrograms() async {
+    try {
+      final headers = await _headers;
+      final response = await http.get(
+        Uri.parse('$baseUrl/training-programs/mobile/all'),
+        headers: headers,
+      );
+
+      print('Training programs response status: ${response.statusCode}');
+      print('Training programs response body: ${response.body}');
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data['data']};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch training programs',
+        };
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
