@@ -9,6 +9,15 @@ class UserProfile {
   final String email;
   final String phone;
   final String dateEnlisted;
+  final String homeAddress;
+  final String? alternateEmail;
+  final String? maritalStatus; // Single, Married, etc.
+  final String? bloodType; // A+, A-, B+, B-, AB+, AB-, O+, O-
+  final String?
+  heightMeters; // in meters (stored as string for simplicity/formatting)
+  final String?
+  weightKg; // in kilograms (stored as string for simplicity/formatting)
+  final EmergencyContact? emergencyContact;
   final String? profilePictureUrl;
   final int completedPrograms;
   final int certificatesEarned;
@@ -24,6 +33,13 @@ class UserProfile {
     required this.email,
     required this.phone,
     required this.dateEnlisted,
+    required this.homeAddress,
+    this.alternateEmail,
+    this.maritalStatus,
+    this.bloodType,
+    this.heightMeters,
+    this.weightKg,
+    this.emergencyContact,
     this.profilePictureUrl,
     required this.completedPrograms,
     required this.certificatesEarned,
@@ -41,6 +57,13 @@ class UserProfile {
     String? email,
     String? phone,
     String? dateEnlisted,
+    String? homeAddress,
+    String? alternateEmail,
+    String? maritalStatus,
+    String? bloodType,
+    String? heightMeters,
+    String? weightKg,
+    EmergencyContact? emergencyContact,
     String? profilePictureUrl,
     int? completedPrograms,
     int? certificatesEarned,
@@ -56,6 +79,13 @@ class UserProfile {
       email: email ?? this.email,
       phone: phone ?? this.phone,
       dateEnlisted: dateEnlisted ?? this.dateEnlisted,
+      homeAddress: homeAddress ?? this.homeAddress,
+      alternateEmail: alternateEmail ?? this.alternateEmail,
+      maritalStatus: maritalStatus ?? this.maritalStatus,
+      bloodType: bloodType ?? this.bloodType,
+      heightMeters: heightMeters ?? this.heightMeters,
+      weightKg: weightKg ?? this.weightKg,
+      emergencyContact: emergencyContact ?? this.emergencyContact,
       profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
       completedPrograms: completedPrograms ?? this.completedPrograms,
       certificatesEarned: certificatesEarned ?? this.certificatesEarned,
@@ -75,6 +105,13 @@ class UserProfile {
       'email': email,
       'phone': phone,
       'dateEnlisted': dateEnlisted,
+      'homeAddress': homeAddress,
+      'alternateEmail': alternateEmail,
+      'maritalStatus': maritalStatus,
+      'bloodType': bloodType,
+      'heightMeters': heightMeters,
+      'weightKg': weightKg,
+      'emergencyContact': emergencyContact?.toJson(),
       'profilePictureUrl': profilePictureUrl,
       'completedPrograms': completedPrograms,
       'certificatesEarned': certificatesEarned,
@@ -94,6 +131,16 @@ class UserProfile {
       email: json['email'] ?? '',
       phone: json['phone'] ?? '',
       dateEnlisted: json['dateEnlisted'] ?? '',
+      homeAddress: json['homeAddress'] ?? '',
+      alternateEmail: json['alternateEmail'],
+      maritalStatus: json['maritalStatus'],
+      bloodType: json['bloodType'],
+      heightMeters: json['heightMeters'],
+      weightKg: json['weightKg'],
+      emergencyContact:
+          json['emergencyContact'] != null
+              ? EmergencyContact.fromJson(json['emergencyContact'])
+              : null,
       profilePictureUrl: json['profilePictureUrl'],
       completedPrograms: json['completedPrograms'] ?? 0,
       certificatesEarned: json['certificatesEarned'] ?? 0,
@@ -112,7 +159,65 @@ class UserProfile {
     email: 'j.delacruz@afp.mil.ph',
     phone: '(+63) 912-345-6789',
     dateEnlisted: 'February 15, 2020',
+    homeAddress: 'Street 1, Zone 2, Brgy 3, Taguig City, Metro Manila',
+    alternateEmail: 'juan.delacruz@example.com',
+    maritalStatus: 'Single',
+    bloodType: 'O+',
+    heightMeters: '1.73',
+    weightKg: '70',
+    emergencyContact: EmergencyContact(
+      fullName: 'Maria Dela Cruz',
+      address: 'Street 1, Zone 2, Brgy 3, Taguig City, Metro Manila',
+      contactNumber: '(+63) 998-111-2222',
+      relationship: 'Mother',
+    ),
     completedPrograms: 8,
     certificatesEarned: 12,
   );
+}
+
+class EmergencyContact {
+  final String fullName;
+  final String address;
+  final String contactNumber;
+  final String relationship; // Father, Mother, Sibling, Husband, Wife, etc.
+
+  EmergencyContact({
+    required this.fullName,
+    required this.address,
+    required this.contactNumber,
+    required this.relationship,
+  });
+
+  EmergencyContact copyWith({
+    String? fullName,
+    String? address,
+    String? contactNumber,
+    String? relationship,
+  }) {
+    return EmergencyContact(
+      fullName: fullName ?? this.fullName,
+      address: address ?? this.address,
+      contactNumber: contactNumber ?? this.contactNumber,
+      relationship: relationship ?? this.relationship,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'fullName': fullName,
+      'address': address,
+      'contactNumber': contactNumber,
+      'relationship': relationship,
+    };
+  }
+
+  factory EmergencyContact.fromJson(Map<String, dynamic> json) {
+    return EmergencyContact(
+      fullName: json['fullName'] ?? '',
+      address: json['address'] ?? '',
+      contactNumber: json['contactNumber'] ?? '',
+      relationship: json['relationship'] ?? '',
+    );
+  }
 }

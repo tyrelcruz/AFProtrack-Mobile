@@ -98,8 +98,8 @@ class CertificateCard extends StatelessWidget {
                 TextButton(
                   onPressed: onViewDetails,
                   style: TextButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black87,
+                    backgroundColor: AppColors.trainingButtonPrimary,
+                    foregroundColor: AppColors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 8,

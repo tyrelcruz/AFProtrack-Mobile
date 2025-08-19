@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_widget.dart';
-import '../widgets/bottom_nav_bar.dart';
 import '../utils/app_colors.dart';
 import '../utils/responsive_utils.dart';
 import '../models/user_profile.dart';
@@ -27,7 +25,8 @@ class _ProfileViewState extends State<ProfileView> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    // screenHeight is not used; if needed later, uncomment the next line
+    // final screenHeight = MediaQuery.of(context).size.height;
 
     // Responsive dimensions
     final cardWidth =
@@ -37,458 +36,325 @@ class _ProfileViewState extends State<ProfileView> {
             ? screenWidth * 0.8
             : 400.0;
 
-    final padding = ResponsiveUtils.getResponsivePadding(context);
+    // final padding = ResponsiveUtils.getResponsivePadding(context);
     final profilePictureSize = ResponsiveUtils.isMobile(context) ? 65.0 : 75.0;
     final profileIconSize = ResponsiveUtils.isMobile(context) ? 38.0 : 43.0;
 
     return Scaffold(
       backgroundColor: AppColors.appBackground,
-      appBar: const AppBarWidget(
-        title: 'Profile',
-        showLeading: true, // Shows back button
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(padding),
-        child: Column(
-          children: [
-            SizedBox(height: ResponsiveUtils.isMobile(context) ? 1 : 2),
-            // Profile container
-            Container(
-              width: cardWidth,
-              child: Card(
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  side: BorderSide(color: AppColors.cardBorder, width: 2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                elevation: 0,
-                child: Padding(
-                  padding: EdgeInsets.all(padding),
-                  child: Column(
-                    children: [
-                      // Profile Header Section
-                      Column(
-                        children: [
-                          // Profile Picture - Placeholder that can be changed
-                          GestureDetector(
-                            onTap: () {
-                              // TODO: Implement profile picture change functionality
-                              _showProfilePictureDialog();
-                            },
-                            child: Container(
-                              width: profilePictureSize,
-                              height: profilePictureSize,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: AppColors.black,
-                                  width: 2,
-                                ),
-                              ),
-                              child: Icon(
-                                Icons.person,
-                                size: profileIconSize,
-                                color: AppColors.black,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: ResponsiveUtils.isMobile(context) ? 12 : 14,
-                          ),
-                          // Name
-                          Text(
-                            _userProfile.name,
-                            style: TextStyle(
-                              fontSize: ResponsiveUtils.getResponsiveFontSize(
-                                context,
-                                mobile: 22,
-                                tablet: 22,
-                                desktop: 22,
-                              ),
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.black,
-                            ),
-                          ),
-                          SizedBox(
-                            height: ResponsiveUtils.isMobile(context) ? 2 : 2,
-                          ),
-                          // Rank
-                          Text(
-                            _userProfile.rank,
-                            style: TextStyle(
-                              fontSize: ResponsiveUtils.getResponsiveFontSize(
-                                context,
-                                mobile: 15,
-                                tablet: 15,
-                                desktop: 15,
-                              ),
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(
-                            height: ResponsiveUtils.isMobile(context) ? 3 : 3,
-                          ),
-                          // ID
-                          Text(
-                            _userProfile.serviceId,
-                            style: TextStyle(
-                              fontSize: ResponsiveUtils.getResponsiveFontSize(
-                                context,
-                                mobile: 15,
-                                tablet: 15,
-                                desktop: 15,
-                              ),
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(
-                        height: ResponsiveUtils.isMobile(context) ? 18 : 18,
-                      ),
-
-                      // Information Cards
-                      _buildInfoCard(
-                        context,
-                        icon: Icons.shield,
-                        title: _userProfile.unit,
-                        detail: _userProfile.branch,
-                      ),
-                      SizedBox(
-                        height: ResponsiveUtils.isMobile(context) ? 5 : 5,
-                      ),
-                      _buildInfoCard(
-                        context,
-                        icon: Icons.location_on,
-                        title: 'Current Base',
-                        detail: _userProfile.currentBase,
-                      ),
-                      SizedBox(
-                        height: ResponsiveUtils.isMobile(context) ? 12 : 12,
-                      ),
-                      _buildInfoCard(
-                        context,
-                        icon: Icons.email,
-                        title: 'Email',
-                        detail: _userProfile.email,
-                      ),
-                      SizedBox(
-                        height: ResponsiveUtils.isMobile(context) ? 12 : 12,
-                      ),
-                      _buildInfoCard(
-                        context,
-                        icon: Icons.phone,
-                        title: 'Phone',
-                        detail: _userProfile.phone,
-                      ),
-                      SizedBox(
-                        height: ResponsiveUtils.isMobile(context) ? 12 : 12,
-                      ),
-                      _buildInfoCard(
-                        context,
-                        icon: Icons.calendar_today,
-                        title: 'Date Enlisted',
-                        detail: _userProfile.dateEnlisted,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            SizedBox(height: ResponsiveUtils.isMobile(context) ? 16 : 20),
-
-            //training summary
-            Container(
-              width: cardWidth,
-              child: Card(
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  side: BorderSide(color: AppColors.cardBorder, width: 2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                elevation: 0,
-                child: Padding(
-                  padding: EdgeInsets.all(
-                    ResponsiveUtils.getResponsivePadding(
-                      context,
-                      mobile: 12,
-                      tablet: 16,
-                      desktop: 16,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Title
-                      Text(
-                        'Training Summary',
-                        style: TextStyle(
-                          fontSize: ResponsiveUtils.getResponsiveFontSize(
-                            context,
-                            mobile: 18,
-                            tablet: 18,
-                            desktop: 18,
-                          ),
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.black,
-                        ),
-                      ),
-                      SizedBox(
-                        height: ResponsiveUtils.isMobile(context) ? 8 : 8,
-                      ),
-                      // Divider line
-                      Container(height: 1, color: Colors.grey[300]),
-                      SizedBox(
-                        height: ResponsiveUtils.isMobile(context) ? 12 : 12,
-                      ),
-                      // Stats section
-                      Row(
-                        children: [
-                          // Left section - Completed Programs
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  '${_userProfile.completedPrograms}',
-                                  style: TextStyle(
-                                    fontSize:
-                                        ResponsiveUtils.getResponsiveFontSize(
-                                          context,
-                                          mobile: 24,
-                                          tablet: 24,
-                                          desktop: 24,
-                                        ),
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.black,
-                                  ),
-                                ),
-                                SizedBox(
-                                  height:
-                                      ResponsiveUtils.isMobile(context) ? 1 : 1,
-                                ),
-                                Text(
-                                  'Completed Programs',
-                                  style: TextStyle(
-                                    fontSize:
-                                        ResponsiveUtils.getResponsiveFontSize(
-                                          context,
-                                          mobile: 14,
-                                          tablet: 14,
-                                          desktop: 14,
-                                        ),
-                                    color: Colors.grey[600],
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Vertical divider
-                          Container(
-                            width: 1,
-                            height: ResponsiveUtils.isMobile(context) ? 50 : 60,
-                            color: Colors.grey[300],
-                          ),
-                          // Right section - Certificates Earned
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  '${_userProfile.certificatesEarned}',
-                                  style: TextStyle(
-                                    fontSize:
-                                        ResponsiveUtils.getResponsiveFontSize(
-                                          context,
-                                          mobile: 24,
-                                          tablet: 24,
-                                          desktop: 24,
-                                        ),
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.black,
-                                  ),
-                                ),
-                                SizedBox(
-                                  height:
-                                      ResponsiveUtils.isMobile(context) ? 1 : 1,
-                                ),
-                                Text(
-                                  'Certificates Earned',
-                                  style: TextStyle(
-                                    fontSize:
-                                        ResponsiveUtils.getResponsiveFontSize(
-                                          context,
-                                          mobile: 14,
-                                          tablet: 14,
-                                          desktop: 14,
-                                        ),
-                                    color: Colors.grey[600],
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            SizedBox(height: ResponsiveUtils.isMobile(context) ? 16 : 20),
-
-            // Action Buttons
-            Container(
-              width: cardWidth,
-              child: Card(
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  side: BorderSide(color: AppColors.cardBorder, width: 2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                elevation: 0,
-                child: Column(
-                  children: [
-                    // Edit Profile Settings
-                    ListTile(
-                      leading: Icon(
-                        Icons.settings,
-                        color: Colors.grey[700],
-                        size: ResponsiveUtils.isMobile(context) ? 20 : 22,
-                      ),
-                      title: Text(
-                        'Edit Profile Settings',
-                        style: TextStyle(
-                          fontSize: ResponsiveUtils.getResponsiveFontSize(
-                            context,
-                            mobile: 16,
-                            tablet: 16,
-                            desktop: 16,
-                          ),
-                          color: AppColors.black,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      onTap: () {
-                        _showEditProfileDialog();
-                      },
-                    ),
-                    // Divider
-                    Container(
-                      height: 1,
-                      color: Colors.grey[300],
-                      margin: EdgeInsets.symmetric(
-                        horizontal: ResponsiveUtils.isMobile(context) ? 16 : 20,
-                      ),
-                    ),
-                    // Logout
-                    ListTile(
-                      leading: Icon(
-                        Icons.logout,
-                        color: Colors.grey[700],
-                        size: ResponsiveUtils.isMobile(context) ? 20 : 22,
-                      ),
-                      title: Text(
-                        'Logout',
-                        style: TextStyle(
-                          fontSize: ResponsiveUtils.getResponsiveFontSize(
-                            context,
-                            mobile: 16,
-                            tablet: 16,
-                            desktop: 16,
-                          ),
-                          color: AppColors.black,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      onTap: () {
-                        _showLogoutDialog();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Add bottom padding to ensure content doesn't get cut off
-            SizedBox(height: ResponsiveUtils.isMobile(context) ? 20 : 30),
-          ],
+      appBar: AppBar(
+        backgroundColor: AppColors.armyPrimary,
+        elevation: 0,
+        centerTitle: false,
+        titleSpacing: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
         ),
+        // Edit icon on the right
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.tune, color: Colors.white),
+            onPressed: _showEditProfileDialog,
+          ),
+        ],
+      ),
+
+      body: Stack(
+        children: [
+          // Top header background
+          Container(
+            height: ResponsiveUtils.isMobile(context) ? 480 : 440,
+            width: double.infinity,
+            color: AppColors.armyPrimary,
+          ),
+          // Scrollable content
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                // Header content
+                _buildHeaderSection(
+                  context,
+                  profilePictureSize: profilePictureSize,
+                  profileIconSize: profileIconSize,
+                ),
+                // Overview card with rounded top corners
+                _buildOverviewCard(context, cardWidth),
+              ],
+            ),
+          ),
+        ],
       ),
 
       // No bottom navigation bar needed since Profile is accessed as a separate page
     );
   }
 
-  Widget _buildInfoCard(
+  Widget _buildHeaderSection(
     BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String detail,
+    required double profilePictureSize,
+    required double profileIconSize,
   }) {
+    final padding = ResponsiveUtils.getResponsivePadding(context);
+    final double leftPadding =
+        padding + (ResponsiveUtils.isMobile(context) ? 20.0 : 40.0);
     return Container(
-      padding: EdgeInsets.all(
-        ResponsiveUtils.getResponsivePadding(
-          context,
-          mobile: 14,
-          tablet: 16,
-          desktop: 16,
-        ),
-      ),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-      ),
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(leftPadding, padding, padding, padding),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(
-            icon,
-            color: Colors.grey[600],
-            size: ResponsiveUtils.isMobile(context) ? 22 : 24,
+          // Profile picture
+          GestureDetector(
+            onTap: _showProfilePictureDialog,
+            child: Container(
+              width: profilePictureSize,
+              height: profilePictureSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: Icon(
+                Icons.person,
+                size: profileIconSize,
+                color: Colors.white,
+              ),
+            ),
           ),
-          SizedBox(width: ResponsiveUtils.isMobile(context) ? 10 : 12),
+          SizedBox(width: 26),
+          // Name and essentials
           Expanded(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  'TRAINEE PROFILE'.toUpperCase(),
                   style: TextStyle(
-                    fontSize: ResponsiveUtils.getResponsiveFontSize(
-                      context,
-                      mobile: 16,
-                      tablet: 16,
-                      desktop: 16,
-                    ),
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.black,
+                    color: Colors.white70,
+                    fontSize: 12,
+                    letterSpacing: 1.2,
                   ),
                 ),
-                SizedBox(height: ResponsiveUtils.isMobile(context) ? 1 : 2),
+                const SizedBox(height: 6),
                 Text(
-                  detail,
-                  style: TextStyle(
-                    fontSize: ResponsiveUtils.getResponsiveFontSize(
-                      context,
-                      mobile: 15,
-                      tablet: 15,
-                      desktop: 15,
-                    ),
-                    color: AppColors.black,
+                  _userProfile.name.toUpperCase(),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
                   ),
                 ),
+                const SizedBox(height: 6),
+                _buildHeaderMeta('AFPIC NO:', _userProfile.serviceId),
+                _buildHeaderMeta('UNIT:', _userProfile.unit),
+                _buildHeaderMeta('BRANCH', _userProfile.branch),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildHeaderMeta(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Text(
+            '$label  ',
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewCard(BuildContext context, double cardWidth) {
+    final padding = ResponsiveUtils.getResponsivePadding(context);
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(28),
+          topRight: Radius.circular(28),
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(padding, 20, padding, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 42,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'PROFILE OVERVIEW',
+              style: TextStyle(
+                color: AppColors.armyPrimary,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.1,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Overview rows
+            _buildOverviewRow('Home Address', _userProfile.homeAddress),
+            _buildOverviewRow('Email', _userProfile.email),
+            if ((_userProfile.alternateEmail ?? '').isNotEmpty)
+              _buildOverviewRow(
+                'Alternate Email',
+                _userProfile.alternateEmail ?? '',
+              ),
+            _buildOverviewRow('Phone', _userProfile.phone),
+            _buildOverviewRow('Date Enlisted', _userProfile.dateEnlisted),
+            _buildOverviewRow('Blood Type', _userProfile.bloodType ?? '-'),
+            _buildOverviewRow('Status', _userProfile.maritalStatus ?? '-'),
+            _buildOverviewRow(
+              'Height',
+              (_userProfile.heightMeters ?? '-') + ' m',
+            ),
+            _buildOverviewRow('Weight', (_userProfile.weightKg ?? '-') + ' kg'),
+            const SizedBox(height: 16),
+            Container(height: 1, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            // Training summary
+            Text(
+              'TRAINING SUMMARY',
+              style: TextStyle(
+                color: AppColors.armyPrimary,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.1,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatTile(
+                    'Completed Programs',
+                    _userProfile.completedPrograms.toString(),
+                  ),
+                ),
+                Container(width: 1, height: 48, color: Colors.grey[300]),
+                Expanded(
+                  child: _buildStatTile(
+                    'Certificates Earned',
+                    _userProfile.certificatesEarned.toString(),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            // Actions
+            Card(
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(color: AppColors.cardBorder, width: 1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 0,
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: Icon(
+                      Icons.settings,
+                      color: Colors.grey[700],
+                      size: 20,
+                    ),
+                    title: const Text('Edit Profile Settings'),
+                    onTap: _showEditProfileDialog,
+                  ),
+                  Container(
+                    height: 1,
+                    color: Colors.grey[300],
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.logout,
+                      color: Colors.grey[700],
+                      size: 20,
+                    ),
+                    title: const Text('Logout'),
+                    onTap: _showLogoutDialog,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOverviewRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 140,
+            child: Text(
+              label.toUpperCase(),
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatTile(String title, String value) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.grey[600], fontSize: 13),
+        ),
+      ],
     );
   }
 
