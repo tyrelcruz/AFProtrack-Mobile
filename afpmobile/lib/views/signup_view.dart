@@ -11,33 +11,136 @@ import 'login_view.dart';
 class MilitaryData {
   // Backend enum values
   static const List<String> branches = [
-    "Army",
-    "Air Force",
-    "Navy",
-    "Marine Corps",
-    "Coast Guard",
+    "Philippine Army",
+    "Philippine Navy",
+    "Philippine Air Force",
   ];
 
   static const List<String> divisions = [
-    "Infantry",
-    "Artillery",
-    "Armor",
-    "Engineer",
-    "Signal",
-    "Medical",
-    "Logistics",
-    "Intelligence",
+    // Philippine Army Divisions
+    "Infantry Divisions",
+    "Specialized / Support Units",
+    // Philippine Navy Divisions
+    "Naval Operating Forces",
+    "Fleet Units",
+    "Naval Special Operations",
+    "Philippine Marine Corps",
+    // Philippine Air Force Divisions
+    "Air Wings",
+    "Operational Commands",
+    "Support / Training",
   ];
 
   static const List<String> units = [
-    "1st Infantry Division",
-    "2nd Infantry Division",
-    "3rd Infantry Division",
-    "4th Infantry Division",
-    "5th Infantry Division",
-    "6th Infantry Division",
-    "7th Infantry Division",
-    "8th Infantry Division",
+    // Philippine Army Units
+    "1st Infantry Division (1ID) – Tabak Division",
+    "2nd Infantry Division (2ID) – Jungle Fighter Division",
+    "3rd Infantry Division (3ID) – Spearhead Troopers",
+    "4th Infantry Division (4ID) – Diamond Division",
+    "5th Infantry Division (5ID) – Star Division",
+    "6th Infantry Division (6ID) – Kampilan Division",
+    "7th Infantry Division (7ID) – Kaugnay Division",
+    "8th Infantry Division (8ID) – Stormtroopers Division",
+    "9th Infantry Division (9ID) – Spear Division",
+    "10th Infantry Division (10ID) – Agila Division",
+    "11th Infantry Division (11ID) – Alakdan Division",
+    'Armor "Pambato" Division (Armor Div)',
+    "Special Forces Regiment (Airborne) (SFR-A)",
+    "Scout Ranger Regiment (SRR)",
+    "Army Aviation Regiment (AAR)",
+    "Civil-Military Operations Regiment (CMOR)",
+    // Philippine Navy Units
+    "Naval Forces Northern Luzon (NFNL)",
+    "Naval Forces Southern Luzon (NFSL)",
+    "Naval Forces Western Mindanao (NFWM)",
+    "Naval Forces Eastern Mindanao (NFEM)",
+    "Naval Forces West (NFW)",
+    "Offshore Combat Force (OCF)",
+    "Littoral Combat Force (LCF)",
+    "Sealift Amphibious Force (SAF)",
+    "Naval Air Wing (NAW)",
+    "Naval Special Operations Command (NAVSOCOM)",
+    "Marine Special Operations Group (MARSOG)",
+    // Philippine Air Force Units
+    "5th Fighter Wing (5FW)",
+    "15th Strike Wing (15SW)",
+    "205th Tactical Helicopter Wing (205THW)",
+    "220th Airlift Wing (220AW)",
+    "Air Defense Command (ADC)",
+    "Air Mobility Command (AMC)",
+    "Tactical Operations Wing – Northern Luzon (TOWNL)",
+    "Tactical Operations Wing – Southern Luzon (TOWSL)",
+    "Tactical Operations Wing – Central (TOWC)",
+    "Tactical Operations Wing – Western Mindanao (TOWWM)",
+    "Tactical Operations Wing – Eastern Mindanao (TOWEM)",
+    "Air Education, Training, and Doctrine Command (AETDC)",
+    "Air Logistics Command (ALC)",
+  ];
+
+  static const List<String> ranks = [
+    // Philippine Army Ranks
+    "Private (PVT)",
+    "Private First Class (PFC)",
+    "Corporal (CPL)",
+    "Sergeant (SGT)",
+    "Staff Sergeant (SSG)",
+    "Technical Sergeant (TSG)",
+    "Master Sergeant (MSG)",
+    "Senior Master Sergeant (SMSg)",
+    "Chief Master Sergeant (CMSg)",
+    "First Chief Master Sergeant (FCMSg)",
+    "Second Lieutenant (2LT)",
+    "First Lieutenant (1LT)",
+    "Captain (CPT)",
+    "Major (MAJ)",
+    "Lieutenant Colonel (LTCOL)",
+    "Colonel (COL)",
+    "Brigadier General (BGEN)",
+    "Major General (MGEN)",
+    "Lieutenant General (LTGEN)",
+    "General (GEN)",
+    // Philippine Navy Ranks
+    "Apprentice Seaman (ASN)",
+    "Seaman Second Class (SN2)",
+    "Seaman First Class (SN1)",
+    "Petty Officer Third Class (PO3)",
+    "Petty Officer Second Class (PO2)",
+    "Petty Officer First Class (PO1)",
+    "Chief Petty Officer (CPO)",
+    "Senior Chief Petty Officer (SCPO)",
+    "Master Chief Petty Officer (MCPO)",
+    "First Command Master Chief Petty Officer (FCMCPO)",
+    "Ensign (ENS)",
+    "Lieutenant Junior Grade (LTJG)",
+    "Lieutenant (LT)",
+    "Lieutenant Commander (LCDR)",
+    "Commander (CDR)",
+    "Captain (CAPT)",
+    "Commodore (COMMO)",
+    "Rear Admiral (RADM)",
+    "Vice Admiral (VADM)",
+    "Admiral (ADM)",
+    // Philippine Air Force Ranks
+    "Airman (AM)",
+    "Airman First Class (A1C)",
+    "Airman Second Class (A2C)",
+    "Sergeant (SGT)",
+    "Staff Sergeant (SSG)",
+    "Technical Sergeant (TSG)",
+    "Master Sergeant (MSG)",
+    "Senior Master Sergeant (SMSg)",
+    "Chief Master Sergeant (CMSg)",
+    "First Chief Master Sergeant (FCMSg)",
+    "Second Lieutenant (2LT)",
+    "First Lieutenant (1LT)",
+    "Captain (CPT)",
+    "Major (MAJ)",
+    "Lieutenant Colonel (LTCOL)",
+    "Colonel (COL)",
+    "Brigadier General (BGEN)",
+    "Major General (MGEN)",
+    "Lieutenant General (LTGEN)",
+    "General (GEN)",
   ];
 
   static List<String> getBranches() {
@@ -45,15 +148,183 @@ class MilitaryData {
   }
 
   static List<String> getDivisions(String branch) {
-    // For now, return all divisions for any branch
-    // This can be customized later if needed
-    return divisions;
+    // Return divisions based on selected branch
+    switch (branch) {
+      case "Philippine Army":
+        return ["Infantry Divisions", "Specialized / Support Units"];
+      case "Philippine Navy":
+        return [
+          "Naval Operating Forces",
+          "Fleet Units",
+          "Naval Special Operations",
+          "Philippine Marine Corps",
+        ];
+      case "Philippine Air Force":
+        return ["Air Wings", "Operational Commands", "Support / Training"];
+      default:
+        return [];
+    }
   }
 
   static List<String> getUnits(String branch, String division) {
-    // For now, return all units for any branch/division
-    // This can be customized later if needed
-    return units;
+    // Return units based on selected branch and division
+    if (branch == "Philippine Army") {
+      if (division == "Infantry Divisions") {
+        return [
+          "1st Infantry Division (1ID) – Tabak Division",
+          "2nd Infantry Division (2ID) – Jungle Fighter Division",
+          "3rd Infantry Division (3ID) – Spearhead Troopers",
+          "4th Infantry Division (4ID) – Diamond Division",
+          "5th Infantry Division (5ID) – Star Division",
+          "6th Infantry Division (6ID) – Kampilan Division",
+          "7th Infantry Division (7ID) – Kaugnay Division",
+          "8th Infantry Division (8ID) – Stormtroopers Division",
+          "9th Infantry Division (9ID) – Spear Division",
+          "10th Infantry Division (10ID) – Agila Division",
+          "11th Infantry Division (11ID) – Alakdan Division",
+        ];
+      } else if (division == "Specialized / Support Units") {
+        return [
+          'Armor "Pambato" Division (Armor Div)',
+          "Special Forces Regiment (Airborne) (SFR-A)",
+          "Scout Ranger Regiment (SRR)",
+          "Army Aviation Regiment (AAR)",
+          "Civil-Military Operations Regiment (CMOR)",
+        ];
+      }
+    } else if (branch == "Philippine Navy") {
+      if (division == "Naval Operating Forces") {
+        return [
+          "Naval Forces Northern Luzon (NFNL)",
+          "Naval Forces Southern Luzon (NFSL)",
+          "Naval Forces Western Mindanao (NFWM)",
+          "Naval Forces Eastern Mindanao (NFEM)",
+        ];
+      } else if (division == "Fleet Units") {
+        return [
+          "Naval Forces West (NFW)",
+          "Offshore Combat Force (OCF)",
+          "Littoral Combat Force (LCF)",
+          "Sealift Amphibious Force (SAF)",
+        ];
+      } else if (division == "Naval Special Operations") {
+        return [
+          "Naval Air Wing (NAW)",
+          "Naval Special Operations Command (NAVSOCOM)",
+          "Marine Special Operations Group (MARSOG)",
+        ];
+      } else if (division == "Philippine Marine Corps") {
+        return ["Marine Special Operations Group (MARSOG)"];
+      }
+    } else if (branch == "Philippine Air Force") {
+      if (division == "Air Wings") {
+        return [
+          "5th Fighter Wing (5FW)",
+          "15th Strike Wing (15SW)",
+          "205th Tactical Helicopter Wing (205THW)",
+          "220th Airlift Wing (220AW)",
+        ];
+      } else if (division == "Operational Commands") {
+        return [
+          "Air Defense Command (ADC)",
+          "Air Mobility Command (AMC)",
+          "Tactical Operations Wing – Northern Luzon (TOWNL)",
+          "Tactical Operations Wing – Southern Luzon (TOWSL)",
+          "Tactical Operations Wing – Central (TOWC)",
+          "Tactical Operations Wing – Western Mindanao (TOWWM)",
+          "Tactical Operations Wing – Eastern Mindanao (TOWEM)",
+        ];
+      } else if (division == "Support / Training") {
+        return [
+          "Air Education, Training, and Doctrine Command (AETDC)",
+          "Air Logistics Command (ALC)",
+        ];
+      }
+    }
+    return [];
+  }
+
+  static List<String> getRanks() {
+    // For now, return all ranks - can be filtered by branch later if needed
+    return ranks;
+  }
+
+  static List<String> getRanksByBranch(String? branch) {
+    if (branch == null) return [];
+
+    switch (branch) {
+      case "Philippine Army":
+        return [
+          "Private (PVT)",
+          "Private First Class (PFC)",
+          "Corporal (CPL)",
+          "Sergeant (SGT)",
+          "Staff Sergeant (SSG)",
+          "Technical Sergeant (TSG)",
+          "Master Sergeant (MSG)",
+          "Senior Master Sergeant (SMSg)",
+          "Chief Master Sergeant (CMSg)",
+          "First Chief Master Sergeant (FCMSg)",
+          "Second Lieutenant (2LT)",
+          "First Lieutenant (1LT)",
+          "Captain (CPT)",
+          "Major (MAJ)",
+          "Lieutenant Colonel (LTCOL)",
+          "Colonel (COL)",
+          "Brigadier General (BGEN)",
+          "Major General (MGEN)",
+          "Lieutenant General (LTGEN)",
+          "General (GEN)",
+        ];
+      case "Philippine Navy":
+        return [
+          "Apprentice Seaman (ASN)",
+          "Seaman Second Class (SN2)",
+          "Seaman First Class (SN1)",
+          "Petty Officer Third Class (PO3)",
+          "Petty Officer Second Class (PO2)",
+          "Petty Officer First Class (PO1)",
+          "Chief Petty Officer (CPO)",
+          "Senior Chief Petty Officer (SCPO)",
+          "Master Chief Petty Officer (MCPO)",
+          "First Command Master Chief Petty Officer (FCMCPO)",
+          "Ensign (ENS)",
+          "Lieutenant Junior Grade (LTJG)",
+          "Lieutenant (LT)",
+          "Lieutenant Commander (LCDR)",
+          "Commander (CDR)",
+          "Captain (CAPT)",
+          "Commodore (COMMO)",
+          "Rear Admiral (RADM)",
+          "Vice Admiral (VADM)",
+          "Admiral (ADM)",
+        ];
+      case "Philippine Air Force":
+        return [
+          "Airman (AM)",
+          "Airman First Class (A1C)",
+          "Airman Second Class (A2C)",
+          "Sergeant (SGT)",
+          "Staff Sergeant (SSG)",
+          "Technical Sergeant (TSG)",
+          "Master Sergeant (MSG)",
+          "Senior Master Sergeant (SMSg)",
+          "Chief Master Sergeant (CMSg)",
+          "First Chief Master Sergeant (FCMSg)",
+          "Second Lieutenant (2LT)",
+          "First Lieutenant (1LT)",
+          "Captain (CPT)",
+          "Major (MAJ)",
+          "Lieutenant Colonel (LTCOL)",
+          "Colonel (COL)",
+          "Brigadier General (BGEN)",
+          "Major General (MGEN)",
+          "Lieutenant General (LTGEN)",
+          "General (GEN)",
+        ];
+      default:
+        return [];
+    }
   }
 }
 
@@ -104,6 +375,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
   String? _selectedBranch;
   String? _selectedDivision;
   String? _selectedUnit;
+  String? _selectedRank;
 
   // Store form data
   Map<String, dynamic> _formData = {};
@@ -800,6 +1072,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                   _selectedDivision =
                       null; // Reset division when branch changes
                   _selectedUnit = null; // Reset unit when branch changes
+                  _selectedRank = null; // Reset rank when branch changes
                 });
               },
               // Customize dropdown button icon
@@ -966,6 +1239,67 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
             ),
           ),
         ),
+        const SizedBox(height: 16),
+        // Rank dropdown with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Container(
+            decoration: const BoxDecoration(),
+            child: DropdownButtonFormField<String>(
+              key: const ValueKey('rank_dropdown'),
+              value: _selectedRank,
+              hint: Text(
+                _selectedBranch == null ? 'Select Branch first' : 'Select Rank',
+              ),
+              isExpanded: true,
+              decoration: InputDecoration(
+                prefixIcon: Icon(
+                  Icons.military_tech,
+                  color: AppColors.armyPrimary,
+                ),
+                labelText: 'Rank',
+                labelStyle: TextStyle(color: AppColors.armyPrimary),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 2,
+                  ),
+                ),
+                contentPadding: EdgeInsets.only(
+                  left: 16,
+                  right: 40,
+                  top: 16,
+                  bottom: 16,
+                ),
+                errorText: _showStep2Errors ? _errorsStep2['rank'] : null,
+              ),
+              items:
+                  _selectedBranch != null
+                      ? _buildGroupedRankItems(_selectedBranch!)
+                      : [],
+              onChanged:
+                  _selectedBranch != null
+                      ? (String? newValue) {
+                        setState(() {
+                          _selectedRank = newValue;
+                        });
+                      }
+                      : null,
+              icon: Icon(Icons.arrow_drop_down, color: AppColors.armyPrimary),
+              iconSize: 24,
+            ),
+          ),
+        ),
         const SizedBox(height: 24),
         // Buttons with fade animation
         FadeTransition(
@@ -1117,6 +1451,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
         'unit': _selectedUnit ?? '',
         'branchOfService': _selectedBranch ?? '',
         'division': _selectedDivision ?? '',
+        'rank': _selectedRank ?? '',
         'address': _streetAddressController.text.trim(),
         'contactNumber': _contactNoController.text.trim(),
         'dateOfBirth':
@@ -1142,6 +1477,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
         branch: _selectedBranch,
         division: _selectedDivision,
         unit: _selectedUnit,
+        rank: _selectedRank,
       );
 
       // Check if there are any validation errors
@@ -1473,6 +1809,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                     'Division',
                     _selectedDivision ?? 'Not selected',
                   ),
+                  _buildDetailRow('Rank', _selectedRank ?? 'Not selected'),
                 ]),
               ],
             ),
@@ -1885,6 +2222,7 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
         'Division',
       ),
       'unit': ValidationUtils.validateDropdown(_selectedUnit, 'Unit'),
+      'rank': ValidationUtils.validateDropdown(_selectedRank, 'Rank'),
     };
   }
 
@@ -1910,5 +2248,171 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
     if (!hasError) {
       _nextStep();
     }
+  }
+
+  List<DropdownMenuItem<String>> _buildGroupedRankItems(String branch) {
+    final allRanks = MilitaryData.getRanksByBranch(branch);
+
+    // Define enlisted and officer ranks for each branch
+    List<String> enlistedRanks = [];
+    List<String> officerRanks = [];
+
+    if (branch == "Philippine Army") {
+      enlistedRanks =
+          allRanks
+              .where(
+                (rank) =>
+                    rank.startsWith('Private') ||
+                    rank.startsWith('Corporal') ||
+                    rank.startsWith('Sergeant') ||
+                    rank.startsWith('Technical Sergeant') ||
+                    rank.startsWith('Master Sergeant') ||
+                    rank.startsWith('Chief Master Sergeant') ||
+                    rank.startsWith('First Chief Master Sergeant'),
+              )
+              .toList();
+
+      officerRanks =
+          allRanks
+              .where(
+                (rank) =>
+                    rank.startsWith('Second Lieutenant') ||
+                    rank.startsWith('First Lieutenant') ||
+                    rank.startsWith('Captain') ||
+                    rank.startsWith('Major') ||
+                    rank.startsWith('Lieutenant Colonel') ||
+                    rank.startsWith('Colonel') ||
+                    rank.startsWith('Brigadier General') ||
+                    rank.startsWith('Major General') ||
+                    rank.startsWith('Lieutenant General') ||
+                    rank.startsWith('General'),
+              )
+              .toList();
+    } else if (branch == "Philippine Navy") {
+      enlistedRanks =
+          allRanks
+              .where(
+                (rank) =>
+                    rank.startsWith('Apprentice Seaman') ||
+                    rank.startsWith('Seaman') ||
+                    rank.startsWith('Petty Officer') ||
+                    rank.startsWith('Chief Petty Officer') ||
+                    rank.startsWith('Senior Chief Petty Officer') ||
+                    rank.startsWith('Master Chief Petty Officer') ||
+                    rank.startsWith('First Command Master Chief Petty Officer'),
+              )
+              .toList();
+
+      officerRanks =
+          allRanks
+              .where(
+                (rank) =>
+                    rank.startsWith('Ensign') ||
+                    rank.startsWith('Lieutenant Junior Grade') ||
+                    rank.startsWith('Lieutenant') ||
+                    rank.startsWith('Lieutenant Commander') ||
+                    rank.startsWith('Commander') ||
+                    rank.startsWith('Captain') ||
+                    rank.startsWith('Commodore') ||
+                    rank.startsWith('Rear Admiral') ||
+                    rank.startsWith('Vice Admiral') ||
+                    rank.startsWith('Admiral'),
+              )
+              .toList();
+    } else if (branch == "Philippine Air Force") {
+      enlistedRanks =
+          allRanks
+              .where(
+                (rank) =>
+                    rank.startsWith('Airman') ||
+                    rank.startsWith('Sergeant') ||
+                    rank.startsWith('Staff Sergeant') ||
+                    rank.startsWith('Technical Sergeant') ||
+                    rank.startsWith('Master Sergeant') ||
+                    rank.startsWith('Senior Master Sergeant') ||
+                    rank.startsWith('Chief Master Sergeant') ||
+                    rank.startsWith('First Chief Master Sergeant'),
+              )
+              .toList();
+
+      officerRanks =
+          allRanks
+              .where(
+                (rank) =>
+                    rank.startsWith('Second Lieutenant') ||
+                    rank.startsWith('First Lieutenant') ||
+                    rank.startsWith('Captain') ||
+                    rank.startsWith('Major') ||
+                    rank.startsWith('Lieutenant Colonel') ||
+                    rank.startsWith('Colonel') ||
+                    rank.startsWith('Brigadier General') ||
+                    rank.startsWith('Major General') ||
+                    rank.startsWith('Lieutenant General') ||
+                    rank.startsWith('General'),
+              )
+              .toList();
+    }
+
+    final List<DropdownMenuItem<String>> items = [];
+
+    if (enlistedRanks.isNotEmpty) {
+      items.add(
+        const DropdownMenuItem<String>(
+          value: 'Enlisted Ranks',
+          child: Text(
+            'Enlisted Ranks',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.armyPrimary,
+            ),
+          ),
+        ),
+      );
+      items.addAll(
+        enlistedRanks.map(
+          (rank) => DropdownMenuItem<String>(
+            value: rank,
+            child: Text(
+              rank,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (officerRanks.isNotEmpty) {
+      items.add(
+        const DropdownMenuItem<String>(
+          value: 'Officer Ranks',
+          child: Text(
+            'Officer Ranks',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.armyPrimary,
+            ),
+          ),
+        ),
+      );
+      items.addAll(
+        officerRanks.map(
+          (rank) => DropdownMenuItem<String>(
+            value: rank,
+            child: Text(
+              rank,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return items;
   }
 }

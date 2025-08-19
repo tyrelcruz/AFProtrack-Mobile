@@ -195,6 +195,7 @@ class ValidationUtils {
     String? branch,
     String? division,
     String? unit,
+    String? rank,
   }) {
     final errors = <String, String?>{};
 
@@ -215,6 +216,7 @@ class ValidationUtils {
     errors['branch'] = validateDropdown(branch, 'Branch of service');
     errors['division'] = validateDropdown(division, 'Division');
     errors['unit'] = validateDropdown(unit, 'Unit');
+    errors['rank'] = validateDropdown(rank, 'Rank');
 
     return errors;
   }
