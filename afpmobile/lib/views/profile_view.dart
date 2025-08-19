@@ -45,8 +45,17 @@ class _ProfileViewState extends State<ProfileView> {
       appBar: AppBar(
         backgroundColor: AppColors.armyPrimary,
         elevation: 0,
-        centerTitle: false,
+        centerTitle: true,
         titleSpacing: 0,
+        title: const Text(
+          'TRAINEE PROFILE',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.1,
+          ),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
@@ -78,6 +87,7 @@ class _ProfileViewState extends State<ProfileView> {
                   profilePictureSize: profilePictureSize,
                   profileIconSize: profileIconSize,
                 ),
+                const SizedBox(height: 5),
                 // Overview card with rounded top corners
                 _buildOverviewCard(context, cardWidth),
               ],
@@ -98,9 +108,17 @@ class _ProfileViewState extends State<ProfileView> {
     final padding = ResponsiveUtils.getResponsivePadding(context);
     final double leftPadding =
         padding + (ResponsiveUtils.isMobile(context) ? 20.0 : 40.0);
+    final double topPadding = ResponsiveUtils.isMobile(context) ? 8.0 : 12.0;
+    final double rightPadding =
+        padding + (ResponsiveUtils.isMobile(context) ? 20.0 : 40.0);
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(leftPadding, padding, padding, padding),
+      padding: EdgeInsets.fromLTRB(
+        leftPadding,
+        topPadding,
+        rightPadding,
+        padding,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -129,25 +147,16 @@ class _ProfileViewState extends State<ProfileView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'TRAINEE PROFILE'.toUpperCase(),
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
                   _userProfile.name.toUpperCase(),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                     fontSize: 16,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 12),
                 _buildHeaderMeta('AFPIC NO:', _userProfile.serviceId),
                 _buildHeaderMeta('UNIT:', _userProfile.unit),
                 _buildHeaderMeta('BRANCH', _userProfile.branch),
@@ -186,7 +195,9 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Widget _buildOverviewCard(BuildContext context, double cardWidth) {
-    final padding = ResponsiveUtils.getResponsivePadding(context);
+    final basePadding = ResponsiveUtils.getResponsivePadding(context);
+    final double horizontalPadding =
+        basePadding + (ResponsiveUtils.isMobile(context) ? 8.0 : 16.0);
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -197,7 +208,12 @@ class _ProfileViewState extends State<ProfileView> {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(padding, 20, padding, 24),
+        padding: EdgeInsets.fromLTRB(
+          horizontalPadding,
+          20,
+          horizontalPadding,
+          24,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
