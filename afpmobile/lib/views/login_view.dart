@@ -18,7 +18,8 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
   bool _isLoading = false;
 
   // Text controllers for login form
-  final TextEditingController _serviceIdController = TextEditingController();
+  final TextEditingController _emailOrServiceIdController =
+      TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   // Static flag to track if this is the initial app launch
@@ -117,7 +118,7 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
     _titleController.dispose();
     _formController.dispose();
     _buttonController.dispose();
-    _serviceIdController.dispose();
+    _emailOrServiceIdController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -127,8 +128,8 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
     if (_isLoading) return; // Prevent multiple calls
 
     // Validate inputs
-    if (_serviceIdController.text.trim().isEmpty) {
-      _showErrorDialog('Service ID is required');
+    if (_emailOrServiceIdController.text.trim().isEmpty) {
+      _showErrorDialog('Email or Service ID is required');
       return;
     }
     if (_passwordController.text.trim().isEmpty) {
@@ -143,7 +144,7 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
     try {
       // Call backend login API
       final result = await ApiService.login(
-        _serviceIdController.text.trim(),
+        _emailOrServiceIdController.text.trim(),
         _passwordController.text.trim(),
       );
 
@@ -487,13 +488,15 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
                           ],
                         ),
                         child: TextField(
-                          controller: _serviceIdController,
+                          controller: _emailOrServiceIdController,
+                          keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
                             prefixIcon: Icon(
-                              Icons.badge,
+                              Icons.email,
                               color: AppColors.armyPrimary,
                             ),
-                            labelText: 'Service ID',
+                            labelText: 'Email or Service ID',
+                            hintText: 'Enter your email or service ID',
                             labelStyle: TextStyle(
                               color: AppColors.armySecondary,
                             ),

@@ -129,23 +129,30 @@ class ApiService {
     }
   }
 
-  // Login user
+  // Login user with email or service ID
   static Future<Map<String, dynamic>> login(
-    String serviceId,
+    String emailOrServiceId,
     String password,
   ) async {
     try {
       final url = '$baseUrl/users/login';
       print('Making login request to: $url');
 
+      // For now, always send as serviceId since backend only supports serviceId
+      // TODO: Update backend to support email login
+      final requestBody = {
+        'serviceId': emailOrServiceId.toUpperCase().trim(),
+        'password': password,
+      };
+
+      print('Login with serviceId: ${emailOrServiceId.toUpperCase().trim()}');
+      print('Request body: ${jsonEncode(requestBody)}');
+
       final response = await http
           .post(
             Uri.parse(url),
             headers: _headers,
-            body: jsonEncode({
-              'serviceId': serviceId.toUpperCase(),
-              'password': password,
-            }),
+            body: jsonEncode(requestBody),
           )
           .timeout(
             const Duration(seconds: 30),
@@ -157,6 +164,7 @@ class ApiService {
           );
 
       print('Login response status: ${response.statusCode}');
+      print('Login response body: ${response.body}');
 
       final data = jsonDecode(response.body);
 
