@@ -7,88 +7,51 @@ import 'login_view.dart';
 
 // Data structure for military branches and their divisions/units
 class MilitaryData {
-  static const Map<String, Map<String, List<String>>> branches = {
-    'Philippine Army (PA)': {
-      'Infantry Divisions': [
-        '1st Infantry Division (1ID)',
-        '2nd Infantry Division (2ID)',
-        '3rd Infantry Division (3ID)',
-        '4th Infantry Division (4ID)',
-        '5th Infantry Division (5ID)',
-        '6th Infantry Division (6ID)',
-        '7th Infantry Division (7ID)',
-        '8th Infantry Division (8ID)',
-        '9th Infantry Division (9ID)',
-        '10th Infantry Division (10ID)',
-        '11th Infantry Division (11ID)',
-      ],
-      'Specialized / Support Units': [
-        'Armor "Pambato" Division (Armor Div)',
-        'Special Forces Regiment (Airborne) (SFR-A)',
-        'Scout Ranger Regiment (SRR)',
-        'Army Aviation Regiment (AAR)',
-        'Civil-Military Operations Regiment (CMOR)',
-      ],
-    },
-    'Philippine Navy (PN)': {
-      'Naval Operating Forces': [
-        'Naval Forces Northern Luzon (NFNL)',
-        'Naval Forces Southern Luzon (NFSL)',
-        'Naval Forces Western Mindanao (NFWM)',
-        'Naval Forces Eastern Mindanao (NFEM)',
-        'Naval Forces West (NFW)',
-      ],
-      'Fleet Units': [
-        'Offshore Combat Force (OCF)',
-        'Littoral Combat Force (LCF)',
-        'Sealift Amphibious Force (SAF)',
-        'Naval Air Wing (NAW)',
-      ],
-      'Naval Special Operations': [
-        'Naval Special Operations Command (NAVSOCOM)',
-      ],
-      'Philippine Marine Corps': ['Marine Special Operations Group (MARSOG)'],
-    },
-    'Philippine Air Force (PAF)': {
-      'Air Wings': [
-        '5th Fighter Wing (5FW)',
-        '15th Strike Wing (15SW)',
-        '205th Tactical Helicopter Wing (205THW)',
-        '220th Airlift Wing (220AW)',
-      ],
-      'Operational Commands': [
-        'Air Defense Command (ADC)',
-        'Air Mobility Command (AMC)',
-        'Tactical Operations Wing - Northern Luzon (TOWNL)',
-        'Tactical Operations Wing - Southern Luzon (TOWSL)',
-        'Tactical Operations Wing - Central (TOWC)',
-        'Tactical Operations Wing - Western Mindanao (TOWWM)',
-        'Tactical Operations Wing - Eastern Mindanao (TOWEM)',
-      ],
-      'Support / Training': [
-        'Air Education, Training, and Doctrine Command (AETDC)',
-        'Air Logistics Command (ALC)',
-      ],
-    },
-  };
+  // Backend enum values
+  static const List<String> branches = [
+    "Army",
+    "Air Force",
+    "Navy",
+    "Marine Corps",
+    "Coast Guard",
+  ];
+
+  static const List<String> divisions = [
+    "Infantry",
+    "Artillery",
+    "Armor",
+    "Engineer",
+    "Signal",
+    "Medical",
+    "Logistics",
+    "Intelligence",
+  ];
+
+  static const List<String> units = [
+    "1st Infantry Division",
+    "2nd Infantry Division",
+    "3rd Infantry Division",
+    "4th Infantry Division",
+    "5th Infantry Division",
+    "6th Infantry Division",
+    "7th Infantry Division",
+    "8th Infantry Division",
+  ];
 
   static List<String> getBranches() {
-    return branches.keys.toList();
+    return branches;
   }
 
   static List<String> getDivisions(String branch) {
-    if (branches.containsKey(branch)) {
-      return branches[branch]!.keys.toList();
-    }
-    return [];
+    // For now, return all divisions for any branch
+    // This can be customized later if needed
+    return divisions;
   }
 
   static List<String> getUnits(String branch, String division) {
-    if (branches.containsKey(branch) &&
-        branches[branch]!.containsKey(division)) {
-      return branches[branch]![division]!;
-    }
-    return [];
+    // For now, return all units for any branch/division
+    // This can be customized later if needed
+    return units;
   }
 }
 
@@ -115,7 +78,8 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
   late Animation<double> _headerAnimation;
 
   // Form controllers for Step 1
-  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _suffixController = TextEditingController();
   final TextEditingController _serviceIdController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -209,7 +173,8 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
     _stepTransitionController.dispose();
     _formElementsController.dispose();
     _headerController.dispose();
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _suffixController.dispose();
     _serviceIdController.dispose();
     _passwordController.dispose();
@@ -401,14 +366,13 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
           ),
         ),
         const SizedBox(height: 22),
-        // Name and Suffix fields with fade animation
+        // First Name and Last Name fields with fade animation
         FadeTransition(
           opacity: _formElementsAnimation,
           child: Row(
             children: [
-              // Name field (expanded)
+              // First Name field
               Expanded(
-                flex: 2,
                 child: Container(
                   decoration: BoxDecoration(
                     boxShadow: [
@@ -420,13 +384,13 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                     ],
                   ),
                   child: TextField(
-                    controller: _nameController,
+                    controller: _firstNameController,
                     decoration: InputDecoration(
                       prefixIcon: Icon(
                         Icons.person,
                         color: AppColors.armyPrimary,
                       ),
-                      labelText: 'Full Name',
+                      labelText: 'First Name',
                       labelStyle: TextStyle(color: AppColors.armyPrimary),
                       filled: true,
                       fillColor: Colors.white,
@@ -449,9 +413,8 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                 ),
               ),
               const SizedBox(width: 16),
-              // Suffix field (smaller)
+              // Last Name field
               Expanded(
-                flex: 1,
                 child: Container(
                   decoration: BoxDecoration(
                     boxShadow: [
@@ -463,19 +426,14 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                     ],
                   ),
                   child: TextField(
-                    controller: _suffixController,
+                    controller: _lastNameController,
                     decoration: InputDecoration(
-                      labelText: 'Suffix',
-                      hintText: 'Jr., Sr., III, etc.',
+                      prefixIcon: Icon(
+                        Icons.person,
+                        color: AppColors.armyPrimary,
+                      ),
+                      labelText: 'Last Name',
                       labelStyle: TextStyle(color: AppColors.armyPrimary),
-                      hintStyle: TextStyle(
-                        color: AppColors.armyPrimary.withOpacity(0.6),
-                        fontSize: 12,
-                      ),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 16,
-                      ),
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
@@ -497,6 +455,54 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                 ),
               ),
             ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Suffix field with fade animation
+        FadeTransition(
+          opacity: _formElementsAnimation,
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _suffixController,
+              decoration: InputDecoration(
+                prefixIcon: Icon(
+                  Icons.text_fields,
+                  color: AppColors.armyPrimary,
+                ),
+                labelText: 'Suffix',
+                hintText: 'Jr., Sr., III, etc.',
+                labelStyle: TextStyle(color: AppColors.armyPrimary),
+                hintStyle: TextStyle(
+                  color: AppColors.armyPrimary.withOpacity(0.6),
+                  fontSize: 12,
+                ),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: AppColors.armyPrimary,
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -1259,38 +1265,46 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
     });
 
     try {
-      // Parse the full name into first and last name
-      final fullName = _nameController.text.trim();
-      if (fullName.isEmpty) {
-        throw Exception('Full name is required');
-      }
-
-      final nameParts = fullName.split(' ');
-      String firstName, lastName;
-
-      if (nameParts.length == 1) {
-        // Only one name provided, use it as first name
-        firstName = nameParts[0];
-        lastName = '';
-      } else if (nameParts.length == 2) {
-        // Two names provided
-        firstName = nameParts[0];
-        lastName = nameParts[1];
-      } else {
-        // More than two names, first is first name, rest is last name
-        firstName = nameParts[0];
-        lastName = nameParts.sublist(1).join(' ');
-      }
+      // Get first and last name from separate fields
+      final firstName = _firstNameController.text.trim();
+      final lastName = _lastNameController.text.trim();
 
       // Parse birthday string to Date
       DateTime? dateOfBirth;
       if (_birthdayController.text.isNotEmpty) {
-        final parts = _birthdayController.text.split('/');
-        if (parts.length == 3) {
-          final month = int.tryParse(parts[0]) ?? 1;
-          final day = int.tryParse(parts[1]) ?? 1;
-          final year = int.tryParse(parts[2]) ?? 1990;
-          dateOfBirth = DateTime(year, month, day);
+        // Parse format: "January 15, 1990"
+        final months = [
+          'January',
+          'February',
+          'March',
+          'April',
+          'May',
+          'June',
+          'July',
+          'August',
+          'September',
+          'October',
+          'November',
+          'December',
+        ];
+
+        try {
+          // Remove the comma and split by spaces
+          final cleanText = _birthdayController.text.replaceAll(',', '');
+          final parts = cleanText.split(' ');
+
+          if (parts.length == 3) {
+            final monthName = parts[0];
+            final day = int.tryParse(parts[1]) ?? 1;
+            final year = int.tryParse(parts[2]) ?? 1990;
+
+            final monthIndex = months.indexOf(monthName);
+            if (monthIndex != -1) {
+              dateOfBirth = DateTime(year, monthIndex + 1, day);
+            }
+          }
+        } catch (e) {
+          // If parsing fails, dateOfBirth remains null
         }
       }
 
@@ -1298,7 +1312,6 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
       final userData = {
         'firstName': firstName,
         'lastName': lastName,
-        'suffix': _suffixController.text.trim(),
         'serviceId': _serviceIdController.text.trim().toUpperCase(),
         'email': _emailController.text.trim().toLowerCase(),
         'unit': _selectedUnit ?? '',
@@ -1306,10 +1319,12 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
         'division': _selectedDivision ?? '',
         'address': _streetAddressController.text.trim(),
         'contactNumber': _contactNoController.text.trim(),
-        'dateOfBirth': dateOfBirth?.toIso8601String(),
+        'dateOfBirth':
+            dateOfBirth?.toIso8601String().split(
+              'T',
+            )[0], // Format as YYYY-MM-DD
         'password': _passwordController.text,
-        'accountType': 'mobile', // Since this is mobile app
-        'role': 'personnel', // Default role for new signups
+        'confirmPassword': _confirmPasswordController.text,
       };
 
       // Validate required fields
@@ -1333,6 +1348,21 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
       }
       if (dateOfBirth == null) {
         throw Exception('Date of birth is required');
+      }
+      if (_selectedBranch == null || _selectedBranch!.isEmpty) {
+        throw Exception('Branch of service is required');
+      }
+      if (_selectedDivision == null || _selectedDivision!.isEmpty) {
+        throw Exception('Division is required');
+      }
+      if (_selectedUnit == null || _selectedUnit!.isEmpty) {
+        throw Exception('Unit is required');
+      }
+      if (_streetAddressController.text.trim().isEmpty) {
+        throw Exception('Address is required');
+      }
+      if (_contactNoController.text.trim().isEmpty) {
+        throw Exception('Contact number is required');
       }
 
       // Make API call to create pending account
@@ -1634,7 +1664,8 @@ class _SignupViewState extends State<SignupView> with TickerProviderStateMixin {
                 const SizedBox(height: 20),
                 // Personal Information Section
                 _buildDetailSection('Personal Information', Icons.person, [
-                  _buildDetailRow('Full Name', _nameController.text),
+                  _buildDetailRow('First Name', _firstNameController.text),
+                  _buildDetailRow('Last Name', _lastNameController.text),
                   _buildDetailRow('Suffix', _suffixController.text),
                   _buildDetailRow('Date of Birth', _birthdayController.text),
                   _buildDetailRow('Email Address', _emailController.text),

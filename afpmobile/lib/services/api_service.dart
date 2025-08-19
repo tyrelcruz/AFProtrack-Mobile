@@ -1,9 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../config/app_config.dart';
 
 class ApiService {
-  // Use 10.0.2.2 for Android emulator or your computer's IP for physical device
-  static const String baseUrl = 'http://10.0.2.2:5000/api';
+  // Get base URL from environment variables or app config
+  static String get baseUrl {
+    return dotenv.env['API_BASE_URL'] ?? AppConfig.apiBaseUrl;
+  }
 
   // Headers for API requests
   static Map<String, String> get _headers => {
@@ -16,11 +20,23 @@ class ApiService {
     Map<String, dynamic> userData,
   ) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/users/pending/create'),
-        headers: _headers,
-        body: jsonEncode(userData),
-      );
+      final url = '$baseUrl/users/mobile/signup';
+      print('Making API request to: $url');
+      print('Request body: ${jsonEncode(userData)}');
+
+      final response = await http
+          .post(Uri.parse(url), headers: _headers, body: jsonEncode(userData))
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw Exception(
+                'Request timed out. Please check your connection and try again.',
+              );
+            },
+          );
+
+      print('Signup response status: ${response.statusCode}');
+      print('Signup response body: ${response.body}');
 
       final data = jsonDecode(response.body);
 
@@ -119,14 +135,28 @@ class ApiService {
     String password,
   ) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/users/login'),
-        headers: _headers,
-        body: jsonEncode({
-          'serviceId': serviceId.toUpperCase(),
-          'password': password,
-        }),
-      );
+      final url = '$baseUrl/users/login';
+      print('Making login request to: $url');
+
+      final response = await http
+          .post(
+            Uri.parse(url),
+            headers: _headers,
+            body: jsonEncode({
+              'serviceId': serviceId.toUpperCase(),
+              'password': password,
+            }),
+          )
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw Exception(
+                'Login request timed out. Please check your connection and try again.',
+              );
+            },
+          );
+
+      print('Login response status: ${response.statusCode}');
 
       final data = jsonDecode(response.body);
 

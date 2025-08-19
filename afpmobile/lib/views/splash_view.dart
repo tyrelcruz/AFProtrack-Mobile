@@ -4,7 +4,7 @@ import 'main_navigation_view.dart';
 import 'dart:async';
 
 // Toggle this flag to bypass login temporarily without removing implementation
-const bool kBypassLogin = true;
+const bool kBypassLogin = false;
 
 class SplashView extends StatefulWidget {
   const SplashView({Key? key}) : super(key: key);
