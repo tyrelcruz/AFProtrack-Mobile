@@ -243,4 +243,34 @@ class ApiService {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }
+
+  // Get available training programs (mobile)
+  static Future<Map<String, dynamic>> getAvailableTrainingPrograms({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+      final headers = await _headers;
+      final uri = Uri.parse(
+        '$baseUrl/training-programs/mobile/available?page=$page&limit=$limit',
+      );
+      final response = await http.get(uri, headers: headers);
+
+      print('Available programs response status: ${response.statusCode}');
+      print('Available programs response body: ${response.body}');
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data['data']};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch available programs',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
 }
