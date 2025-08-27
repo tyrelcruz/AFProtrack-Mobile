@@ -16,9 +16,9 @@ class ResponsiveUtils {
 
   static double getResponsiveFontSize(
     BuildContext context, {
-    double mobile = 14.0,
-    double tablet = 16.0,
-    double desktop = 18.0,
+    double mobile = 12.0,
+    double tablet = 14.0,
+    double desktop = 16.0,
   }) {
     if (isMobile(context)) return mobile;
     if (isTablet(context)) return tablet;

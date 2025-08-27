@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/app_colors.dart';
 import '../services/api_service.dart';
 import '../services/token_service.dart';
@@ -97,6 +98,9 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
       _formController.value = 1.0;
       _buttonController.value = 1.0;
     }
+
+    // Load remembered credentials if available
+    _loadRememberedCredentials();
   }
 
   void _startAnimations() async {
@@ -152,6 +156,39 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
       if (result['success']) {
         // Save authentication data
         final userData = result['data'];
+        // Enforce role-based access: only allow 'trainee'
+        final dynamic user = userData != null ? userData['user'] : null;
+        final dynamic rawRole =
+            user != null ? (user['role'] ?? user['accountType']) : null;
+        String? resolvedRole;
+        if (rawRole is String) {
+          resolvedRole = rawRole.toLowerCase();
+        } else if (rawRole is List) {
+          // If backend returns roles array, find a matching role
+          try {
+            resolvedRole = rawRole
+                .map((e) => e.toString().toLowerCase())
+                .firstWhere(
+                  (r) =>
+                      r == 'trainee' || r == 'admin' || r == 'training_staff',
+                  orElse: () => '',
+                );
+          } catch (_) {
+            resolvedRole = null;
+          }
+        }
+
+        if (resolvedRole == null ||
+            resolvedRole.isEmpty ||
+            resolvedRole != 'trainee') {
+          _showErrorDialog('Only trainee accounts can log in on this app.');
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+          return;
+        }
         if (userData != null && userData['token'] != null) {
           await TokenService.saveAuthData(
             token: userData['token'],
@@ -159,6 +196,16 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
             userId: userData['user']?['_id'] ?? userData['user']?['id'],
             userData: userData['user'],
           );
+        }
+
+        // Handle remember password preference after successful login
+        if (_rememberMe) {
+          await _saveRememberedCredentials(
+            _emailOrServiceIdController.text.trim(),
+            _passwordController.text.trim(),
+          );
+        } else {
+          await _clearRememberedCredentials();
         }
 
         // Login successful
@@ -208,6 +255,52 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  // Load saved credentials from SharedPreferences
+  Future<void> _loadRememberedCredentials() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedRemember = prefs.getBool('remember_me') ?? false;
+      if (savedRemember) {
+        final savedUsername = prefs.getString('remember_username') ?? '';
+        final savedPassword = prefs.getString('remember_password') ?? '';
+        setState(() {
+          _rememberMe = true;
+          _emailOrServiceIdController.text = savedUsername;
+          _passwordController.text = savedPassword;
+        });
+      }
+    } catch (e) {
+      // Ignore errors silently for UX
+    }
+  }
+
+  // Save credentials based on user preference
+  Future<void> _saveRememberedCredentials(
+    String username,
+    String password,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('remember_me', true);
+      await prefs.setString('remember_username', username);
+      await prefs.setString('remember_password', password);
+    } catch (e) {
+      // Ignore errors silently for UX
+    }
+  }
+
+  // Clear saved credentials
+  Future<void> _clearRememberedCredentials() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('remember_me');
+      await prefs.remove('remember_username');
+      await prefs.remove('remember_password');
+    } catch (e) {
+      // Ignore errors silently for UX
     }
   }
 

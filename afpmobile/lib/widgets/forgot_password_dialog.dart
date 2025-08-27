@@ -327,7 +327,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
                               color: Colors.white,
                               fontSize: ResponsiveUtils.getResponsiveFontSize(
                                 context,
-                                mobile: 13.0,
+                                mobile: 11.0,
                                 tablet: 14.0,
                                 desktop: 16.0,
                               ),
