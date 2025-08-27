@@ -15,7 +15,8 @@ class TrainingDataService {
     _isLoading = true;
 
     try {
-      final response = await ApiService.getTrainingPrograms();
+      // Fetch only available programs for the mobile list per requirement
+      final response = await ApiService.getAvailableTrainingPrograms();
 
       if (response['success']) {
         final programsData = response['data']['programs'] as List;
