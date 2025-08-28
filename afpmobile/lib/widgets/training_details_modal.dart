@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
 import '../models/training_program.dart';
 import '../utils/app_colors.dart';
+import '../services/api_service.dart';
+import '../services/training_data_service.dart';
 
-class TrainingDetailsModal extends StatelessWidget {
+class TrainingDetailsModal extends StatefulWidget {
   final TrainingProgram program;
 
   const TrainingDetailsModal({Key? key, required this.program})
     : super(key: key);
+
+  @override
+  State<TrainingDetailsModal> createState() => _TrainingDetailsModalState();
+}
+
+class _TrainingDetailsModalState extends State<TrainingDetailsModal> {
+  bool _isEnrolling = false;
+  String? _enrollmentError;
 
   @override
   Widget build(BuildContext context) {
@@ -28,13 +38,13 @@ class TrainingDetailsModal extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.trainingUpcomingBg,
+                    color: widget.program.statusColor,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
-                    program.status,
+                    widget.program.status,
                     style: TextStyle(
-                      color: AppColors.trainingUpcomingText,
+                      color: widget.program.statusTextColor,
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
                     ),
@@ -52,7 +62,7 @@ class TrainingDetailsModal extends StatelessWidget {
 
             // Title
             Text(
-              program.title,
+              widget.program.title,
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 22,
@@ -62,29 +72,29 @@ class TrainingDetailsModal extends StatelessWidget {
             const SizedBox(height: 20),
 
             // Details
-            _DetailRow(label: 'Batch', value: program.batch),
+            _DetailRow(label: 'Batch', value: widget.program.batch),
             const SizedBox(height: 12),
-            _DetailRow(label: 'Instructor', value: program.instructor),
+            _DetailRow(label: 'Instructor', value: widget.program.instructor),
             const SizedBox(height: 12),
-            _DetailRow(label: 'Venue', value: program.venue),
+            _DetailRow(label: 'Venue', value: widget.program.venue),
             const SizedBox(height: 12),
             _DetailRow(
               label: 'Time',
               value:
-                  '${program.formattedStartTime} - ${program.formattedEndTime}',
+                  '${widget.program.formattedStartTime} - ${widget.program.formattedEndTime}',
             ),
             const SizedBox(height: 24),
 
             // Participants
             Text(
-              'Participants: ${program.participants}',
+              'Participants: ${widget.program.participants}',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             const SizedBox(height: 12),
 
             // Progress bar
             LinearProgressIndicator(
-              value: _getProgressValue(program.participants),
+              value: _getProgressValue(widget.program.participants),
               minHeight: 10,
               backgroundColor: Colors.grey[200],
               color: Colors.grey[400],
@@ -94,7 +104,7 @@ class TrainingDetailsModal extends StatelessWidget {
 
             // Enrollment date
             Text(
-              'Enrollment Starts on ${program.enrollmentDate}',
+              'Enrollment Starts on ${widget.program.enrollmentDate}',
               style: const TextStyle(
                 fontSize: 14,
                 color: Color(0xFF0B6000),
@@ -103,39 +113,78 @@ class TrainingDetailsModal extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Enroll button
+            // Error message
+            if (_enrollmentError != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red[200]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red[600], size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _enrollmentError!,
+                        style: TextStyle(color: Colors.red[700], fontSize: 14),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+
+            // Action button (Enroll/View Details/etc.)
             SizedBox(
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
                 onPressed:
-                    program.isEnrollmentActive
-                        ? () {
-                          // TODO: Implement enrollment logic
-                          Navigator.of(context).pop();
-                        }
-                        : null,
+                    _isEnrolling ||
+                            widget.program.isDisabled ||
+                            widget.program.isEnrolled
+                        ? null
+                        : _handleEnrollment,
                 style: ElevatedButton.styleFrom(
                   backgroundColor:
-                      program.isEnrollmentActive
-                          ? AppColors.trainingButtonPrimary
-                          : AppColors.trainingButtonDisabled,
+                      _isEnrolling || widget.program.isEnrolled
+                          ? AppColors.trainingButtonDisabled
+                          : widget.program.buttonColor,
                   foregroundColor:
-                      program.isEnrollmentActive
-                          ? AppColors.white
-                          : AppColors.trainingButtonDisabledText,
+                      _isEnrolling || widget.program.isEnrolled
+                          ? AppColors.trainingButtonDisabledText
+                          : widget.program.buttonTextColor,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text(
-                  'Enroll',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
+                child:
+                    _isEnrolling
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                        : Text(
+                          widget.program.isEnrolled
+                              ? 'Currently Enrolled'
+                              : _getModalButtonText(),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
               ),
             ),
           ],
@@ -152,6 +201,66 @@ class TrainingDetailsModal extends StatelessWidget {
       return current / total;
     }
     return 0.0;
+  }
+
+  String _getModalButtonText() {
+    switch (widget.program.status.toLowerCase()) {
+      case 'completed':
+        return 'View Certificate';
+      case 'in progress':
+        return 'Currently Active';
+      case 'available':
+      case 'upcoming':
+        return 'Enroll';
+      default:
+        return 'View Details';
+    }
+  }
+
+  Future<void> _handleEnrollment() async {
+    setState(() {
+      _isEnrolling = true;
+      _enrollmentError = null;
+    });
+
+    try {
+      final response = await ApiService.enrollInTrainingProgram(
+        widget.program.id,
+      );
+
+      if (response['success']) {
+        // Clear cache to refresh training list
+        TrainingDataService.clearCache();
+
+        // Show success message and close modal
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response['message'] ?? 'Successfully enrolled!'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+          Navigator.of(context).pop();
+        }
+      } else {
+        // Show error message
+        setState(() {
+          _enrollmentError =
+              response['message'] ?? 'Failed to enroll in training program';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _enrollmentError = 'Network error: ${e.toString()}';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isEnrolling = false;
+        });
+      }
+    }
   }
 }
 

@@ -122,7 +122,10 @@ class TrainingProgram {
     }
   }
 
-  bool get isEnrollmentActive => !isFull && status.toLowerCase() == 'available';
+  bool get isEnrollmentActive =>
+      !isFull &&
+      (status.toLowerCase() == 'available' ||
+          status.toLowerCase() == 'upcoming');
 
   // Status colors based on status
   Color get statusColor {
@@ -157,7 +160,7 @@ class TrainingProgram {
 
   String get buttonText {
     if (isEnrolled) {
-      return 'Currently Enrolled';
+      return 'Enrolled';
     }
     switch (status.toLowerCase()) {
       case 'completed':
@@ -170,25 +173,27 @@ class TrainingProgram {
   }
 
   Color get buttonColor {
-    if (isEnrolled || status.toLowerCase() == 'in progress') {
+    if (status.toLowerCase() == 'in progress') {
       return AppColors.trainingButtonDisabled;
     }
     if (status.toLowerCase() == 'completed') {
       return AppColors.trainingButtonSecondary;
     }
+    if (isEnrolled) {
+      return AppColors.trainingButtonPrimary;
+    }
     return AppColors.trainingButtonPrimary;
   }
 
   Color get buttonTextColor {
-    if (isEnrolled || status.toLowerCase() == 'in progress') {
+    if (status.toLowerCase() == 'in progress') {
       return AppColors.trainingButtonDisabledText;
     }
     return AppColors.white;
   }
 
   bool get isDisabled {
-    return isEnrolled ||
-        status.toLowerCase() == 'in progress' ||
+    return status.toLowerCase() == 'in progress' ||
         status.toLowerCase() == 'completed';
   }
 
@@ -221,8 +226,6 @@ class TrainingProgram {
     // Backend replaced `status` with `calculatedStatus`
     final status =
         (json['calculatedStatus'] ?? json['status'] ?? '').toString();
-    print('=== DEBUG: Creating TrainingProgram from JSON ===');
-    print('Program: ${json['programName']}, Raw Status: "$status"');
 
     final program = TrainingProgram(
       id: json['id'] ?? json['_id'] ?? '',
@@ -245,11 +248,11 @@ class TrainingProgram {
       availableSlots: json['availableSlots'] ?? 0,
       isFull: json['isFull'] ?? false,
       enrollmentPercentage: json['enrollmentPercentage'] ?? 0,
+      // Use the actual enrollment status from the backend
       isEnrolled: json['isEnrolled'] ?? false,
     );
 
-    print('Created program status: "${program.status}"');
-    print('=== END DEBUG ===');
+
 
     return program;
   }

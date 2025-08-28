@@ -132,8 +132,16 @@ class TrainingProgramCard extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: program.isDisabled ? null : onViewDetails,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: program.buttonColor,
-                  foregroundColor: program.buttonTextColor,
+                  backgroundColor:
+                      program.isEnrolled
+                          ? const Color(
+                            0xFFE8F5E8,
+                          ) // Light green background for enrolled
+                          : program.buttonColor,
+                  foregroundColor:
+                      program.isEnrolled
+                          ? const Color(0xFF4CAF50) // Green text for enrolled
+                          : program.buttonTextColor,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),

@@ -147,6 +147,82 @@ class UserProfile {
     );
   }
 
+  // Create from backend API response
+  factory UserProfile.fromBackendResponse(Map<String, dynamic> json) {
+    // Map backend fields to our UserProfile model
+    final fullName =
+        '${json['firstName'] ?? ''} ${json['lastName'] ?? ''}'.trim();
+
+    // Format date of birth for display
+    String dateEnlisted = '';
+    if (json['dateOfBirth'] != null) {
+      try {
+        final date = DateTime.parse(json['dateOfBirth']);
+        final months = [
+          'January',
+          'February',
+          'March',
+          'April',
+          'May',
+          'June',
+          'July',
+          'August',
+          'September',
+          'October',
+          'November',
+          'December',
+        ];
+        dateEnlisted = '${months[date.month - 1]} ${date.day}, ${date.year}';
+      } catch (e) {
+        dateEnlisted = json['dateOfBirth'] ?? '';
+      }
+    }
+
+    return UserProfile(
+      id: json['_id'] ?? json['id'] ?? '',
+      name: fullName,
+      rank: json['rank'] ?? '',
+      serviceId: json['serviceId'] ?? '',
+      unit: json['unit'] ?? '',
+      branch: json['branchOfService'] ?? '',
+      currentBase: json['currentBase'] ?? '', // This might not exist in backend
+      email: json['email'] ?? '',
+      phone: json['contactNumber'] ?? '',
+      dateEnlisted: dateEnlisted,
+      homeAddress: json['address'] ?? '',
+      alternateEmail: json['alternateEmail'],
+      maritalStatus: json['maritalStatus'],
+      bloodType: json['bloodType'],
+      heightMeters: json['heightMeters']?.toString(),
+      weightKg: json['weightKg']?.toString(),
+      emergencyContact: null, // Backend doesn't have emergency contact yet
+      profilePictureUrl: json['profilePictureUrl'],
+      completedPrograms: 0, // Will be calculated from training programs
+      certificatesEarned: 0, // Will be calculated from training programs
+    );
+  }
+
+  // Convert to backend API format for updates
+  Map<String, dynamic> toBackendFormat() {
+    return {
+      'firstName': name.split(' ').first,
+      'lastName': name.split(' ').skip(1).join(' '),
+      'rank': rank,
+      'serviceId': serviceId,
+      'unit': unit,
+      'branchOfService': branch,
+      'email': email,
+      'contactNumber': phone,
+      'address': homeAddress,
+      'alternateEmail': alternateEmail,
+      'maritalStatus': maritalStatus,
+      'bloodType': bloodType,
+      'heightMeters':
+          heightMeters != null ? double.tryParse(heightMeters!) : null,
+      'weightKg': weightKg != null ? double.tryParse(weightKg!) : null,
+    };
+  }
+
   // Sample data for development
   static UserProfile get sampleProfile => UserProfile(
     id: '1',

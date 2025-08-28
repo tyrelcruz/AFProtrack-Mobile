@@ -3,6 +3,7 @@ import '../models/user_profile.dart';
 import '../widgets/app_bar_widget.dart';
 import '../widgets/edit_profile_widget.dart';
 import '../utils/app_colors.dart';
+import '../services/profile_service.dart';
 
 class EditProfileView extends StatefulWidget {
   final UserProfile profile;
@@ -35,18 +36,59 @@ class _EditProfileViewState extends State<EditProfileView> {
     );
   }
 
-  void _handleProfileSave(UserProfile updatedProfile) {
+  void _handleProfileSave(UserProfile updatedProfile) async {
     setState(() {
       _currentProfile = updatedProfile;
     });
 
-    // TODO: Here you would typically:
-    // 1. Save the profile to your backend/API
-    // 2. Update local storage
-    // 3. Update any global state management
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
 
-    // For now, we'll just navigate back to the profile view
-    Navigator.of(context).pop(updatedProfile);
+    try {
+      // Save the profile to backend
+      final success = await ProfileService.updateUserProfile(updatedProfile);
+
+      // Hide loading indicator
+      Navigator.of(context).pop();
+
+      if (success) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Navigate back to profile view with updated profile
+        Navigator.of(context).pop(updatedProfile);
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update profile'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // Hide loading indicator
+      Navigator.of(context).pop();
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating profile: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _handleCancel() {

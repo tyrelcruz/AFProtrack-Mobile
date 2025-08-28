@@ -17,18 +17,46 @@ class TrainingDataService {
       // Fetch all programs using the new mobile endpoint
       final response = await ApiService.getTrainingPrograms();
 
+      // Fetch user's enrolled programs to determine enrollment status
+      final enrolledResponse = await ApiService.getMyTrainingPrograms();
+
+      Set<String> enrolledProgramIds = {};
+
+      if (enrolledResponse['success']) {
+        final enrolledData = enrolledResponse['data'];
+        List<dynamic> enrolledPrograms = [];
+
+        if (enrolledData is List) {
+          enrolledPrograms = enrolledData;
+        } else if (enrolledData is Map) {
+          // Check if it has a 'programs' key (nested structure)
+          if (enrolledData.containsKey('programs')) {
+            enrolledPrograms = enrolledData['programs'] as List? ?? [];
+          } else {
+            enrolledPrograms = [enrolledData];
+          }
+        }
+
+        // Extract enrolled program IDs
+        for (var program in enrolledPrograms) {
+          final programId = program['id'] ?? program['_id'];
+          if (programId != null) {
+            enrolledProgramIds.add(programId.toString());
+          }
+        }
+      }
+
       if (response['success']) {
         // Support both array and wrapped object { programs: [...] }
         final dynamic data = response['data'];
         final List programsData =
             (data is List) ? data : (data?['programs'] as List? ?? []);
-        print('=== DEBUG: Raw API response programs ===');
         for (var program in programsData) {
-          print(
-            'Raw program: ${program['programName']}, CalculatedStatus: "${program['calculatedStatus']}"',
-          );
+          final programId = program['id'] ?? program['_id'];
+          final isEnrolled = enrolledProgramIds.contains(programId.toString());
+          // Override the isEnrolled field with our calculated value
+          program['isEnrolled'] = isEnrolled;
         }
-        print('=== END DEBUG ===');
 
         _cachedPrograms =
             programsData
@@ -51,61 +79,33 @@ class TrainingDataService {
     List<TrainingProgram> programs,
     int filterIndex,
   ) {
-    // Debug: Print all programs and their statuses
-    print('=== DEBUG: All programs and their statuses ===');
-    for (var program in programs) {
-      print('Program: ${program.programName}, Status: "${program.status}"');
-    }
-    print('=== END DEBUG ===');
-
     switch (filterIndex) {
       case 0: // All
-        print('All programs returned: ${programs.length}');
         return programs;
       case 1: // Available
-        final availablePrograms =
-            programs
-                .where((program) => program.status.toLowerCase() == 'available')
-                .toList();
-        print('Available programs found: ${availablePrograms.length}');
-        return availablePrograms;
+        return programs
+            .where((program) => program.status.toLowerCase() == 'available')
+            .toList();
       case 2: // In Progress
-        final inProgressPrograms =
-            programs
-                .where(
-                  (program) => program.status.toLowerCase() == 'in progress',
-                )
-                .toList();
-        print('In-progress programs found: ${inProgressPrograms.length}');
-        return inProgressPrograms;
+        return programs
+            .where((program) => program.status.toLowerCase() == 'in progress')
+            .toList();
       case 3: // Upcoming
-        final upcomingPrograms =
-            programs
-                .where((program) => program.status.toLowerCase() == 'upcoming')
-                .toList();
-        print('Upcoming programs found: ${upcomingPrograms.length}');
-        return upcomingPrograms;
+        return programs
+            .where((program) => program.status.toLowerCase() == 'upcoming')
+            .toList();
       case 4: // Completed
-        final completedPrograms =
-            programs
-                .where((program) => program.status.toLowerCase() == 'completed')
-                .toList();
-        print('Completed programs found: ${completedPrograms.length}');
-        return completedPrograms;
+        return programs
+            .where((program) => program.status.toLowerCase() == 'completed')
+            .toList();
       case 5: // Cancelled
-        final cancelledPrograms =
-            programs
-                .where((program) => program.status.toLowerCase() == 'cancelled')
-                .toList();
-        print('Cancelled programs found: ${cancelledPrograms.length}');
-        return cancelledPrograms;
+        return programs
+            .where((program) => program.status.toLowerCase() == 'cancelled')
+            .toList();
       case 6: // Dropped
-        final droppedPrograms =
-            programs
-                .where((program) => program.status.toLowerCase() == 'dropped')
-                .toList();
-        print('Dropped programs found: ${droppedPrograms.length}');
-        return droppedPrograms;
+        return programs
+            .where((program) => program.status.toLowerCase() == 'dropped')
+            .toList();
       default:
         return programs;
     }
@@ -130,5 +130,11 @@ class TrainingDataService {
       default:
         return 'No programs found';
     }
+  }
+
+  // Clear cache to force refresh after enrollment
+  static void clearCache() {
+    _cachedPrograms.clear();
+    _isLoading = false;
   }
 }
