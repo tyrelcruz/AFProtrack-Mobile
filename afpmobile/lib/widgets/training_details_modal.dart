@@ -19,7 +19,7 @@ class TrainingDetailsModal extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with badge, duration, and close button
+            // Header with badge and close button
             Row(
               children: [
                 Container(
@@ -40,11 +40,7 @@ class TrainingDetailsModal extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Text(
-                  'Duration: ${program.durationDisplay}',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                ),
+                // Removed duration from header per requirements
                 const Spacer(),
                 GestureDetector(
                   onTap: () => Navigator.of(context).pop(),

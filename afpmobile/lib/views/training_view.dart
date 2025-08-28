@@ -100,10 +100,11 @@ class _TrainingViewState extends State<TrainingView> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
+                  // All
                   SizedBox(
                     width: MediaQuery.of(context).size.width / 3.5,
                     child: TrainingFilterButton(
-                      text: 'Available',
+                      text: 'All',
                       isSelected: _selectedFilterIndex == 0,
                       onTap: () => setState(() => _selectedFilterIndex = 0),
                     ),
@@ -112,7 +113,7 @@ class _TrainingViewState extends State<TrainingView> {
                   SizedBox(
                     width: MediaQuery.of(context).size.width / 3.5,
                     child: TrainingFilterButton(
-                      text: 'In Progress',
+                      text: 'Available',
                       isSelected: _selectedFilterIndex == 1,
                       onTap: () => setState(() => _selectedFilterIndex = 1),
                     ),
@@ -121,7 +122,7 @@ class _TrainingViewState extends State<TrainingView> {
                   SizedBox(
                     width: MediaQuery.of(context).size.width / 3.5,
                     child: TrainingFilterButton(
-                      text: 'Upcoming',
+                      text: 'In Progress',
                       isSelected: _selectedFilterIndex == 2,
                       onTap: () => setState(() => _selectedFilterIndex = 2),
                     ),
@@ -130,9 +131,30 @@ class _TrainingViewState extends State<TrainingView> {
                   SizedBox(
                     width: MediaQuery.of(context).size.width / 3.5,
                     child: TrainingFilterButton(
-                      text: 'Completed',
+                      text: 'Upcoming',
                       isSelected: _selectedFilterIndex == 3,
                       onTap: () => setState(() => _selectedFilterIndex = 3),
+                    ),
+                  ),
+                  SizedBox(width: ResponsiveUtils.isMobile(context) ? 8 : 12),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width / 3.5,
+                    child: TrainingFilterButton(
+                      text: 'Completed',
+                      isSelected: _selectedFilterIndex == 4,
+                      onTap: () => setState(() => _selectedFilterIndex = 4),
+                    ),
+                  ),
+                  SizedBox(width: ResponsiveUtils.isMobile(context) ? 8 : 12),
+                  // More (Cancelled, Dropped)
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width / 3.5,
+                    child: TrainingFilterButton(
+                      text: 'More',
+                      isSelected:
+                          _selectedFilterIndex == 5 ||
+                          _selectedFilterIndex == 6,
+                      onTap: _openMoreFilters,
                     ),
                   ),
                 ],
@@ -193,5 +215,46 @@ class _TrainingViewState extends State<TrainingView> {
 
   String _getEmptyStateMessage() {
     return TrainingDataService.getEmptyStateMessage(_selectedFilterIndex);
+  }
+
+  void _openMoreFilters() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Cancelled'),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() => _selectedFilterIndex = 5);
+                },
+                trailing:
+                    _selectedFilterIndex == 5
+                        ? const Icon(Icons.check, color: Colors.green)
+                        : null,
+              ),
+              ListTile(
+                title: const Text('Dropped'),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() => _selectedFilterIndex = 6);
+                },
+                trailing:
+                    _selectedFilterIndex == 6
+                        ? const Icon(Icons.check, color: Colors.green)
+                        : null,
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

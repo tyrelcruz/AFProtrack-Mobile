@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/training_program.dart';
-import '../utils/app_colors.dart';
 
 class TrainingProgramCard extends StatelessWidget {
   final TrainingProgram program;
@@ -62,25 +61,31 @@ class TrainingProgramCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      // Duration with icon
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.schedule,
-                            size: 16,
-                            color: Colors.grey[600],
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            program.durationDisplay,
-                            style: TextStyle(
-                              fontSize: 14,
+                      // Additional details with icon (new field surfaced)
+                      if (program.additionalDetails.isNotEmpty) ...[
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              size: 16,
                               color: Colors.grey[600],
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                program.additionalDetails,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                      ],
+                      // Removed duration row per new requirements
                       // Instructor with icon
                       Row(
                         children: [

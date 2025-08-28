@@ -122,14 +122,14 @@ class TrainingProgram {
     }
   }
 
-  bool get isEnrollmentActive => !isFull && status == 'available';
+  bool get isEnrollmentActive => !isFull && status.toLowerCase() == 'available';
 
   // Status colors based on status
   Color get statusColor {
     switch (status.toLowerCase()) {
       case 'available':
         return AppColors.trainingAvailableBg;
-      case 'ongoing':
+      case 'in progress':
         return AppColors.trainingInProgressBg;
       case 'upcoming':
         return AppColors.trainingUpcomingBg;
@@ -144,7 +144,7 @@ class TrainingProgram {
     switch (status.toLowerCase()) {
       case 'available':
         return AppColors.trainingAvailableText;
-      case 'ongoing':
+      case 'in progress':
         return AppColors.trainingInProgressText;
       case 'upcoming':
         return AppColors.trainingUpcomingText;
@@ -162,7 +162,7 @@ class TrainingProgram {
     switch (status.toLowerCase()) {
       case 'completed':
         return 'View Certificate';
-      case 'ongoing':
+      case 'in progress':
         return 'Currently Active';
       default:
         return 'View Training Details';
@@ -170,7 +170,7 @@ class TrainingProgram {
   }
 
   Color get buttonColor {
-    if (isEnrolled || status.toLowerCase() == 'ongoing') {
+    if (isEnrolled || status.toLowerCase() == 'in progress') {
       return AppColors.trainingButtonDisabled;
     }
     if (status.toLowerCase() == 'completed') {
@@ -180,7 +180,7 @@ class TrainingProgram {
   }
 
   Color get buttonTextColor {
-    if (isEnrolled || status.toLowerCase() == 'ongoing') {
+    if (isEnrolled || status.toLowerCase() == 'in progress') {
       return AppColors.trainingButtonDisabledText;
     }
     return AppColors.white;
@@ -188,7 +188,7 @@ class TrainingProgram {
 
   bool get isDisabled {
     return isEnrolled ||
-        status.toLowerCase() == 'ongoing' ||
+        status.toLowerCase() == 'in progress' ||
         status.toLowerCase() == 'completed';
   }
 
@@ -218,7 +218,9 @@ class TrainingProgram {
 
   // Factory constructor to create from JSON
   factory TrainingProgram.fromJson(Map<String, dynamic> json) {
-    final status = json['status'] ?? '';
+    // Backend replaced `status` with `calculatedStatus`
+    final status =
+        (json['calculatedStatus'] ?? json['status'] ?? '').toString();
     print('=== DEBUG: Creating TrainingProgram from JSON ===');
     print('Program: ${json['programName']}, Raw Status: "$status"');
 

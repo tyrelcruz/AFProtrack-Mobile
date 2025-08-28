@@ -1,5 +1,4 @@
 import '../models/training_program.dart';
-import '../utils/app_colors.dart';
 import 'api_service.dart';
 
 class TrainingDataService {
@@ -15,15 +14,18 @@ class TrainingDataService {
     _isLoading = true;
 
     try {
-      // Fetch only available programs for the mobile list per requirement
-      final response = await ApiService.getAvailableTrainingPrograms();
+      // Fetch all programs using the new mobile endpoint
+      final response = await ApiService.getTrainingPrograms();
 
       if (response['success']) {
-        final programsData = response['data']['programs'] as List;
+        // Support both array and wrapped object { programs: [...] }
+        final dynamic data = response['data'];
+        final List programsData =
+            (data is List) ? data : (data?['programs'] as List? ?? []);
         print('=== DEBUG: Raw API response programs ===');
         for (var program in programsData) {
           print(
-            'Raw program: ${program['programName']}, Status: "${program['status']}"',
+            'Raw program: ${program['programName']}, CalculatedStatus: "${program['calculatedStatus']}"',
           );
         }
         print('=== END DEBUG ===');
@@ -57,34 +59,53 @@ class TrainingDataService {
     print('=== END DEBUG ===');
 
     switch (filterIndex) {
-      case 0: // Available
+      case 0: // All
+        print('All programs returned: ${programs.length}');
+        return programs;
+      case 1: // Available
         final availablePrograms =
             programs
                 .where((program) => program.status.toLowerCase() == 'available')
                 .toList();
         print('Available programs found: ${availablePrograms.length}');
         return availablePrograms;
-      case 1: // In Progress
-        final ongoingPrograms =
+      case 2: // In Progress
+        final inProgressPrograms =
             programs
-                .where((program) => program.status.toLowerCase() == 'ongoing')
+                .where(
+                  (program) => program.status.toLowerCase() == 'in progress',
+                )
                 .toList();
-        print('Ongoing programs found: ${ongoingPrograms.length}');
-        return ongoingPrograms;
-      case 2: // Upcoming
-        final draftPrograms =
+        print('In-progress programs found: ${inProgressPrograms.length}');
+        return inProgressPrograms;
+      case 3: // Upcoming
+        final upcomingPrograms =
             programs
-                .where((program) => program.status.toLowerCase() == 'draft')
+                .where((program) => program.status.toLowerCase() == 'upcoming')
                 .toList();
-        print('Draft programs found: ${draftPrograms.length}');
-        return draftPrograms;
-      case 3: // Completed
+        print('Upcoming programs found: ${upcomingPrograms.length}');
+        return upcomingPrograms;
+      case 4: // Completed
         final completedPrograms =
             programs
                 .where((program) => program.status.toLowerCase() == 'completed')
                 .toList();
         print('Completed programs found: ${completedPrograms.length}');
         return completedPrograms;
+      case 5: // Cancelled
+        final cancelledPrograms =
+            programs
+                .where((program) => program.status.toLowerCase() == 'cancelled')
+                .toList();
+        print('Cancelled programs found: ${cancelledPrograms.length}');
+        return cancelledPrograms;
+      case 6: // Dropped
+        final droppedPrograms =
+            programs
+                .where((program) => program.status.toLowerCase() == 'dropped')
+                .toList();
+        print('Dropped programs found: ${droppedPrograms.length}');
+        return droppedPrograms;
       default:
         return programs;
     }
@@ -93,13 +114,19 @@ class TrainingDataService {
   static String getEmptyStateMessage(int filterIndex) {
     switch (filterIndex) {
       case 0:
-        return 'No available programs';
+        return 'No programs found';
       case 1:
-        return 'No programs in progress';
+        return 'No available programs';
       case 2:
-        return 'No upcoming programs';
+        return 'No programs in progress';
       case 3:
+        return 'No upcoming programs';
+      case 4:
         return 'No completed programs';
+      case 5:
+        return 'No cancelled programs';
+      case 6:
+        return 'No dropped programs';
       default:
         return 'No programs found';
     }
