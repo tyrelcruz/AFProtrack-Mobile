@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/user_profile_card.dart';
-import '../widgets/stats_grid.dart';
+import '../widgets/training_stats_widget.dart';
 import '../widgets/career_progression_card.dart';
 import '../widgets/app_bar_widget.dart';
 import '../models/home_training_program.dart';
@@ -74,32 +74,6 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final stats = [
-      StatItem(
-        icon: Icons.check_circle,
-        label: 'Completed',
-        value: 10,
-        color: Colors.green,
-      ),
-      StatItem(
-        icon: Icons.autorenew,
-        label: 'Ongoing',
-        value: 2,
-        color: Colors.blue,
-      ),
-      StatItem(
-        icon: Icons.event,
-        label: 'Scheduled',
-        value: 3,
-        color: Colors.orange,
-      ),
-      StatItem(
-        icon: Icons.verified,
-        label: 'Certificates',
-        value: 7,
-        color: Colors.purple,
-      ),
-    ];
     final programs = [
       HomeTrainingProgram(
         title: 'Advanced Combat Training',
@@ -142,7 +116,7 @@ class _HomeViewState extends State<HomeView> {
                   cardColor: Colors.white,
                 ),
             SizedBox(height: 12),
-            StatsGrid(items: stats),
+            TrainingStatsWidget(),
             CareerProgressionCard(
               currentRank: 'Sergeant (SGT)',
               nextRank: 'Staff Sergeant (SSG)',

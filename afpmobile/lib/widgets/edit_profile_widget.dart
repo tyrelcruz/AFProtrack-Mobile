@@ -826,14 +826,6 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
 
       // Call the save callback
       widget.onSave(updatedProfile);
-
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Profile updated successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
     } catch (e) {
       // Show error message
       ScaffoldMessenger.of(context).showSnackBar(

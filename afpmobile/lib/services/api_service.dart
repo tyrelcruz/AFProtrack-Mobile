@@ -226,9 +226,6 @@ class ApiService {
         headers: headers,
       );
 
-      print('Training programs response status: ${response.statusCode}');
-      print('Training programs response body: ${response.body}');
-
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
@@ -256,9 +253,6 @@ class ApiService {
       );
       final response = await http.get(uri, headers: headers);
 
-      print('Available programs response status: ${response.statusCode}');
-      print('Available programs response body: ${response.body}');
-
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
@@ -267,6 +261,199 @@ class ApiService {
         return {
           'success': false,
           'message': data['message'] ?? 'Failed to fetch available programs',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get my training programs (schedule)
+  static Future<Map<String, dynamic>> getMyTrainingPrograms({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+      final headers = await _headers;
+      final uri = Uri.parse(
+        '$baseUrl/training-programs/mobile/my-programs?page=$page&limit=$limit',
+      );
+      final response = await http.get(uri, headers: headers);
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data['data']};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch my programs',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get training statistics for home view
+  static Future<Map<String, dynamic>> getTrainingStatistics() async {
+    try {
+      final headers = await _headers;
+      final response = await http.get(
+        Uri.parse('$baseUrl/training-programs/mobile/my-programs'),
+        headers: headers,
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        // Handle different response formats - ensure programs is always a List
+        List<dynamic> programs = [];
+        final responseData = data['data'];
+
+        if (responseData is List) {
+          programs = responseData;
+        } else if (responseData is Map) {
+          // Check if it has a 'programs' key (nested structure)
+          if (responseData.containsKey('programs')) {
+            programs = responseData['programs'] as List? ?? [];
+          } else {
+            // If it's a single object, wrap it in a list
+            programs = [responseData];
+          }
+        } else if (responseData == null) {
+          programs = [];
+        }
+
+        // Calculate statistics from the programs
+        int completed = 0;
+        int ongoing = 0;
+        int scheduled = 0;
+        int certificates = 0;
+
+        for (var program in programs) {
+          final status =
+              (program['calculatedStatus'] ?? program['status'] ?? '')
+                  .toString()
+                  .toLowerCase();
+
+          switch (status) {
+            case 'completed':
+              completed++;
+              certificates++; // Completed programs count as certificates
+              break;
+            case 'in progress':
+              ongoing++;
+              break;
+            case 'upcoming':
+            case 'available':
+              scheduled++;
+              break;
+          }
+        }
+
+        return {
+          'success': true,
+          'data': {
+            'completed': completed,
+            'ongoing': ongoing,
+            'scheduled': scheduled,
+            'certificates': certificates,
+          },
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch training statistics',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Enroll in training program
+  static Future<Map<String, dynamic>> enrollInTrainingProgram(
+    String programId,
+  ) async {
+    try {
+      final headers = await _headers;
+      final response = await http.post(
+        Uri.parse('$baseUrl/training-programs/$programId/enroll'),
+        headers: headers,
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'data': data['data'],
+          'message':
+              data['message'] ?? 'Successfully enrolled in training program',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to enroll in training program',
+          'errors': data['errors'],
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get current user profile
+  static Future<Map<String, dynamic>> getCurrentUser() async {
+    try {
+      final headers = await _headers;
+      final response = await http.get(
+        Uri.parse('$baseUrl/users/me'),
+        headers: headers,
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data['data']};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch user profile',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Update user profile
+  static Future<Map<String, dynamic>> updateUserProfile(
+    String userId,
+    Map<String, dynamic> userData,
+  ) async {
+    try {
+      final headers = await _headers;
+      final response = await http.put(
+        Uri.parse('$baseUrl/users/$userId'),
+        headers: headers,
+        body: jsonEncode(userData),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': data['data'],
+          'message': data['message'] ?? 'Profile updated successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to update profile',
+          'errors': data['errors'],
         };
       }
     } catch (e) {

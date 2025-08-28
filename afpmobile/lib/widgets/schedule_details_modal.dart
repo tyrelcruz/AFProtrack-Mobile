@@ -101,6 +101,8 @@ class _ScheduleDetailsModalState extends State<ScheduleDetailsModal> {
             _DetailRow(label: 'Instructor', value: widget.instructor),
             const SizedBox(height: 1),
             _DetailRow(label: 'Location', value: widget.location),
+            const SizedBox(height: 1),
+            _DetailRow(label: 'Status', value: widget.badge),
             if (widget.trainingComplete) ...[
               const SizedBox(height: 16),
               const Text(

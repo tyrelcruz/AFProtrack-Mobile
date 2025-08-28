@@ -3,6 +3,7 @@ import '../utils/app_colors.dart';
 import '../utils/responsive_utils.dart';
 import '../models/user_profile.dart';
 import '../services/token_service.dart';
+import '../services/profile_service.dart';
 import 'login_view.dart';
 import 'edit_profile_view.dart';
 
@@ -14,20 +15,44 @@ class ProfileView extends StatefulWidget {
 }
 
 class _ProfileViewState extends State<ProfileView> {
-  late UserProfile _userProfile;
+  UserProfile? _userProfile;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    // Initialize with sample data - in a real app, this would come from your data service
-    _userProfile = UserProfile.sampleProfile;
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final profile = await ProfileService.getCurrentUserProfile();
+
+      if (mounted) {
+        setState(() {
+          _userProfile = profile;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Failed to load profile: ${e.toString()}';
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    // screenHeight is not used; if needed later, uncomment the next line
-    // final screenHeight = MediaQuery.of(context).size.height;
 
     // Responsive dimensions
     final cardWidth =
@@ -37,7 +62,6 @@ class _ProfileViewState extends State<ProfileView> {
             ? screenWidth * 0.8
             : 400.0;
 
-    // final padding = ResponsiveUtils.getResponsivePadding(context);
     final profilePictureSize = ResponsiveUtils.isMobile(context) ? 65.0 : 75.0;
     final profileIconSize = ResponsiveUtils.isMobile(context) ? 38.0 : 43.0;
 
@@ -65,39 +89,63 @@ class _ProfileViewState extends State<ProfileView> {
         actions: [
           IconButton(
             icon: const Icon(Icons.tune, color: Colors.white),
-            onPressed: _showEditProfileDialog,
+            onPressed: _userProfile != null ? _showEditProfileDialog : null,
           ),
         ],
       ),
 
-      body: Stack(
-        children: [
-          // Top header background
-          Container(
-            height: ResponsiveUtils.isMobile(context) ? 480 : 440,
-            width: double.infinity,
-            color: AppColors.armyPrimary,
-          ),
-          // Scrollable content
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                // Header content
-                _buildHeaderSection(
-                  context,
-                  profilePictureSize: profilePictureSize,
-                  profileIconSize: profileIconSize,
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _errorMessage != null
+              ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadUserProfile,
+                      child: const Text('Retry'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 5),
-                // Overview card with rounded top corners
-                _buildOverviewCard(context, cardWidth),
-              ],
-            ),
-          ),
-        ],
-      ),
-
-      // No bottom navigation bar needed since Profile is accessed as a separate page
+              )
+              : _userProfile == null
+              ? const Center(
+                child: Text(
+                  'No profile data available',
+                  style: TextStyle(fontSize: 16),
+                ),
+              )
+              : Stack(
+                children: [
+                  // Top header background
+                  Container(
+                    height: ResponsiveUtils.isMobile(context) ? 480 : 440,
+                    width: double.infinity,
+                    color: AppColors.armyPrimary,
+                  ),
+                  // Content without scrolling
+                  Column(
+                    children: [
+                      // Header content
+                      _buildHeaderSection(
+                        context,
+                        profilePictureSize: profilePictureSize,
+                        profileIconSize: profileIconSize,
+                      ),
+                      const SizedBox(height: 5),
+                      // Overview card with rounded top corners - expanded to fill remaining space
+                      Expanded(child: _buildOverviewCard(context, cardWidth)),
+                    ],
+                  ),
+                ],
+              ),
     );
   }
 
@@ -106,6 +154,8 @@ class _ProfileViewState extends State<ProfileView> {
     required double profilePictureSize,
     required double profileIconSize,
   }) {
+    if (_userProfile == null) return const SizedBox.shrink();
+
     final padding = ResponsiveUtils.getResponsivePadding(context);
     final double leftPadding =
         padding + (ResponsiveUtils.isMobile(context) ? 20.0 : 40.0);
@@ -148,7 +198,7 @@ class _ProfileViewState extends State<ProfileView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _userProfile.name.toUpperCase(),
+                  _userProfile!.name.toUpperCase(),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -158,9 +208,9 @@ class _ProfileViewState extends State<ProfileView> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildHeaderMeta('AFPIC NO:', _userProfile.serviceId),
-                _buildHeaderMeta('UNIT:', _userProfile.unit),
-                _buildHeaderMeta('BRANCH', _userProfile.branch),
+                _buildHeaderMeta('AFPIC NO:', _userProfile!.serviceId),
+                _buildHeaderMeta('UNIT:', _userProfile!.unit),
+                _buildHeaderMeta('BRANCH', _userProfile!.branch),
               ],
             ),
           ),
@@ -196,9 +246,12 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Widget _buildOverviewCard(BuildContext context, double cardWidth) {
+    if (_userProfile == null) return const SizedBox.shrink();
+
     final basePadding = ResponsiveUtils.getResponsivePadding(context);
     final double horizontalPadding =
         basePadding + (ResponsiveUtils.isMobile(context) ? 8.0 : 16.0);
+
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -239,22 +292,25 @@ class _ProfileViewState extends State<ProfileView> {
             ),
             const SizedBox(height: 16),
             // Overview rows
-            _buildOverviewRow('Home Address', _userProfile.homeAddress),
-            _buildOverviewRow('Email', _userProfile.email),
-            if ((_userProfile.alternateEmail ?? '').isNotEmpty)
+            _buildOverviewRow('Home Address', _userProfile!.homeAddress),
+            _buildOverviewRow('Email', _userProfile!.email),
+            if ((_userProfile!.alternateEmail ?? '').isNotEmpty)
               _buildOverviewRow(
                 'Alternate Email',
-                _userProfile.alternateEmail ?? '',
+                _userProfile!.alternateEmail ?? '',
               ),
-            _buildOverviewRow('Phone', _userProfile.phone),
-            _buildOverviewRow('Date Enlisted', _userProfile.dateEnlisted),
-            _buildOverviewRow('Blood Type', _userProfile.bloodType ?? '-'),
-            _buildOverviewRow('Status', _userProfile.maritalStatus ?? '-'),
+            _buildOverviewRow('Phone', _userProfile!.phone),
+            _buildOverviewRow('Date Enlisted', _userProfile!.dateEnlisted),
+            _buildOverviewRow('Blood Type', _userProfile!.bloodType ?? '-'),
+            _buildOverviewRow('Status', _userProfile!.maritalStatus ?? '-'),
             _buildOverviewRow(
               'Height',
-              (_userProfile.heightMeters ?? '-') + ' m',
+              (_userProfile!.heightMeters ?? '-') + ' m',
             ),
-            _buildOverviewRow('Weight', (_userProfile.weightKg ?? '-') + ' kg'),
+            _buildOverviewRow(
+              'Weight',
+              (_userProfile!.weightKg ?? '-') + ' kg',
+            ),
             const SizedBox(height: 16),
             Container(height: 1, color: Colors.grey[300]),
             const SizedBox(height: 16),
@@ -273,19 +329,20 @@ class _ProfileViewState extends State<ProfileView> {
                 Expanded(
                   child: _buildStatTile(
                     'Completed Programs',
-                    _userProfile.completedPrograms.toString(),
+                    _userProfile!.completedPrograms.toString(),
                   ),
                 ),
                 Container(width: 1, height: 48, color: Colors.grey[300]),
                 Expanded(
                   child: _buildStatTile(
                     'Certificates Earned',
-                    _userProfile.certificatesEarned.toString(),
+                    _userProfile!.certificatesEarned.toString(),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            // Push logout button to bottom
+            const Spacer(),
             // Actions
             Card(
               color: Colors.white,
@@ -294,32 +351,10 @@ class _ProfileViewState extends State<ProfileView> {
                 borderRadius: BorderRadius.circular(8),
               ),
               elevation: 0,
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: Icon(
-                      Icons.settings,
-                      color: Colors.grey[700],
-                      size: 20,
-                    ),
-                    title: const Text('Edit Profile Settings'),
-                    onTap: _showEditProfileDialog,
-                  ),
-                  Container(
-                    height: 1,
-                    color: Colors.grey[300],
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.logout,
-                      color: Colors.grey[700],
-                      size: 20,
-                    ),
-                    title: const Text('Logout'),
-                    onTap: _showLogoutDialog,
-                  ),
-                ],
+              child: ListTile(
+                leading: Icon(Icons.logout, color: Colors.grey[700], size: 20),
+                title: const Text('Logout'),
+                onTap: _showLogoutDialog,
               ),
             ),
             const SizedBox(height: 24),
@@ -531,17 +566,22 @@ class _ProfileViewState extends State<ProfileView> {
                 InkWell(
                   onTap: () async {
                     Navigator.of(context).pop();
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) => EditProfileView(profile: _userProfile),
-                      ),
-                    );
-                    if (result != null && result is UserProfile) {
-                      setState(() {
-                        _userProfile = result;
-                      });
+                    if (_userProfile != null) {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) =>
+                                  EditProfileView(profile: _userProfile!),
+                        ),
+                      );
+                      if (result != null && result is UserProfile) {
+                        setState(() {
+                          _userProfile = result;
+                        });
+                        // Refresh profile data from backend to ensure consistency
+                        _loadUserProfile();
+                      }
                     }
                   },
                   child: Container(

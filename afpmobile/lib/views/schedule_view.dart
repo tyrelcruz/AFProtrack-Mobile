@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../widgets/app_bar_widget.dart';
 import '../utils/app_colors.dart';
 import '../widgets/schedule_details_modal.dart';
+import '../models/schedule_program.dart';
+import '../services/schedule_data_service.dart';
 
 class ScheduleView extends StatefulWidget {
   const ScheduleView({Key? key}) : super(key: key);
@@ -12,6 +14,43 @@ class ScheduleView extends StatefulWidget {
 
 class _ScheduleViewState extends State<ScheduleView> {
   int _selectedTabIndex = 0;
+  List<ScheduleProgram> _allSchedulePrograms = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSchedulePrograms();
+  }
+
+  Future<void> _loadSchedulePrograms() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final programs = await ScheduleDataService.getMyTrainingPrograms();
+
+      setState(() {
+        _allSchedulePrograms = programs;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to load schedule programs: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<ScheduleProgram> get _filteredPrograms {
+    return ScheduleDataService.getFilteredPrograms(
+      _allSchedulePrograms,
+      _selectedTabIndex,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,24 +91,40 @@ class _ScheduleViewState extends State<ScheduleView> {
             ),
           ),
           Expanded(
-            child: IndexedStack(
-              index: _selectedTabIndex,
-              children: [
-                _ScheduleList(),
-                const Center(
-                  child: Text(
-                    'No ongoing trainings',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
-                const Center(
-                  child: Text(
-                    'No completed trainings',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
-              ],
-            ),
+            child:
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _errorMessage != null
+                    ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _errorMessage!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _loadSchedulePrograms,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
+                    : _filteredPrograms.isEmpty
+                    ? Center(
+                      child: Text(
+                        ScheduleDataService.getEmptyStateMessage(
+                          _selectedTabIndex,
+                        ),
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    )
+                    : _ScheduleList(programs: _filteredPrograms),
           ),
         ],
       ),
@@ -131,73 +186,24 @@ class _TabButton extends StatelessWidget {
 }
 
 class _ScheduleList extends StatelessWidget {
+  final List<ScheduleProgram> programs;
+
+  const _ScheduleList({required this.programs});
+
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-      children: [
-        _ScheduleCard(
-          date: 'July 26, 2025 | 8:00 AM - 2:00 PM',
-          title: 'Advanced Combat Training',
-          badge: 'Practical',
-          badgeColor: const Color(0xFFF3F3F3),
-          badgeTextColor: Color(0xFF8B8B8B),
-          instructor: 'Lt. Garcia',
-          location: 'Training Ground Alpha',
-        ),
-        _ScheduleCard(
-          date: 'July 27, 2025 | 2:00 PM - 3:30 PM',
-          title: 'Leadership Development Course',
-          badge: 'Lecture',
-          badgeColor: const Color(0xFFE6FAF7),
-          badgeTextColor: Color(0xFF00BFA5),
-          instructor: 'Col. Santos',
-          location: 'Conference Room - A',
-        ),
-        _ScheduleCard(
-          date: 'July 30, 2025 | 1:00 PM - 6:00 PM',
-          title: 'Close Quarters Combat',
-          badge: 'Practical',
-          badgeColor: const Color(0xFFF3F3F3),
-          badgeTextColor: Color(0xFF8B8B8B),
-          instructor: 'Sgt. Sanchez',
-          location: 'CQB Area - 1',
-        ),
-        _ScheduleCard(
-          date: '',
-          title: 'Strategic Decision Making',
-          badge: 'Lecture',
-          badgeColor: const Color(0xFFE6FAF7),
-          badgeTextColor: Color(0xFF00BFA5),
-          instructor: 'Col. Santos',
-          location: 'Conference Room - B',
-          trainingComplete: true,
-        ),
-      ],
+      children:
+          programs.map((program) => _ScheduleCard(program: program)).toList(),
     );
   }
 }
 
 class _ScheduleCard extends StatelessWidget {
-  final String date;
-  final String title;
-  final String badge;
-  final Color badgeColor;
-  final Color badgeTextColor;
-  final String instructor;
-  final String location;
-  final bool trainingComplete;
+  final ScheduleProgram program;
 
-  const _ScheduleCard({
-    required this.date,
-    required this.title,
-    required this.badge,
-    required this.badgeColor,
-    required this.badgeTextColor,
-    required this.instructor,
-    required this.location,
-    this.trainingComplete = false,
-  });
+  const _ScheduleCard({required this.program});
 
   @override
   Widget build(BuildContext context) {
@@ -207,12 +213,12 @@ class _ScheduleCard extends StatelessWidget {
           context: context,
           builder:
               (ctx) => ScheduleDetailsModal(
-                title: title,
-                dateTimeRange: date,
-                badge: badge,
-                instructor: instructor,
-                location: location,
-                trainingComplete: trainingComplete,
+                title: program.programName,
+                dateTimeRange: program.dateTimeRange,
+                badge: program.badgeText,
+                instructor: program.instructor,
+                location: program.venue,
+                trainingComplete: program.isTrainingComplete,
               ),
         );
       },
@@ -226,7 +232,7 @@ class _ScheduleCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (trainingComplete)
+              if (program.isTrainingComplete)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
@@ -238,22 +244,22 @@ class _ScheduleCard extends StatelessWidget {
                     ),
                   ),
                 ),
-              if (date.isNotEmpty)
+              if (program.dateTimeRange.isNotEmpty)
                 Text(
-                  date,
+                  program.dateTimeRange,
                   style: TextStyle(
                     color: Color(0xFF0B6000),
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-              if (date.isNotEmpty) SizedBox(height: 2),
+              if (program.dateTimeRange.isNotEmpty) SizedBox(height: 2),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Text(
-                      title,
+                      program.programName,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16.5,
@@ -268,13 +274,13 @@ class _ScheduleCard extends StatelessWidget {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: badgeColor,
+                      color: program.badgeColor,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      badge,
+                      program.badgeText,
                       style: TextStyle(
-                        color: badgeTextColor,
+                        color: program.badgeTextColor,
                         fontWeight: FontWeight.w600,
                         fontSize: 12.5,
                       ),
@@ -284,7 +290,7 @@ class _ScheduleCard extends StatelessWidget {
               ),
               SizedBox(height: 2),
               Text(
-                'Instructor: $instructor',
+                'Instructor: ${program.instructor}',
                 style: TextStyle(
                   color: Color(0xFF8B8B8B),
                   fontSize: 13,
@@ -293,7 +299,7 @@ class _ScheduleCard extends StatelessWidget {
               ),
               SizedBox(height: 2),
               Text(
-                location,
+                program.venue,
                 style: TextStyle(
                   color: Color(0xFF8B8B8B),
                   fontSize: 13,
