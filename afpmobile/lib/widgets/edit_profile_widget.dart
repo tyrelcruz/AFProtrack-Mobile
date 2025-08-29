@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:io';
+import 'dart:convert';
 import '../models/user_profile.dart';
 import '../utils/app_colors.dart';
 import '../utils/responsive_utils.dart';
+import '../utils/validation_utils.dart';
+import '../services/api_service.dart';
+import '../services/token_service.dart';
+import 'package:http_parser/http_parser.dart';
 
 class EditProfileWidget extends StatefulWidget {
   final UserProfile profile;
@@ -43,11 +52,15 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
 
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _isLoadingProfilePhoto = false;
+  File? _selectedImageFile;
+  String? _currentProfilePhotoUrl;
 
   @override
   void initState() {
     super.initState();
     _initializeControllers();
+    _fetchUserProfilePhoto();
   }
 
   void _initializeControllers() {
@@ -156,12 +169,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
                   controller: _serviceIdController,
                   label: 'Service ID',
                   icon: Icons.badge,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your service ID';
-                    }
-                    return null;
-                  },
+                  validator: ValidationUtils.validateServiceId,
                 ),
                 _buildTextField(
                   controller: _dateEnlistedController,
@@ -524,7 +532,41 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
                     color: Colors.grey[100],
                   ),
                   child:
-                      widget.profile.profilePictureUrl != null
+                      _isLoadingProfilePhoto
+                          ? Center(
+                            child: SizedBox(
+                              width: profileIconSize * 0.5,
+                              height: profileIconSize * 0.5,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.armyPrimary,
+                                ),
+                              ),
+                            ),
+                          )
+                          : _selectedImageFile != null
+                          ? ClipOval(
+                            child: Image.file(
+                              _selectedImageFile!,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                          : _currentProfilePhotoUrl != null
+                          ? ClipOval(
+                            child: Image.network(
+                              _currentProfilePhotoUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(
+                                  Icons.person,
+                                  size: profileIconSize,
+                                  color: AppColors.black,
+                                );
+                              },
+                            ),
+                          )
+                          : widget.profile.profilePictureUrl != null
                           ? ClipOval(
                             child: Image.network(
                               widget.profile.profilePictureUrl!,
@@ -751,24 +793,32 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Change Profile Picture'),
+          title: const Text('Change Profile Picture'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: Icon(Icons.camera_alt),
-                title: Text('Take Photo'),
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Take Photo'),
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Implement camera functionality
+                  _pickImage(ImageSource.camera);
                 },
               ),
               ListTile(
-                leading: Icon(Icons.photo_library),
-                title: Text('Choose from Gallery'),
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Choose from Gallery'),
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Implement gallery picker functionality
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.remove_circle_outline),
+                title: const Text('Remove Current Photo'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _removeProfilePhoto();
                 },
               ),
             ],
@@ -778,11 +828,326 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
           ],
         );
       },
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      // Check if image picker is available
+      final ImagePicker picker = ImagePicker();
+
+      // Add a small delay to ensure the picker is properly initialized
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      final XFile? image = await picker
+          .pickImage(
+            source: source,
+            maxWidth: 1024,
+            maxHeight: 1024,
+            imageQuality: 85,
+          )
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw Exception('Image picker timed out. Please try again.');
+            },
+          );
+
+      if (image != null) {
+        setState(() {
+          _selectedImageFile = File(image.path);
+        });
+        await _uploadProfilePhoto(File(image.path));
+      }
+    } on PlatformException catch (e) {
+      String errorMessage = 'Failed to pick image';
+
+      switch (e.code) {
+        case 'camera_access_denied':
+          errorMessage =
+              'Camera access denied. Please grant camera permission.';
+          break;
+        case 'photo_access_denied':
+          errorMessage =
+              'Gallery access denied. Please grant photo permission.';
+          break;
+        case 'channel-error':
+          errorMessage =
+              'Image picker not available. Please try again or restart the app.';
+          break;
+        default:
+          errorMessage = 'Error picking image: ${e.message}';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error picking image: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  Future<void> _uploadProfilePhoto(File imageFile) async {
+    try {
+      setState(() {
+        _isLoadingProfilePhoto = true;
+      });
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          );
+        },
+      );
+
+      // Read the image file as bytes
+      final bytes = await imageFile.readAsBytes();
+      final fileName = imageFile.path.split('/').last;
+      final fileSize = bytes.length;
+
+      // Debug information
+      print('Uploading file: $fileName');
+      print('File size: $fileSize bytes');
+      print('File path: ${imageFile.path}');
+      print('File extension: ${fileName.split('.').last.toLowerCase()}');
+
+      // Validate file size
+      if (fileSize > 10 * 1024 * 1024) {
+        // 10MB limit
+        throw Exception('File size too large. Maximum size is 10MB.');
+      }
+
+      // Validate file extension
+      final fileExtension = fileName.split('.').last.toLowerCase();
+      final allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+      if (!allowedExtensions.contains(fileExtension)) {
+        throw Exception(
+          'Invalid file type. Allowed types: ${allowedExtensions.join(', ')}',
+        );
+      }
+
+      // Check if file exists and is readable
+      if (!await imageFile.exists()) {
+        throw Exception('File does not exist or is not accessible');
+      }
+
+      // Create multipart request for file upload using the direct upload route
+      final uri = Uri.parse(
+        '${ApiService.baseUrl}/upload/profile-photo/direct',
+      );
+      final request = http.MultipartRequest('POST', uri);
+
+      // Add authorization header
+      final token = await TokenService.getToken();
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+
+      // Determine the correct MIME type based on file extension
+      String mimeType = 'image/png'; // default
+      final extension = fileName.split('.').last.toLowerCase();
+      switch (extension) {
+        case 'jpg':
+        case 'jpeg':
+          mimeType = 'image/jpeg';
+          break;
+        case 'png':
+          mimeType = 'image/png';
+          break;
+        case 'gif':
+          mimeType = 'image/gif';
+          break;
+        case 'webp':
+          mimeType = 'image/webp';
+          break;
+      }
+
+      print('Using MIME type: $mimeType');
+
+      // Add the file with the correct field name 'file' and proper MIME type
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'file',
+          bytes,
+          filename: fileName,
+          contentType: MediaType.parse(mimeType),
+        ),
+      );
+
+      // Send the request
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      // Debug response
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      // Hide loading indicator
+      Navigator.of(context).pop();
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+
+        if (data['success']) {
+          // Update the profile picture in the UI
+          setState(() {
+            _currentProfilePhotoUrl = data['data']['cloudinaryUrl'];
+            _isLoadingProfilePhoto = false;
+          });
+
+          // Update the profile with the new photo URL
+          final updatedProfile = widget.profile.copyWith(
+            profilePictureUrl: data['data']['cloudinaryUrl'],
+          );
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                data['message'] ?? 'Profile photo uploaded successfully',
+              ),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+
+          // Don't call onSave here since the photo upload already updated the backend
+          // Just update the local profile state
+          print(
+            'Profile photo uploaded successfully. Photo URL: ${data['data']['cloudinaryUrl']}',
+          );
+        } else {
+          setState(() {
+            _isLoadingProfilePhoto = false;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                data['message'] ?? 'Failed to upload profile photo',
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      } else {
+        setState(() {
+          _isLoadingProfilePhoto = false;
+        });
+
+        final data = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              data['message'] ??
+                  'Failed to upload profile photo (Status: ${response.statusCode})',
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      // Hide loading indicator
+      Navigator.of(context).pop();
+
+      setState(() {
+        _isLoadingProfilePhoto = false;
+      });
+
+      print('Upload error: ${e.toString()}');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error uploading profile photo: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  Future<void> _fetchUserProfilePhoto() async {
+    setState(() {
+      _isLoadingProfilePhoto = true;
+    });
+
+    try {
+      print('🔄 Fetching user profile photo...');
+      final result = await ApiService.getUserProfilePhoto();
+
+      print('🔄 Profile photo result: $result');
+
+      if (result['success']) {
+        if (result['data'] != null) {
+          final photoData = result['data'];
+          print('🔄 Photo data received: $photoData');
+
+          if (photoData['cloudinaryUrl'] != null) {
+            final photoUrl = photoData['cloudinaryUrl'];
+            print('🔄 Setting profile photo URL: $photoUrl');
+            setState(() {
+              _currentProfilePhotoUrl = photoUrl;
+            });
+
+            // Also update the widget's profile data if available
+            final updatedProfile = widget.profile.copyWith(
+              profilePictureUrl: photoUrl,
+            );
+            print('🔄 Profile updated with new photo URL');
+          } else {
+            print('🔄 No photo URL found in response data');
+          }
+        } else {
+          print('🔄 No profile photo found for user');
+        }
+      } else {
+        print('🔄 Failed to fetch profile photo: ${result['message']}');
+        if (result['statusCode'] != null) {
+          print('🔄 Status code: ${result['statusCode']}');
+        }
+      }
+    } catch (e) {
+      // Log error but don't show to user - profile photo is optional
+      print('🔄 Error fetching profile photo: ${e.toString()}');
+    } finally {
+      setState(() {
+        _isLoadingProfilePhoto = false;
+      });
+    }
+  }
+
+  void _removeProfilePhoto() {
+    setState(() {
+      _selectedImageFile = null;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Profile photo removed. Save changes to apply.'),
+        backgroundColor: Colors.orange,
+      ),
     );
   }
 

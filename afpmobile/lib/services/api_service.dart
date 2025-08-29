@@ -7,7 +7,16 @@ import 'token_service.dart';
 class ApiService {
   // Get base URL from environment variables or app config
   static String get baseUrl {
-    return dotenv.env['API_BASE_URL'] ?? AppConfig.apiBaseUrl;
+    final envUrl = dotenv.env['API_BASE_URL'];
+    final configUrl = AppConfig.apiBaseUrl;
+    final finalUrl = envUrl ?? configUrl;
+
+    print('🔧 API Configuration:');
+    print('   Environment URL: $envUrl');
+    print('   Config URL: $configUrl');
+    print('   Final URL: $finalUrl');
+
+    return finalUrl;
   }
 
   // Headers for API requests
@@ -457,6 +466,180 @@ class ApiService {
         };
       }
     } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get user certificates
+  static Future<Map<String, dynamic>> getUserCertificates(String userId) async {
+    try {
+      final headers = await _headers;
+      final response = await http.get(
+        Uri.parse('$baseUrl/upload/certifications/user/$userId'),
+        headers: headers,
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data['data']};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch certificates',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Upload certificate
+  static Future<Map<String, dynamic>> uploadCertificate(
+    String userId,
+    Map<String, dynamic> certificateData,
+  ) async {
+    try {
+      final headers = await _headers;
+      final response = await http.post(
+        Uri.parse('$baseUrl/upload/certifications'),
+        headers: headers,
+        body: jsonEncode(certificateData),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'data': data['data'],
+          'message': data['message'] ?? 'Certificate uploaded successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to upload certificate',
+          'errors': data['errors'],
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Upload profile photo
+  static Future<Map<String, dynamic>> uploadProfilePhoto(
+    Map<String, dynamic> photoData,
+  ) async {
+    try {
+      final headers = await _headers;
+      final response = await http.post(
+        Uri.parse('$baseUrl/upload/profile-photo'),
+        headers: headers,
+        body: jsonEncode(photoData),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'data': data['data'],
+          'message': data['message'] ?? 'Profile photo uploaded successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to upload profile photo',
+          'errors': data['errors'],
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get user profile photo
+  static Future<Map<String, dynamic>> getUserProfilePhoto() async {
+    try {
+      final headers = await _headers;
+      final url = '$baseUrl/users/me';
+
+      print('🔍 Fetching user profile from: $url');
+      print('🔍 Headers: $headers');
+
+      final response = await http.get(Uri.parse(url), headers: headers);
+
+      print('🔍 User profile response status: ${response.statusCode}');
+      print('🔍 User profile response body: ${response.body}');
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        // Extract profile photo from user data
+        final userData = data['data'];
+        final profilePhoto = userData['profilePhoto'];
+
+        if (profilePhoto != null && profilePhoto['cloudinaryUrl'] != null) {
+          return {
+            'success': true,
+            'data': {
+              'cloudinaryUrl': profilePhoto['cloudinaryUrl'],
+              'cloudinaryId': profilePhoto['cloudinaryId'],
+              'uploadedAt': profilePhoto['uploadedAt'],
+            },
+            'message': 'Profile photo fetched successfully',
+          };
+        } else {
+          return {
+            'success': true,
+            'data': null,
+            'message': 'No profile photo found',
+          };
+        }
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch user profile',
+          'statusCode': response.statusCode,
+        };
+      }
+    } catch (e) {
+      print('🔍 Error fetching user profile: $e');
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get profile photo upload signature (for direct upload)
+  static Future<Map<String, dynamic>> getProfilePhotoUploadSignature() async {
+    try {
+      final headers = await _headers;
+      final url = '$baseUrl/upload/profile-photo/signature';
+
+      print('🔍 Fetching profile photo upload signature from: $url');
+
+      final response = await http.get(Uri.parse(url), headers: headers);
+
+      print('🔍 Upload signature response status: ${response.statusCode}');
+      print('🔍 Upload signature response body: ${response.body}');
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': data['data'] ?? data,
+          'message': 'Upload signature fetched successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch upload signature',
+          'statusCode': response.statusCode,
+        };
+      }
+    } catch (e) {
+      print('🔍 Error fetching upload signature: $e');
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }

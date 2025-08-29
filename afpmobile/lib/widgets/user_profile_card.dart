@@ -10,6 +10,7 @@ class UserProfileCard extends StatelessWidget {
   final int trainingProgress;
   final int readinessLevel;
   final Color cardColor;
+  final String? profilePhotoUrl; // Add profile photo URL parameter
 
   const UserProfileCard({
     Key? key,
@@ -20,6 +21,7 @@ class UserProfileCard extends StatelessWidget {
     required this.trainingProgress,
     required this.readinessLevel,
     this.cardColor = Colors.white,
+    this.profilePhotoUrl, // Add to constructor
   }) : super(key: key);
 
   @override
@@ -92,7 +94,36 @@ class UserProfileCard extends StatelessWidget {
                     color: Colors.grey[200],
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.person, size: 30, color: Colors.grey[600]),
+                  child: profilePhotoUrl != null
+                      ? ClipOval(
+                          child: Image.network(
+                            profilePhotoUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(
+                                Icons.person,
+                                size: 30,
+                                color: Colors.grey[600],
+                              );
+                            },
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppColors.armyPrimary,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                      : Icon(Icons.person, size: 30, color: Colors.grey[600]),
                 ),
                 SizedBox(width: 16),
                 // User Details

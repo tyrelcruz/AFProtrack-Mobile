@@ -8,6 +8,7 @@ import '../utils/app_colors.dart';
 import '../utils/responsive_utils.dart';
 import '../widgets/responsive_test_widget.dart';
 import '../services/token_service.dart';
+import '../services/api_service.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({Key? key}) : super(key: key);
@@ -19,11 +20,14 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   Map<String, dynamic>? _userData;
   bool _isLoading = true;
+  String? _profilePhotoUrl;
+  bool _isLoadingProfilePhoto = false;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _fetchProfilePhoto();
   }
 
   Future<void> _loadUserData() async {
@@ -37,6 +41,55 @@ class _HomeViewState extends State<HomeView> {
       print('Error loading user data: $e');
       setState(() {
         _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchProfilePhoto() async {
+    setState(() {
+      _isLoadingProfilePhoto = true;
+    });
+
+    try {
+      print('🏠 Home: Fetching user profile photo...');
+      final result = await ApiService.getUserProfilePhoto();
+
+      print('🏠 Home: Profile photo result: $result');
+
+      if (result['success']) {
+        if (result['data'] != null) {
+          final photoData = result['data'];
+          print('🏠 Home: Photo data received: $photoData');
+
+          if (photoData['cloudinaryUrl'] != null) {
+            final photoUrl = photoData['cloudinaryUrl'];
+            print('🏠 Home: Setting profile photo URL: $photoUrl');
+            setState(() {
+              _profilePhotoUrl = photoUrl;
+              _isLoadingProfilePhoto = false;
+            });
+          } else {
+            print('🏠 Home: No photo URL found in response data');
+            setState(() {
+              _isLoadingProfilePhoto = false;
+            });
+          }
+        } else {
+          print('🏠 Home: No profile photo found for user');
+          setState(() {
+            _isLoadingProfilePhoto = false;
+          });
+        }
+      } else {
+        print('🏠 Home: Failed to fetch profile photo: ${result['message']}');
+        setState(() {
+          _isLoadingProfilePhoto = false;
+        });
+      }
+    } catch (e) {
+      print('🏠 Home: Error fetching profile photo: ${e.toString()}');
+      setState(() {
+        _isLoadingProfilePhoto = false;
       });
     }
   }
@@ -114,6 +167,7 @@ class _HomeViewState extends State<HomeView> {
                   trainingProgress: 80,
                   readinessLevel: 97,
                   cardColor: Colors.white,
+                  profilePhotoUrl: _profilePhotoUrl,
                 ),
             SizedBox(height: 12),
             TrainingStatsWidget(),

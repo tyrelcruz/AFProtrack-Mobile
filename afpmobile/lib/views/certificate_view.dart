@@ -6,6 +6,8 @@ import '../widgets/upload_certificate_dialog.dart';
 import '../widgets/certificate_filter_button.dart';
 import '../models/certificate.dart';
 import '../utils/app_colors.dart';
+import '../services/api_service.dart';
+import '../services/token_service.dart';
 
 class CertificateView extends StatefulWidget {
   const CertificateView({Key? key}) : super(key: key);
@@ -16,31 +18,56 @@ class CertificateView extends StatefulWidget {
 
 class _CertificateViewState extends State<CertificateView> {
   int _currentIndex = 0;
+  bool _isLoading = true;
+  String? _errorMessage;
+  List<Certificate> _allCertificates = [];
 
-  // Sample certificate data based on the image
-  final List<Certificate> _allCertificates = [
-    Certificate(
-      title: 'Advanced Combat Training',
-      instructor: 'Lt. Garcia',
-      certificateNumber: 'ACT-2024-01234',
-      grade: 'A+',
-      status: 'Pending',
-    ),
-    Certificate(
-      title: 'Leadership Development Course',
-      instructor: 'Col. Santos',
-      certificateNumber: 'LDC-2024-01234',
-      grade: 'A+',
-      status: 'Approved',
-    ),
-    Certificate(
-      title: 'Cybersecurity Training',
-      instructor: 'SSG. Ramirez',
-      certificateNumber: 'CST-2024-01234',
-      grade: 'B+',
-      status: 'Pending',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadCertificates();
+  }
+
+  Future<void> _loadCertificates() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final userId = await TokenService.getUserId();
+      if (userId == null) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'User not authenticated';
+        });
+        return;
+      }
+
+      final result = await ApiService.getUserCertificates(userId);
+
+      if (result['success']) {
+        final List<dynamic> certificatesData = result['data'] ?? [];
+        final certificates =
+            certificatesData.map((json) => Certificate.fromJson(json)).toList();
+
+        setState(() {
+          _allCertificates = certificates;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = result['message'] ?? 'Failed to load certificates';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Error loading certificates: ${e.toString()}';
+      });
+    }
+  }
 
   List<Certificate> get _filteredCertificates {
     switch (_currentIndex) {
@@ -108,31 +135,85 @@ class _CertificateViewState extends State<CertificateView> {
 
           // Scrollable Content (Upload Certificate + Certificates List)
           Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  // Upload Certificate Section
-                  UploadCertificateWidget(onUpload: () => _showUploadDialog()),
+            child:
+                _isLoading
+                    ? _buildLoadingState()
+                    : _errorMessage != null
+                    ? _buildErrorState()
+                    : RefreshIndicator(
+                      onRefresh: _loadCertificates,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            // Upload Certificate Section
+                            UploadCertificateWidget(
+                              onUpload: () => _showUploadDialog(),
+                            ),
 
-                  // Certificates List
-                  _filteredCertificates.isEmpty
-                      ? _buildEmptyState()
-                      : Column(
-                        children:
-                            _filteredCertificates.map((certificate) {
-                              return CertificateCard(
-                                certificate: certificate,
-                                onViewDetails:
-                                    () => _showCertificateDetails(certificate),
-                              );
-                            }).toList(),
+                            // Certificates List
+                            _filteredCertificates.isEmpty
+                                ? _buildEmptyState()
+                                : Column(
+                                  children:
+                                      _filteredCertificates.map((certificate) {
+                                        return CertificateCard(
+                                          certificate: certificate,
+                                          onViewDetails:
+                                              () => _showCertificateDetails(
+                                                certificate,
+                                              ),
+                                        );
+                                      }).toList(),
+                                ),
+
+                            // Bottom padding
+                            const SizedBox(height: 16),
+                          ],
+                        ),
                       ),
+                    ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                  // Bottom padding
-                  const SizedBox(height: 16),
-                ],
-              ),
+  Widget _buildLoadingState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 16),
+          Text(
+            'Loading certificates...',
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 64, color: Colors.red),
+          const SizedBox(height: 16),
+          Text(
+            _errorMessage ?? 'An error occurred',
+            style: const TextStyle(fontSize: 16, color: Colors.red),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _loadCertificates,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.armyPrimary,
+              foregroundColor: Colors.white,
             ),
+            child: const Text('Retry'),
           ),
         ],
       ),
@@ -203,8 +284,83 @@ class _CertificateViewState extends State<CertificateView> {
                 ),
               );
             },
+            onSubmit: (certificateData) async {
+              Navigator.of(context).pop();
+              await _uploadCertificate(certificateData);
+            },
           ),
     );
+  }
+
+  Future<void> _uploadCertificate(Map<String, String> certificateData) async {
+    try {
+      final userId = await TokenService.getUserId();
+      if (userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User not authenticated'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              SizedBox(width: 16),
+              Text('Uploading certificate...'),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // Prepare the certificate data for the API
+      final apiData = {
+        'userId': userId,
+        'description': certificateData['title'] ?? '',
+        'fileName': 'certificate.pdf', // This would come from file picker
+        'fileType': 'pdf', // This would be determined from the file
+        'fileSize': 1024000, // This would come from the actual file
+      };
+
+      final result = await ApiService.uploadCertificate(userId, apiData);
+
+      if (result['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result['message'] ?? 'Certificate uploaded successfully',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Reload certificates
+        _loadCertificates();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to upload certificate'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error uploading certificate: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _showCertificateDetails(Certificate certificate) {
@@ -260,7 +416,7 @@ class _CertificateViewState extends State<CertificateView> {
 
                   // Title
                   Text(
-                    certificate.title,
+                    certificate.description,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 22,
@@ -270,14 +426,31 @@ class _CertificateViewState extends State<CertificateView> {
                   const SizedBox(height: 20),
 
                   // Details
-                  _buildDetailRow('Instructor', certificate.instructor),
+                  _buildDetailRow('File Name', certificate.fileName),
                   const SizedBox(height: 12),
                   _buildDetailRow(
-                    'Certificate No.',
-                    certificate.certificateNumber,
+                    'File Type',
+                    certificate.fileType.toUpperCase(),
                   ),
                   const SizedBox(height: 12),
-                  _buildDetailRow('Grade', certificate.grade),
+                  _buildDetailRow('File Size', certificate.formattedFileSize),
+                  const SizedBox(height: 12),
+                  _buildDetailRow(
+                    'Submitted',
+                    _formatDate(certificate.submittedAt),
+                  ),
+                  if (certificate.reviewedBy != null) ...[
+                    const SizedBox(height: 12),
+                    _buildDetailRow(
+                      'Reviewed By',
+                      certificate.reviewedBy!.fullName,
+                    ),
+                  ],
+                  if (certificate.reviewNotes != null &&
+                      certificate.reviewNotes!.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _buildDetailRow('Review Notes', certificate.reviewNotes!),
+                  ],
                   const SizedBox(height: 24),
 
                   // Close button
@@ -346,5 +519,23 @@ class _CertificateViewState extends State<CertificateView> {
       default:
         return Colors.grey;
     }
+  }
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 }
