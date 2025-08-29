@@ -29,7 +29,7 @@ class CertificateCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    certificate.title,
+                    certificate.description,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -58,18 +58,18 @@ class CertificateCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            // Instructor and certificate number
+            // File name and type
             Text(
-              'Instructor: ${certificate.instructor}',
+              'File: ${certificate.fileName}',
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 4),
             Text(
-              'Certificate No.: ${certificate.certificateNumber}',
+              'Type: ${certificate.fileType.toUpperCase()} • ${certificate.formattedFileSize}',
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 12),
-            // Bottom row with grade and view details button
+            // Bottom row with submission date and view details button
             Row(
               children: [
                 Container(
@@ -86,7 +86,7 @@ class CertificateCard extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    certificate.grade,
+                    _formatDate(certificate.submittedAt),
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -130,11 +130,29 @@ class CertificateCard extends StatelessWidget {
       case 'approved':
         return Colors.green;
       case 'pending':
-        return Colors.grey;
+        return Colors.orange;
       case 'rejected':
         return Colors.red;
       default:
         return Colors.grey;
     }
+  }
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 }

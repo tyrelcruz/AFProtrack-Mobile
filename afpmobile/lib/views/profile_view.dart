@@ -4,6 +4,7 @@ import '../utils/responsive_utils.dart';
 import '../models/user_profile.dart';
 import '../services/token_service.dart';
 import '../services/profile_service.dart';
+import '../services/api_service.dart';
 import 'login_view.dart';
 import 'edit_profile_view.dart';
 
@@ -18,11 +19,14 @@ class _ProfileViewState extends State<ProfileView> {
   UserProfile? _userProfile;
   bool _isLoading = true;
   String? _errorMessage;
+  String? _profilePhotoUrl;
+  bool _isLoadingProfilePhoto = false;
 
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
+    _fetchProfilePhoto();
   }
 
   Future<void> _loadUserProfile() async {
@@ -39,6 +43,8 @@ class _ProfileViewState extends State<ProfileView> {
           _userProfile = profile;
           _isLoading = false;
         });
+        // Refresh profile photo after loading profile
+        _fetchProfilePhoto();
       }
     } catch (e) {
       if (mounted) {
@@ -47,6 +53,57 @@ class _ProfileViewState extends State<ProfileView> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _fetchProfilePhoto() async {
+    setState(() {
+      _isLoadingProfilePhoto = true;
+    });
+
+    try {
+      print('👤 Profile: Fetching user profile photo...');
+      final result = await ApiService.getUserProfilePhoto();
+
+      print('👤 Profile: Profile photo result: $result');
+
+      if (result['success']) {
+        if (result['data'] != null) {
+          final photoData = result['data'];
+          print('👤 Profile: Photo data received: $photoData');
+
+          if (photoData['cloudinaryUrl'] != null) {
+            final photoUrl = photoData['cloudinaryUrl'];
+            print('👤 Profile: Setting profile photo URL: $photoUrl');
+            setState(() {
+              _profilePhotoUrl = photoUrl;
+              _isLoadingProfilePhoto = false;
+            });
+          } else {
+            print('👤 Profile: No photo URL found in response data');
+            setState(() {
+              _isLoadingProfilePhoto = false;
+            });
+          }
+        } else {
+          print('👤 Profile: No profile photo found for user');
+          setState(() {
+            _isLoadingProfilePhoto = false;
+          });
+        }
+      } else {
+        print(
+          '👤 Profile: Failed to fetch profile photo: ${result['message']}',
+        );
+        setState(() {
+          _isLoadingProfilePhoto = false;
+        });
+      }
+    } catch (e) {
+      print('👤 Profile: Error fetching profile photo: ${e.toString()}');
+      setState(() {
+        _isLoadingProfilePhoto = false;
+      });
     }
   }
 
@@ -183,11 +240,53 @@ class _ProfileViewState extends State<ProfileView> {
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2),
               ),
-              child: Icon(
-                Icons.person,
-                size: profileIconSize,
-                color: Colors.white,
-              ),
+              child:
+                  _isLoadingProfilePhoto
+                      ? Center(
+                        child: SizedBox(
+                          width: profileIconSize * 0.5,
+                          height: profileIconSize * 0.5,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        ),
+                      )
+                      : _profilePhotoUrl != null
+                      ? ClipOval(
+                        child: Image.network(
+                          _profilePhotoUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              Icons.person,
+                              size: profileIconSize,
+                              color: Colors.white,
+                            );
+                          },
+                        ),
+                      )
+                      : _userProfile?.profilePictureUrl != null
+                      ? ClipOval(
+                        child: Image.network(
+                          _userProfile!.profilePictureUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              Icons.person,
+                              size: profileIconSize,
+                              color: Colors.white,
+                            );
+                          },
+                        ),
+                      )
+                      : Icon(
+                        Icons.person,
+                        size: profileIconSize,
+                        color: Colors.white,
+                      ),
             ),
           ),
           SizedBox(width: 26),
