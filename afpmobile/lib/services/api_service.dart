@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../config/app_config.dart';
 import 'token_service.dart';
@@ -496,16 +498,92 @@ class ApiService {
 
   // Upload certificate
   static Future<Map<String, dynamic>> uploadCertificate(
-    String userId,
     Map<String, dynamic> certificateData,
   ) async {
     try {
-      final headers = await _headers;
-      final response = await http.post(
-        Uri.parse('$baseUrl/upload/certifications'),
-        headers: headers,
-        body: jsonEncode(certificateData),
+      final token = await TokenService.getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'No authentication token found'};
+      }
+
+      // Create multipart request
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse(
+          'https://afprotrack-backend.vercel.app/api/upload/certification/direct',
+        ),
       );
+
+      // Add authorization header
+      request.headers['Authorization'] = 'Bearer $token';
+      // Don't set Content-Type for multipart requests - it's set automatically with boundary
+
+      // Extract file from certificateData
+      final File file = certificateData['file'];
+
+      // Get file extension and determine MIME type
+      final fileExtension = file.path.split('.').last.toLowerCase();
+      String mimeType;
+      switch (fileExtension) {
+        case 'jpg':
+        case 'jpeg':
+          mimeType = 'image/jpeg';
+          break;
+        case 'png':
+          mimeType = 'image/png';
+          break;
+        case 'gif':
+          mimeType = 'image/gif';
+          break;
+        case 'webp':
+          mimeType = 'image/webp';
+          break;
+        case 'pdf':
+          mimeType = 'application/pdf';
+          break;
+        default:
+          mimeType = 'image/jpeg'; // Default fallback
+      }
+
+      // Create multipart file with proper MIME type
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          file.path,
+          contentType: MediaType.parse(mimeType),
+        ),
+      );
+
+      // Add form fields to match Postman working request
+      request.fields['certificateTitle'] =
+          certificateData['certificateTitle'] ?? '';
+      request.fields['instructor'] = certificateData['instructor'] ?? '';
+      request.fields['certificateNumber'] =
+          certificateData['certificateNumber'] ?? '';
+      request.fields['dateIssued'] = certificateData['dateIssued'] ?? '';
+
+      // Use trainingProgramName if provided, otherwise use trainingProgramId
+      request.fields['trainingProgramName'] =
+          certificateData['trainingProgramName'] ??
+          certificateData['trainingProgramId'] ??
+          '';
+
+      print('🔧 Uploading certificate:');
+      print('   URL: ${request.url}');
+      print('   File: ${file.path}');
+      print('   File exists: ${file.existsSync()}');
+      print('   File size: ${file.lengthSync()} bytes');
+      print('   File extension: ${fileExtension}');
+      print('   MIME type: ${mimeType}');
+      print('   Fields: ${request.fields}');
+      print('   Headers: ${request.headers}');
+
+      // Send the request
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print('📡 Upload response: ${response.statusCode}');
+      print('📡 Response body: ${response.body}');
 
       final data = jsonDecode(response.body);
 
@@ -523,6 +601,7 @@ class ApiService {
         };
       }
     } catch (e) {
+      print('❌ Upload error: $e');
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }

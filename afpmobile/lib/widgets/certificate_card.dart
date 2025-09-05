@@ -29,7 +29,11 @@ class CertificateCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    certificate.description,
+                    certificate.certificateTitle.isNotEmpty
+                        ? certificate.certificateTitle
+                        : certificate.description.isNotEmpty
+                        ? certificate.description
+                        : 'Untitled Certificate',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -47,7 +51,7 @@ class CertificateCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    certificate.status,
+                    certificate.status.toUpperCase(),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -57,17 +61,38 @@ class CertificateCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            // File name and type
-            Text(
-              'File: ${certificate.fileName}',
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Type: ${certificate.fileType.toUpperCase()} • ${certificate.formattedFileSize}',
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
-            ),
+            const SizedBox(height: 12),
+
+            // Certificate Details
+            // Training Program
+            if (certificate.trainingProgramName != null &&
+                certificate.trainingProgramName!.isNotEmpty)
+              _buildInfoRow(
+                'Training Program',
+                certificate.trainingProgramName!,
+              ),
+
+            // Instructor
+            if (certificate.instructor.isNotEmpty)
+              _buildInfoRow('Instructor', certificate.instructor),
+
+            // Certificate Number
+            if (certificate.certificateNumber.isNotEmpty)
+              _buildInfoRow(
+                'Certificate Number',
+                certificate.certificateNumber,
+              ),
+
+            // Date Issued
+            _buildInfoRow('Date Issued', _formatDate(certificate.dateIssued)),
+
+            // Grade
+            if (certificate.grade.isNotEmpty)
+              _buildInfoRow('Grade', certificate.grade),
+
+            // Description
+            if (certificate.description.isNotEmpty)
+              _buildInfoRow('Description', certificate.description),
             const SizedBox(height: 12),
             // Bottom row with submission date and view details button
             Row(
@@ -121,6 +146,34 @@ class CertificateCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade700,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 13, color: Colors.black87),
+            ),
+          ),
+        ],
       ),
     );
   }

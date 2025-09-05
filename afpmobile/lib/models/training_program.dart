@@ -164,7 +164,7 @@ class TrainingProgram {
     }
     switch (status.toLowerCase()) {
       case 'completed':
-        return 'View Certificate';
+        return 'Enrolled';
       case 'in progress':
         return 'Currently Active';
       default:
@@ -193,8 +193,7 @@ class TrainingProgram {
   }
 
   bool get isDisabled {
-    return status.toLowerCase() == 'in progress' ||
-        status.toLowerCase() == 'completed';
+    return status.toLowerCase() == 'in progress';
   }
 
   const TrainingProgram({
@@ -251,8 +250,6 @@ class TrainingProgram {
       // Use the actual enrollment status from the backend
       isEnrolled: json['isEnrolled'] ?? false,
     );
-
-
 
     return program;
   }

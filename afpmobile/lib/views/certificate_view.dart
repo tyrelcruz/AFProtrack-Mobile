@@ -6,6 +6,7 @@ import '../widgets/upload_certificate_dialog.dart';
 import '../widgets/certificate_filter_button.dart';
 import '../models/certificate.dart';
 import '../utils/app_colors.dart';
+import '../utils/flushbar_utils.dart';
 import '../services/api_service.dart';
 import '../services/token_service.dart';
 
@@ -48,6 +49,18 @@ class _CertificateViewState extends State<CertificateView> {
 
       if (result['success']) {
         final List<dynamic> certificatesData = result['data'] ?? [];
+
+        print('🔧 Certificate data from backend:');
+        for (var cert in certificatesData) {
+          print('   Certificate: $cert');
+          if (cert['trainingProgramId'] != null) {
+            print(
+              '   trainingProgramId type: ${cert['trainingProgramId'].runtimeType}',
+            );
+            print('   trainingProgramId value: ${cert['trainingProgramId']}');
+          }
+        }
+
         final certificates =
             certificatesData.map((json) => Certificate.fromJson(json)).toList();
 
@@ -269,97 +282,70 @@ class _CertificateViewState extends State<CertificateView> {
             onTakePhoto: () {
               Navigator.of(context).pop();
               // TODO: Implement camera functionality
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Camera functionality coming soon'),
-                ),
+              FlushbarUtils.showInfo(
+                context,
+                message: 'Camera functionality coming soon',
               );
             },
             onBrowseFiles: () {
               Navigator.of(context).pop();
               // TODO: Implement file picker functionality
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('File picker functionality coming soon'),
-                ),
+              FlushbarUtils.showInfo(
+                context,
+                message: 'File picker functionality coming soon',
               );
             },
             onSubmit: (certificateData) async {
-              Navigator.of(context).pop();
               await _uploadCertificate(certificateData);
+              if (mounted) {
+                Navigator.of(context).pop();
+              }
             },
           ),
     );
   }
 
-  Future<void> _uploadCertificate(Map<String, String> certificateData) async {
+  Future<void> _uploadCertificate(Map<String, dynamic> certificateData) async {
     try {
       final userId = await TokenService.getUserId();
       if (userId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('User not authenticated'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        FlushbarUtils.showError(context, message: 'User not authenticated');
         return;
       }
 
       // Show loading indicator
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Row(
-            children: [
-              SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-              SizedBox(width: 16),
-              Text('Uploading certificate...'),
-            ],
-          ),
-          duration: Duration(seconds: 2),
-        ),
+      FlushbarUtils.showInfo(
+        context,
+        message: 'Uploading certificate...',
+        duration: const Duration(seconds: 2),
       );
 
-      // Prepare the certificate data for the API
-      final apiData = {
-        'userId': userId,
-        'description': certificateData['title'] ?? '',
-        'fileName': 'certificate.pdf', // This would come from file picker
-        'fileType': 'pdf', // This would be determined from the file
-        'fileSize': 1024000, // This would come from the actual file
-      };
-
-      final result = await ApiService.uploadCertificate(userId, apiData);
+      final result = await ApiService.uploadCertificate(certificateData);
 
       if (result['success']) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              result['message'] ?? 'Certificate uploaded successfully',
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
+        if (mounted) {
+          FlushbarUtils.showSuccess(
+            context,
+            message: result['message'] ?? 'Certificate uploaded successfully',
+          );
+        }
         // Reload certificates
         _loadCertificates();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Failed to upload certificate'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        if (mounted) {
+          FlushbarUtils.showError(
+            context,
+            message: result['message'] ?? 'Failed to upload certificate',
+          );
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error uploading certificate: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        FlushbarUtils.showError(
+          context,
+          message: 'Error uploading certificate: ${e.toString()}',
+        );
+      }
     }
   }
 
@@ -373,110 +359,265 @@ class _CertificateViewState extends State<CertificateView> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Container(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header with status badge and close button
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _getStatusColor(
-                            certificate.status,
-                          ).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          certificate.status,
-                          style: TextStyle(
-                            color: _getStatusColor(certificate.status),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.8,
+                maxWidth: MediaQuery.of(context).size.width * 0.9,
+              ),
+              padding: const EdgeInsets.all(20),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header with status badge and close button
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(
+                              certificate.status,
+                            ).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text(
+                            certificate.status.toUpperCase(),
+                            style: TextStyle(
+                              color: _getStatusColor(certificate.status),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.black,
+                            size: 24,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Title
+                    Text(
+                      certificate.certificateTitle.isNotEmpty
+                          ? certificate.certificateTitle
+                          : certificate.description.isNotEmpty
+                          ? certificate.description
+                          : 'Untitled Certificate',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                        color: Colors.black87,
                       ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: const Icon(
-                          Icons.close,
-                          color: Colors.black,
-                          size: 24,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Certificate Image
+                    Container(
+                      height: 250,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                        color: Colors.grey.shade50,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          certificate.cloudinaryUrl,
+                          fit: BoxFit.contain,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: Colors.grey.shade100,
+                              child: const Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFF4CAF50),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey.shade100,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.image_not_supported_outlined,
+                                    size: 48,
+                                    color: Colors.grey.shade400,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Image not available',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Certificate Details
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'Certificate Details',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade800,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Training Program
+                          if (certificate.trainingProgramName != null &&
+                              certificate.trainingProgramName!.isNotEmpty)
+                            _buildDetailRow(
+                              'Training Program',
+                              certificate.trainingProgramName!,
+                            ),
+
+                          // Instructor
+                          if (certificate.instructor.isNotEmpty)
+                            _buildDetailRow(
+                              'Instructor',
+                              certificate.instructor,
+                            ),
+
+                          // Certificate Number
+                          if (certificate.certificateNumber.isNotEmpty)
+                            _buildDetailRow(
+                              'Certificate Number',
+                              certificate.certificateNumber,
+                            ),
+
+                          // Date Issued
+                          _buildDetailRow(
+                            'Date Issued',
+                            _formatDate(certificate.dateIssued),
+                          ),
+
+                          // Grade
+                          if (certificate.grade.isNotEmpty)
+                            _buildDetailRow('Grade', certificate.grade),
+
+                          // Description
+                          if (certificate.description.isNotEmpty)
+                            _buildDetailRow(
+                              'Description',
+                              certificate.description,
+                            ),
+                        ],
+                      ),
+                    ),
+
+                    // Review Information
+                    if (certificate.reviewedBy != null ||
+                        (certificate.reviewNotes != null &&
+                            certificate.reviewNotes!.isNotEmpty)) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.blue.shade200),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              child: Text(
+                                'Review Information',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.blue.shade800,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            if (certificate.reviewedBy != null)
+                              _buildDetailRow(
+                                'Reviewed By',
+                                certificate.reviewedBy!.fullName,
+                              ),
+
+                            if (certificate.reviewNotes != null &&
+                                certificate.reviewNotes!.isNotEmpty)
+                              _buildDetailRow(
+                                'Review Notes',
+                                certificate.reviewNotes!,
+                              ),
+                          ],
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 24),
 
-                  // Title
-                  Text(
-                    certificate.description,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
-                  // Details
-                  _buildDetailRow('File Name', certificate.fileName),
-                  const SizedBox(height: 12),
-                  _buildDetailRow(
-                    'File Type',
-                    certificate.fileType.toUpperCase(),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildDetailRow('File Size', certificate.formattedFileSize),
-                  const SizedBox(height: 12),
-                  _buildDetailRow(
-                    'Submitted',
-                    _formatDate(certificate.submittedAt),
-                  ),
-                  if (certificate.reviewedBy != null) ...[
-                    const SizedBox(height: 12),
-                    _buildDetailRow(
-                      'Reviewed By',
-                      certificate.reviewedBy!.fullName,
-                    ),
-                  ],
-                  if (certificate.reviewNotes != null &&
-                      certificate.reviewNotes!.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    _buildDetailRow('Review Notes', certificate.reviewNotes!),
-                  ],
-                  const SizedBox(height: 24),
-
-                  // Close button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.armyPrimary,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    // Close button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.armyPrimary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                      child: const Text(
-                        'Close',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
+                        child: const Text(
+                          'Close',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -484,27 +625,35 @@ class _CertificateViewState extends State<CertificateView> {
   }
 
   Widget _buildDetailRow(String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 120,
-          child: Text(
-            '$label:',
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              '$label:',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
             ),
           ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: TextStyle(fontSize: 15, color: Colors.grey[700]),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Colors.black87,
+                height: 1.3,
+              ),
+              softWrap: true,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

@@ -158,54 +158,58 @@ class _TrainingViewState extends State<TrainingView> {
                   topRight: Radius.circular(28),
                 ),
               ),
-              child:
-                  _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _errorMessage != null
-                      ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _errorMessage!,
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 16,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: _loadTrainingPrograms,
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
-                      )
-                      : _filteredPrograms.isEmpty
-                      ? TrainingEmptyState(message: _getEmptyStateMessage())
-                      : ListView.builder(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: ResponsiveUtils.getResponsivePadding(
-                            context,
-                          ),
-                          vertical: 12,
-                        ),
-                        itemCount: _filteredPrograms.length,
-                        itemBuilder: (context, index) {
-                          // Safety check to prevent range error
-                          if (index >= _filteredPrograms.length) {
-                            return const SizedBox.shrink();
-                          }
-                          return TrainingProgramCard(
-                            program: _filteredPrograms[index],
-                            onViewDetails:
-                                () => _showTrainingDetails(
-                                  _filteredPrograms[index],
+              child: RefreshIndicator(
+                onRefresh: _loadTrainingPrograms,
+                color: AppColors.armyPrimary,
+                child:
+                    _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : _errorMessage != null
+                        ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _errorMessage!,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 16,
                                 ),
-                          );
-                        },
-                      ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: _loadTrainingPrograms,
+                                child: const Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        )
+                        : _filteredPrograms.isEmpty
+                        ? TrainingEmptyState(message: _getEmptyStateMessage())
+                        : ListView.builder(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: ResponsiveUtils.getResponsivePadding(
+                              context,
+                            ),
+                            vertical: 12,
+                          ),
+                          itemCount: _filteredPrograms.length,
+                          itemBuilder: (context, index) {
+                            // Safety check to prevent range error
+                            if (index >= _filteredPrograms.length) {
+                              return const SizedBox.shrink();
+                            }
+                            return TrainingProgramCard(
+                              program: _filteredPrograms[index],
+                              onViewDetails:
+                                  () => _showTrainingDetails(
+                                    _filteredPrograms[index],
+                                  ),
+                            );
+                          },
+                        ),
+              ),
             ),
           ),
         ],

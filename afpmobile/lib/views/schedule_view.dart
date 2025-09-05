@@ -91,40 +91,44 @@ class _ScheduleViewState extends State<ScheduleView> {
             ),
           ),
           Expanded(
-            child:
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _errorMessage != null
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            _errorMessage!,
-                            style: const TextStyle(
-                              color: Colors.red,
-                              fontSize: 16,
+            child: RefreshIndicator(
+              onRefresh: _loadSchedulePrograms,
+              color: AppColors.armyPrimary,
+              child:
+                  _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _errorMessage != null
+                      ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _errorMessage!,
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 16,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: _loadSchedulePrograms,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    )
-                    : _filteredPrograms.isEmpty
-                    ? Center(
-                      child: Text(
-                        ScheduleDataService.getEmptyStateMessage(
-                          _selectedTabIndex,
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _loadSchedulePrograms,
+                              child: const Text('Retry'),
+                            ),
+                          ],
                         ),
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                    )
-                    : _ScheduleList(programs: _filteredPrograms),
+                      )
+                      : _filteredPrograms.isEmpty
+                      ? Center(
+                        child: Text(
+                          ScheduleDataService.getEmptyStateMessage(
+                            _selectedTabIndex,
+                          ),
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                      )
+                      : _ScheduleList(programs: _filteredPrograms),
+            ),
           ),
         ],
       ),

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import '../models/training_program.dart';
+import '../services/training_data_service.dart';
 
 class UploadCertificateDialog extends StatefulWidget {
   final VoidCallback? onTakePhoto;
   final VoidCallback? onBrowseFiles;
-  final Function(Map<String, String>)? onSubmit;
+  final Function(Map<String, dynamic>)? onSubmit;
 
   const UploadCertificateDialog({
     Key? key,
@@ -24,7 +29,48 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
   final _certificateNumberController = TextEditingController();
   final _dateController = TextEditingController();
   final _gradeController = TextEditingController();
+  final _descriptionController = TextEditingController();
   bool _isLoading = false;
+  bool _isLoadingPrograms = true;
+  File? _selectedFile;
+  final ImagePicker _picker = ImagePicker();
+  List<TrainingProgram> _trainingPrograms = [];
+  String? _selectedTrainingProgramId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTrainingPrograms();
+  }
+
+  Future<void> _loadTrainingPrograms() async {
+    try {
+      final programs = await TrainingDataService.getAllTrainingPrograms();
+
+      print('🔧 Loaded ${programs.length} training programs:');
+      for (var program in programs) {
+        print('   ${program.id}: ${program.programName}');
+      }
+
+      setState(() {
+        _trainingPrograms = programs;
+        _isLoadingPrograms = false;
+      });
+    } catch (e) {
+      print('❌ Error loading training programs: $e');
+      setState(() {
+        _isLoadingPrograms = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading training programs: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -155,6 +201,10 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
                 SizedBox(height: spacing),
 
                 // Certificate Details Form
+                // Training Program Dropdown (first field as shown in image)
+                _buildTrainingProgramDropdown(isMobile, spacing),
+                SizedBox(height: spacing),
+
                 _buildTextField(
                   controller: _titleController,
                   label: 'Certificate Title',
@@ -274,6 +324,21 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
                     ),
                 SizedBox(height: spacing),
 
+                _buildTextField(
+                  controller: _descriptionController,
+                  label: 'Description',
+                  hint: 'Enter certificate description',
+                  icon: Icons.description_outlined,
+                  isMobile: isMobile,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter description';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: spacing),
+
                 // File Upload Section
                 Container(
                   padding: EdgeInsets.all(
@@ -328,6 +393,54 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
                                 : (isMediumScreen ? 10 : (isMobile ? 12 : 16)),
                       ),
 
+                      // Selected file display
+                      if (_selectedFile != null) ...[
+                        Container(
+                          padding: EdgeInsets.all(
+                            isSmallScreen ? 6 : (isMediumScreen ? 8 : 10),
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: Colors.green.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                _getFileIcon(_selectedFile!.path),
+                                color: Colors.green,
+                                size: isSmallScreen ? 16 : 18,
+                              ),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _selectedFile!.path.split('/').last,
+                                  style: TextStyle(
+                                    fontSize: isSmallScreen ? 11 : 12,
+                                    color: Colors.green.shade700,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedFile = null;
+                                  });
+                                },
+                                child: Icon(
+                                  Icons.close,
+                                  color: Colors.green.shade700,
+                                  size: isSmallScreen ? 16 : 18,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                      ],
+
                       // Action Buttons
                       Row(
                         children: [
@@ -336,7 +449,7 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
                               icon: Icons.camera_alt_outlined,
                               text: 'Take photo',
                               isMobile: isMobile,
-                              onTap: widget.onTakePhoto,
+                              onTap: _takePhoto,
                             ),
                           ),
                           SizedBox(
@@ -350,9 +463,9 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
                           Expanded(
                             child: _ActionButton(
                               icon: Icons.upload_file_outlined,
-                              text: 'Browse Files',
+                              text: 'Browse Files (Images & PDF)',
                               isMobile: isMobile,
-                              onTap: widget.onBrowseFiles,
+                              onTap: _pickFile,
                             ),
                           ),
                         ],
@@ -413,6 +526,124 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
     );
   }
 
+  Widget _buildTrainingProgramDropdown(bool isMobile, double spacing) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenHeight < 700;
+    final isMediumScreen = screenHeight >= 700 && screenHeight < 850;
+
+    final labelFontSize =
+        isSmallScreen
+            ? 11.0
+            : (isMediumScreen ? 12.0 : (isMobile ? 13.0 : 14.0));
+    final iconSize =
+        isSmallScreen
+            ? 16.0
+            : (isMediumScreen ? 17.0 : (isMobile ? 18.0 : 20.0));
+    final contentPadding =
+        isSmallScreen
+            ? const EdgeInsets.symmetric(horizontal: 10, vertical: 8)
+            : (isMediumScreen
+                ? const EdgeInsets.symmetric(horizontal: 11, vertical: 9)
+                : (isMobile
+                    ? const EdgeInsets.symmetric(horizontal: 12, vertical: 10)
+                    : const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    )));
+
+    return Theme(
+      data: Theme.of(context).copyWith(
+        dropdownMenuTheme: DropdownMenuThemeData(
+          textStyle: TextStyle(
+            fontSize: labelFontSize,
+            color: const Color(0xFF4CAF50),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      child: DropdownButtonFormField<String>(
+        value: _selectedTrainingProgramId,
+        decoration: InputDecoration(
+          labelText: 'Training Program',
+          labelStyle: TextStyle(
+            fontSize: labelFontSize,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF4CAF50),
+          ),
+          hintText:
+              _isLoadingPrograms
+                  ? 'Loading programs...'
+                  : 'Select training program',
+          hintStyle: TextStyle(
+            color: Colors.grey.shade500,
+            fontSize: labelFontSize,
+          ),
+          prefixIcon: Icon(
+            Icons.school_outlined,
+            color: const Color(0xFF4CAF50),
+            size: iconSize,
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.red.shade300, width: 1),
+          ),
+          contentPadding: contentPadding,
+        ),
+        items:
+            _trainingPrograms.map((program) {
+              return DropdownMenuItem<String>(
+                value: program.id,
+                child: Text(
+                  program.programName,
+                  style: TextStyle(
+                    fontSize: labelFontSize,
+                    color: const Color(0xFF4CAF50),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            }).toList(),
+        onChanged:
+            _isLoadingPrograms
+                ? null
+                : (String? newValue) {
+                  setState(() {
+                    _selectedTrainingProgramId = newValue;
+                  });
+                },
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please select a training program';
+          }
+          return null;
+        },
+        isExpanded: true,
+        icon: Icon(Icons.arrow_drop_down, color: const Color(0xFF4CAF50)),
+        dropdownColor: Colors.white,
+        style: TextStyle(
+          fontSize: labelFontSize,
+          color: const Color(0xFF4CAF50),
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -457,6 +688,7 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
         controller: controller,
         readOnly: readOnly,
         validator: validator,
+        onTap: onTap,
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
@@ -508,38 +740,205 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
     if (picked != null) {
       setState(() {
         _dateController.text =
-            "${picked.month.toString().padLeft(2, '0')}/${picked.day.toString().padLeft(2, '0')}/${picked.year}";
+            "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
       });
     }
   }
 
-  void _handleSubmit() {
+  Future<void> _takePhoto() async {
+    try {
+      final XFile? photo = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+      if (photo != null) {
+        setState(() {
+          _selectedFile = File(photo.path);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error taking photo: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickFile() async {
+    try {
+      // Show file type selection dialog
+      final String? fileType = await _showFileTypeDialog();
+      if (fileType == null) return;
+
+      if (fileType == 'image') {
+        // Pick image from gallery
+        final XFile? file = await _picker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 1920,
+          maxHeight: 1080,
+          imageQuality: 85,
+        );
+        if (file != null) {
+          setState(() {
+            _selectedFile = File(file.path);
+          });
+        }
+      } else if (fileType == 'pdf') {
+        // Pick PDF file
+        FilePickerResult? result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['pdf'],
+          allowMultiple: false,
+        );
+        if (result != null && result.files.single.path != null) {
+          setState(() {
+            _selectedFile = File(result.files.single.path!);
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error picking file: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  IconData _getFileIcon(String filePath) {
+    final extension = filePath.toLowerCase().split('.').last;
+    switch (extension) {
+      case 'pdf':
+        return Icons.picture_as_pdf;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'webp':
+        return Icons.image;
+      default:
+        return Icons.insert_drive_file;
+    }
+  }
+
+  Future<String?> _showFileTypeDialog() async {
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select File Type'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.image, color: Color(0xFF4CAF50)),
+                title: const Text('Image'),
+                subtitle: const Text('JPG, PNG, GIF, WebP'),
+                onTap: () => Navigator.of(context).pop('image'),
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.picture_as_pdf,
+                  color: Color(0xFF4CAF50),
+                ),
+                title: const Text('PDF Document'),
+                subtitle: const Text('PDF files'),
+                onTap: () => Navigator.of(context).pop('pdf'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
+      if (_selectedFile == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a file to upload'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (_selectedTrainingProgramId == null ||
+          _selectedTrainingProgramId!.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a training program'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       setState(() {
         _isLoading = true;
       });
 
-      // Simulate API call
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() {
-          _isLoading = false;
-        });
+      // Get the selected training program
+      final selectedProgram = _trainingPrograms.firstWhere(
+        (program) => program.id == _selectedTrainingProgramId,
+        orElse: () => _trainingPrograms.first,
+      );
 
-        // Prepare certificate data
-        final certificateData = {
-          'title': _titleController.text,
-          'instructor': _instructorController.text,
-          'certificateNumber': _certificateNumberController.text,
-          'dateIssued': _dateController.text,
-          'grade': _gradeController.text,
-        };
+      // Prepare certificate data
+      final certificateData = {
+        'file': _selectedFile!,
+        'certificateTitle': _titleController.text,
+        'instructor': _instructorController.text,
+        'certificateNumber': _certificateNumberController.text,
+        'dateIssued': _dateController.text,
+        'trainingProgramName': selectedProgram.programName,
+      };
 
+      print('🔧 Certificate data being sent:');
+      print('   Training Program ID: ${_selectedTrainingProgramId}');
+      print('   Training Program Name: ${selectedProgram.programName}');
+      print('   Available programs count: ${_trainingPrograms.length}');
+      print(
+        '   Available programs: ${_trainingPrograms.map((p) => '${p.id}: ${p.programName}').join(', ')}',
+      );
+
+      try {
         // Call the onSubmit callback
-        widget.onSubmit?.call(certificateData);
-
-        // Close the dialog
-        Navigator.of(context).pop();
-      });
+        await widget.onSubmit?.call(certificateData);
+      } catch (e) {
+        // Handle any errors from the upload
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Upload failed: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        // Reset loading state
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 
@@ -550,6 +949,7 @@ class _UploadCertificateDialogState extends State<UploadCertificateDialog> {
     _certificateNumberController.dispose();
     _dateController.dispose();
     _gradeController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 }

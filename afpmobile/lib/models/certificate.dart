@@ -4,6 +4,7 @@ class Certificate {
   final String id;
   final String userId;
   final String? trainingProgramId;
+  final String? trainingProgramName;
   final String fileName;
   final String cloudinaryId;
   final String cloudinaryUrl;
@@ -11,6 +12,11 @@ class Certificate {
   final int fileSize;
   final String status;
   final String submittedBy;
+  final String certificateTitle;
+  final String instructor;
+  final String certificateNumber;
+  final DateTime dateIssued;
+  final String grade;
   final String description;
   final DateTime submittedAt;
   final DateTime createdAt;
@@ -24,6 +30,7 @@ class Certificate {
     required this.id,
     required this.userId,
     this.trainingProgramId,
+    this.trainingProgramName,
     required this.fileName,
     required this.cloudinaryId,
     required this.cloudinaryUrl,
@@ -31,6 +38,11 @@ class Certificate {
     required this.fileSize,
     required this.status,
     required this.submittedBy,
+    required this.certificateTitle,
+    required this.instructor,
+    required this.certificateNumber,
+    required this.dateIssued,
+    required this.grade,
     required this.description,
     required this.submittedAt,
     required this.createdAt,
@@ -42,10 +54,25 @@ class Certificate {
   });
 
   factory Certificate.fromJson(Map<String, dynamic> json) {
+    // Handle trainingProgramId - it might be a Map or String
+    String? trainingProgramId;
+    String? trainingProgramName;
+    if (json['trainingProgramId'] != null) {
+      if (json['trainingProgramId'] is String) {
+        trainingProgramId = json['trainingProgramId'];
+      } else if (json['trainingProgramId'] is Map) {
+        // If it's a Map, extract the ID and name
+        trainingProgramId =
+            json['trainingProgramId']['id'] ?? json['trainingProgramId']['_id'];
+        trainingProgramName = json['trainingProgramId']['programName'];
+      }
+    }
+
     return Certificate(
       id: json['id'] ?? json['_id'] ?? '',
       userId: json['userId'] ?? '',
-      trainingProgramId: json['trainingProgramId'],
+      trainingProgramId: trainingProgramId,
+      trainingProgramName: trainingProgramName,
       fileName: json['fileName'] ?? '',
       cloudinaryId: json['cloudinaryId'] ?? '',
       cloudinaryUrl: json['cloudinaryUrl'] ?? '',
@@ -53,7 +80,14 @@ class Certificate {
       fileSize: json['fileSize'] ?? 0,
       status: json['status'] ?? '',
       submittedBy: json['submittedBy'] ?? '',
-      description: json['description'] ?? '',
+      certificateTitle: (json['certificateTitle'] ?? '').toString(),
+      instructor: (json['instructor'] ?? '').toString(),
+      certificateNumber: (json['certificateNumber'] ?? '').toString(),
+      dateIssued: DateTime.parse(
+        json['dateIssued'] ?? DateTime.now().toIso8601String(),
+      ),
+      grade: (json['grade'] ?? '').toString(),
+      description: (json['description'] ?? '').toString(),
       submittedAt: DateTime.parse(
         json['submittedAt'] ?? DateTime.now().toIso8601String(),
       ),
@@ -69,7 +103,7 @@ class Certificate {
               ? DateTime.parse(json['reviewedAt'])
               : null,
       reviewedBy:
-          json['reviewedBy'] != null
+          json['reviewedBy'] != null && json['reviewedBy'] is Map
               ? Reviewer.fromJson(json['reviewedBy'])
               : null,
       formattedFileSize: json['formattedFileSize'] ?? '',
@@ -77,10 +111,14 @@ class Certificate {
   }
 
   // Computed properties for backward compatibility
-  String get title => description;
-  String get instructor => reviewedBy?.fullName ?? 'N/A';
-  String get certificateNumber => id;
-  String get grade => status == 'approved' ? 'A+' : 'N/A';
+  String get title =>
+      certificateTitle.isNotEmpty ? certificateTitle : description;
+  String get instructorName =>
+      instructor.isNotEmpty ? instructor : (reviewedBy?.fullName ?? 'N/A');
+  String get certNumber =>
+      certificateNumber.isNotEmpty ? certificateNumber : id;
+  String get displayGrade =>
+      grade.isNotEmpty ? grade : (status == 'approved' ? 'A+' : 'N/A');
 }
 
 class Reviewer {
