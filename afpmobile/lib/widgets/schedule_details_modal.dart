@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../utils/app_colors.dart';
+import '../models/schedule_program.dart';
 
 class ScheduleDetailsModal extends StatefulWidget {
   final String title;
@@ -8,6 +8,7 @@ class ScheduleDetailsModal extends StatefulWidget {
   final String instructor;
   final String location;
   final bool trainingComplete;
+  final List<SessionMetadata> sessionMetadata;
 
   const ScheduleDetailsModal({
     Key? key,
@@ -17,6 +18,7 @@ class ScheduleDetailsModal extends StatefulWidget {
     required this.instructor,
     required this.location,
     required this.trainingComplete,
+    this.sessionMetadata = const [],
   }) : super(key: key);
 
   @override
@@ -114,11 +116,135 @@ class _ScheduleDetailsModalState extends State<ScheduleDetailsModal> {
                 ),
               ),
             ],
+
+            // Show cancellation information if there are cancelled sessions
+            if (widget.sessionMetadata.any(
+              (session) => session.status.toLowerCase() == 'cancelled',
+            )) ...[
+              const SizedBox(height: 20),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange[200]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: Colors.orange[700],
+                          size: 24,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Cancelled Sessions',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.orange[700],
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ...widget.sessionMetadata
+                        .where(
+                          (session) =>
+                              session.status.toLowerCase() == 'cancelled',
+                        )
+                        .map((session) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: Colors.orange[100]!),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.event_busy,
+                                        color: Colors.orange[600],
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        _formatSessionDate(session.date),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.orange[700],
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '${session.startTime} - ${session.endTime}',
+                                        style: TextStyle(
+                                          color: Colors.orange[600],
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (session.reason.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Reason: ${session.reason}',
+                                      style: TextStyle(
+                                        color: Colors.orange[600],
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          );
+                        })
+                        .toList(),
+                  ],
+                ),
+              ),
+            ],
+
             const SizedBox(height: 20),
           ],
         ),
       ),
     );
+  }
+
+  String _formatSessionDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      final months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+      return '${months[date.month - 1]} ${date.day}, ${date.year}';
+    } catch (e) {
+      return dateString;
+    }
   }
 }
 

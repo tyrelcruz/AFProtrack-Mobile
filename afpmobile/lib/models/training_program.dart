@@ -28,6 +28,24 @@ class TrainingProgram {
   String get title => programName;
   String get participants => '$currentEnrollment/$maxParticipants';
 
+  // Get capitalized status for display
+  String get displayStatus {
+    switch (status.toLowerCase()) {
+      case 'available':
+        return 'Available';
+      case 'in progress':
+        return 'In Progress';
+      case 'upcoming':
+        return 'Upcoming';
+      case 'completed':
+        return 'Completed';
+      default:
+        return status.isNotEmpty
+            ? '${status[0].toUpperCase()}${status.substring(1).toLowerCase()}'
+            : status;
+    }
+  }
+
   // Format enrollment date for display
   String get enrollmentDate {
     try {

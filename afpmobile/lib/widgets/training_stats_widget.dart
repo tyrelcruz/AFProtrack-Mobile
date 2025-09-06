@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
+import '../services/training_progress_service.dart';
 import '../utils/responsive_utils.dart';
 
 class StatItem {
@@ -49,22 +49,20 @@ class _TrainingStatsWidgetState extends State<TrainingStatsWidget> {
         _error = null;
       });
 
-      final response = await ApiService.getTrainingStatistics();
+      final progressData = await TrainingProgressService.getTrainingProgress();
 
-      if (response['success']) {
-        setState(() {
-          _stats = Map<String, int>.from(response['data']);
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _error = response['message'] ?? 'Failed to load statistics';
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _stats = {
+          'completed': progressData['completed'] ?? 0,
+          'ongoing': progressData['ongoing'] ?? 0,
+          'scheduled': progressData['scheduled'] ?? 0,
+          'certificates': progressData['certificates'] ?? 0,
+        };
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() {
-        _error = 'Network error: ${e.toString()}';
+        _error = 'Failed to load training statistics: ${e.toString()}';
         _isLoading = false;
       });
     }

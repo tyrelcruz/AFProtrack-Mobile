@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import '../widgets/user_profile_card.dart';
 import '../widgets/training_stats_widget.dart';
 import '../widgets/career_progression_card.dart';
+import '../widgets/skeleton_loading.dart';
 import '../widgets/app_bar_widget.dart';
-import '../models/home_training_program.dart';
 import '../utils/app_colors.dart';
 import '../utils/responsive_utils.dart';
 import '../widgets/responsive_test_widget.dart';
 import '../services/token_service.dart';
 import '../services/api_service.dart';
+import '../services/training_progress_service.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({Key? key}) : super(key: key);
@@ -22,12 +23,19 @@ class _HomeViewState extends State<HomeView> {
   bool _isLoading = true;
   String? _profilePhotoUrl;
   bool _isLoadingProfilePhoto = false;
+  int _trainingProgress = 10;
+  int _combatReadiness = 40;
+  List<Map<String, dynamic>> _currentTrainingPrograms = [];
+  bool _isLoadingPrograms = true;
+  bool _isLoadingProgress = true;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
     _fetchProfilePhoto();
+    _loadTrainingProgress();
+    _loadCurrentTrainingPrograms();
   }
 
   Future<void> _loadUserData() async {
@@ -41,6 +49,50 @@ class _HomeViewState extends State<HomeView> {
       print('Error loading user data: $e');
       setState(() {
         _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadTrainingProgress() async {
+    try {
+      final progressData = await TrainingProgressService.getTrainingProgress();
+      setState(() {
+        _trainingProgress = progressData['overallProgress'] ?? 10;
+        _combatReadiness = progressData['combatReadiness'] ?? 40;
+        _isLoadingProgress = false;
+      });
+    } catch (e) {
+      print('Error loading training progress: $e');
+      setState(() {
+        _isLoadingProgress = false;
+      });
+      // Keep default values if loading fails
+    }
+  }
+
+  /// Refresh training progress data (can be called when returning from schedule view)
+  Future<void> refreshTrainingProgress() async {
+    await _loadTrainingProgress();
+    await _loadCurrentTrainingPrograms();
+  }
+
+  Future<void> _loadCurrentTrainingPrograms() async {
+    try {
+      setState(() {
+        _isLoadingPrograms = true;
+      });
+
+      final programs =
+          await TrainingProgressService.getCurrentTrainingPrograms();
+      setState(() {
+        _currentTrainingPrograms = programs;
+        _isLoadingPrograms = false;
+      });
+    } catch (e) {
+      print('Error loading current training programs: $e');
+      setState(() {
+        _currentTrainingPrograms = [];
+        _isLoadingPrograms = false;
       });
     }
   }
@@ -127,24 +179,6 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final programs = [
-      HomeTrainingProgram(
-        title: 'Advanced Combat Training',
-        instructor: 'Lt. Garcia',
-        progress: 0.65,
-        grade: 'A-',
-        nextSession: DateTime(2025, 7, 26, 8, 0),
-        status: 'Ongoing',
-      ),
-      HomeTrainingProgram(
-        title: 'Leadership Development Course',
-        instructor: 'Col. Santos',
-        progress: 0.48,
-        grade: 'B+',
-        nextSession: DateTime(2025, 8, 2, 10, 0),
-        status: 'Ongoing',
-      ),
-    ];
     return Scaffold(
       backgroundColor: AppColors.appBackground,
       appBar: const AppBarWidget(),
@@ -164,10 +198,11 @@ class _HomeViewState extends State<HomeView> {
                   rank: _getUserRank(),
                   unit: _getUserUnit(),
                   serviceId: _getUserServiceId(),
-                  trainingProgress: 80,
-                  readinessLevel: 97,
+                  trainingProgress: _trainingProgress,
+                  readinessLevel: _combatReadiness,
                   cardColor: Colors.white,
                   profilePhotoUrl: _profilePhotoUrl,
+                  isLoading: _isLoadingProgress,
                 ),
             SizedBox(height: 12),
             TrainingStatsWidget(),
@@ -211,7 +246,7 @@ class _HomeViewState extends State<HomeView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Current Training Programs',
+                      'My Training Programs',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
@@ -219,137 +254,208 @@ class _HomeViewState extends State<HomeView> {
                       ),
                     ),
                     SizedBox(height: 16),
-                    ...programs.map(
-                      (HomeTrainingProgram p) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                    _isLoadingPrograms
+                        ? Column(
+                          children: List.generate(
+                            3,
+                            (index) => const TrainingProgramSkeleton(),
+                          ),
+                        )
+                        : _currentTrainingPrograms.isEmpty
+                        ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: Column(
                               children: [
-                                Container(
-                                  padding: EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue[50],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Icon(
-                                    Icons.school,
-                                    color: Colors.blue[700],
-                                    size: 16,
+                                Icon(
+                                  Icons.school_outlined,
+                                  size: 48,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'No enrolled training programs',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[600],
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                SizedBox(width: 10),
-                                Expanded(
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Check the Training tab to enroll in programs',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[500],
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                        : Column(
+                          children:
+                              _currentTrainingPrograms.asMap().entries.map((
+                                entry,
+                              ) {
+                                final index = entry.key;
+                                final program = entry.value;
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        p.title,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                          color: Colors.black87,
-                                        ),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: EdgeInsets.all(6),
+                                            decoration: BoxDecoration(
+                                              color: Colors.blue[50],
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Icon(
+                                              Icons.school,
+                                              color: Colors.blue[700],
+                                              size: 16,
+                                            ),
+                                          ),
+                                          SizedBox(width: 10),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  program['name'] ??
+                                                      'Unknown Program',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 15,
+                                                    color: Colors.black87,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                ),
+                                                SizedBox(height: 2),
+                                                Text(
+                                                  'Instructor: ${program['instructor'] ?? 'Unknown'}',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey[600],
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: _getStatusBackgroundColor(
+                                                program['status'] ?? '',
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: _getStatusBorderColor(
+                                                  program['status'] ?? '',
+                                                ),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              _getStatusDisplayText(
+                                                program['status'] ?? '',
+                                              ),
+                                              style: TextStyle(
+                                                color: _getStatusTextColor(
+                                                  program['status'] ?? '',
+                                                ),
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      SizedBox(height: 2),
-                                      Text(
-                                        'Instructor: ${p.instructor}',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[600],
-                                        ),
+                                      SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            'Progress',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                          Spacer(),
+                                          Text(
+                                            '${(program['progress'] ?? 0.0).round()}%',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                        ],
                                       ),
+                                      SizedBox(height: 3),
+                                      LinearProgressIndicator(
+                                        value:
+                                            (program['progress'] ?? 0.0) /
+                                            100.0,
+                                        minHeight: 5,
+                                        backgroundColor: Colors.grey[200],
+                                        color: Colors.green[700],
+                                      ),
+                                      SizedBox(height: 3),
+                                      Row(
+                                        children: [
+                                          Spacer(),
+                                          Text(
+                                            'Grade: ${program['grade'] ?? 'N/A'}',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      if (program['nextSession'] != null)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 4.0,
+                                          ),
+                                          child: Text(
+                                            'Next Session: ${program['nextSession']}',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                        ),
+                                      if (index <
+                                          _currentTrainingPrograms.length - 1)
+                                        Divider(
+                                          height: 16,
+                                          color: Colors.grey[300],
+                                        ),
                                     ],
                                   ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: _getStatusColor(
-                                      p.status,
-                                    ).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: _getStatusColor(
-                                        p.status,
-                                      ).withOpacity(0.3),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    p.status,
-                                    style: TextStyle(
-                                      color: _getStatusColor(p.status),
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Text(
-                                  'Progress',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                Spacer(),
-                                Text(
-                                  '${(p.progress * 100).toInt()}%',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 3),
-                            LinearProgressIndicator(
-                              value: p.progress,
-                              minHeight: 5,
-                              backgroundColor: Colors.grey[200],
-                              color: Colors.green[700],
-                            ),
-                            SizedBox(height: 3),
-                            Row(
-                              children: [
-                                Spacer(),
-                                Text(
-                                  'Grade: ${p.grade}',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (p.nextSession != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4.0),
-                                child: Text(
-                                  'Next Session: ${_formatDate(p.nextSession!)}',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ),
-                            if (p != programs.last)
-                              Divider(height: 16, color: Colors.grey[300]),
-                          ],
+                                );
+                              }).toList(),
                         ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -395,34 +501,66 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Ongoing':
-        return Colors.blue;
-      case 'Completed':
-        return Colors.green;
-      case 'Scheduled':
-        return Colors.orange;
+  // Helper methods for status styling
+  String _getStatusDisplayText(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return 'Completed';
+      case 'in progress':
+        return 'In Progress';
+      case 'upcoming':
+        return 'Upcoming';
+      case 'cancelled':
+        return 'Cancelled';
       default:
-        return Colors.grey;
+        return status.isNotEmpty
+            ? '${status[0].toUpperCase()}${status.substring(1).toLowerCase()}'
+            : 'Unknown';
     }
   }
 
-  String _formatDate(DateTime date) {
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    return '${months[date.month - 1]} ${date.day}, ${date.year} at ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  Color _getStatusBackgroundColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return Colors.green.withOpacity(0.1);
+      case 'in progress':
+        return Colors.blue.withOpacity(0.1);
+      case 'upcoming':
+        return Colors.orange.withOpacity(0.1);
+      case 'cancelled':
+        return Colors.red.withOpacity(0.1);
+      default:
+        return Colors.grey.withOpacity(0.1);
+    }
+  }
+
+  Color _getStatusBorderColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return Colors.green.withOpacity(0.3);
+      case 'in progress':
+        return Colors.blue.withOpacity(0.3);
+      case 'upcoming':
+        return Colors.orange.withOpacity(0.3);
+      case 'cancelled':
+        return Colors.red.withOpacity(0.3);
+      default:
+        return Colors.grey.withOpacity(0.3);
+    }
+  }
+
+  Color _getStatusTextColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return Colors.green[700]!;
+      case 'in progress':
+        return Colors.blue[700]!;
+      case 'upcoming':
+        return Colors.orange[700]!;
+      case 'cancelled':
+        return Colors.red[700]!;
+      default:
+        return Colors.grey[700]!;
+    }
   }
 }

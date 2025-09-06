@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/training_program.dart';
 import '../utils/app_colors.dart';
+import '../utils/flushbar_utils.dart';
 import '../services/api_service.dart';
 import '../services/training_data_service.dart';
 
@@ -29,9 +30,33 @@ class _TrainingDetailsModalState extends State<TrainingDetailsModal> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with badge and close button
+            // Header with close button
             Row(
               children: [
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: const Icon(Icons.close, color: Colors.black, size: 24),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Title with status badge on the right
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.program.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -42,7 +67,7 @@ class _TrainingDetailsModalState extends State<TrainingDetailsModal> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
-                    widget.program.status,
+                    widget.program.displayStatus,
                     style: TextStyle(
                       color: widget.program.statusTextColor,
                       fontWeight: FontWeight.w600,
@@ -50,24 +75,7 @@ class _TrainingDetailsModalState extends State<TrainingDetailsModal> {
                     ),
                   ),
                 ),
-                // Removed duration from header per requirements
-                const Spacer(),
-                GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: const Icon(Icons.close, color: Colors.black, size: 24),
-                ),
               ],
-            ),
-            const SizedBox(height: 24),
-
-            // Title
-            Text(
-              widget.program.title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 22,
-                color: Colors.black87,
-              ),
             ),
             const SizedBox(height: 20),
 
@@ -234,12 +242,13 @@ class _TrainingDetailsModalState extends State<TrainingDetailsModal> {
 
         // Show success message and close modal
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response['message'] ?? 'Successfully enrolled!'),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 3),
-            ),
+          FlushbarUtils.showSuccess(
+            context,
+            title: 'Enrollment Successful',
+            message:
+                response['message'] ??
+                'Successfully enrolled in training program!',
+            duration: const Duration(seconds: 3),
           );
           Navigator.of(context).pop();
         }
