@@ -195,3 +195,254 @@ class ProgressBarSkeleton extends StatelessWidget {
     );
   }
 }
+
+// Skeleton for career progression card
+class CareerProgressionSkeleton extends StatelessWidget {
+  const CareerProgressionSkeleton({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 1,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title
+            SkeletonLoading(
+              width: 180,
+              height: 20,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            const SizedBox(height: 16),
+
+            // Current rank section
+            Row(
+              children: [
+                SkeletonLoading(
+                  width: 40,
+                  height: 40,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonLoading(
+                        width: 120,
+                        height: 16,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      const SizedBox(height: 4),
+                      SkeletonLoading(
+                        width: 80,
+                        height: 14,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Progress section
+            Row(
+              children: [
+                SkeletonLoading(
+                  width: 60,
+                  height: 14,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                const Spacer(),
+                SkeletonLoading(
+                  width: 40,
+                  height: 16,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SkeletonLoading(
+              width: double.infinity,
+              height: 8,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            const SizedBox(height: 16),
+
+            // Next rank section
+            Row(
+              children: [
+                SkeletonLoading(
+                  width: 40,
+                  height: 40,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonLoading(
+                        width: 140,
+                        height: 16,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      const SizedBox(height: 4),
+                      SkeletonLoading(
+                        width: 100,
+                        height: 14,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Skeleton for training stats grid
+class TrainingStatsSkeleton extends StatelessWidget {
+  const TrainingStatsSkeleton({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 1,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title
+            SkeletonLoading(
+              width: 150,
+              height: 20,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            const SizedBox(height: 16),
+
+            // Stats grid
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.5,
+              children: List.generate(4, (index) {
+                return Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SkeletonLoading(
+                        width: 24,
+                        height: 24,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      const SizedBox(height: 8),
+                      SkeletonLoading(
+                        width: 30,
+                        height: 20,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      const SizedBox(height: 4),
+                      SkeletonLoading(
+                        width: 60,
+                        height: 12,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Skeleton for profile overview section
+class ProfileOverviewSkeleton extends StatelessWidget {
+  const ProfileOverviewSkeleton({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 1,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Profile header
+            Row(
+              children: [
+                SkeletonLoading(
+                  width: 60,
+                  height: 60,
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonLoading(
+                        width: 120,
+                        height: 18,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      const SizedBox(height: 4),
+                      SkeletonLoading(
+                        width: 100,
+                        height: 14,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      const SizedBox(height: 4),
+                      SkeletonLoading(
+                        width: 80,
+                        height: 12,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Progress sections
+            const ProgressBarSkeleton(),
+            const SizedBox(height: 16),
+            const ProgressBarSkeleton(),
+          ],
+        ),
+      ),
+    );
+  }
+}

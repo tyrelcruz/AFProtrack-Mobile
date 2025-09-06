@@ -28,6 +28,8 @@ class _HomeViewState extends State<HomeView> {
   List<Map<String, dynamic>> _currentTrainingPrograms = [];
   bool _isLoadingPrograms = true;
   bool _isLoadingProgress = true;
+  bool _isLoadingStats = true;
+  bool _isLoadingCareer = true;
 
   @override
   void initState() {
@@ -36,6 +38,7 @@ class _HomeViewState extends State<HomeView> {
     _fetchProfilePhoto();
     _loadTrainingProgress();
     _loadCurrentTrainingPrograms();
+    _loadStatsAndCareer();
   }
 
   Future<void> _loadUserData() async {
@@ -74,6 +77,16 @@ class _HomeViewState extends State<HomeView> {
   Future<void> refreshTrainingProgress() async {
     await _loadTrainingProgress();
     await _loadCurrentTrainingPrograms();
+  }
+
+  /// Simulate loading for stats and career components
+  Future<void> _loadStatsAndCareer() async {
+    // Simulate loading time for stats and career data
+    await Future.delayed(const Duration(milliseconds: 1500));
+    setState(() {
+      _isLoadingStats = false;
+      _isLoadingCareer = false;
+    });
   }
 
   Future<void> _loadCurrentTrainingPrograms() async {
@@ -205,28 +218,35 @@ class _HomeViewState extends State<HomeView> {
                   isLoading: _isLoadingProgress,
                 ),
             SizedBox(height: 12),
-            TrainingStatsWidget(),
-            CareerProgressionCard(
-              currentRank: 'Sergeant (SGT)',
-              nextRank: 'Staff Sergeant (SSG)',
-              timeInRank: '2 years, 3 months',
-              progress: 0.7,
-              requirements: [
-                PromotionRequirement(
-                  label: 'Completed Leadership Course',
-                  passed: true,
+            _isLoadingStats
+                ? const TrainingStatsSkeleton()
+                : TrainingStatsWidget(),
+            _isLoadingCareer
+                ? const CareerProgressionSkeleton()
+                : CareerProgressionCard(
+                  currentRank: 'Sergeant (SGT)',
+                  nextRank: 'Staff Sergeant (SSG)',
+                  timeInRank: '2 years, 3 months',
+                  progress: 0.7,
+                  requirements: [
+                    PromotionRequirement(
+                      label: 'Completed Leadership Course',
+                      passed: true,
+                    ),
+                    PromotionRequirement(
+                      label: 'Minimum 2 years in rank',
+                      passed: true,
+                    ),
+                    PromotionRequirement(
+                      label: 'Passed Physical Fitness Test',
+                      passed: false,
+                    ),
+                    PromotionRequirement(
+                      label: 'Staff Endorsement',
+                      passed: false,
+                    ),
+                  ],
                 ),
-                PromotionRequirement(
-                  label: 'Minimum 2 years in rank',
-                  passed: true,
-                ),
-                PromotionRequirement(
-                  label: 'Passed Physical Fitness Test',
-                  passed: false,
-                ),
-                PromotionRequirement(label: 'Staff Endorsement', passed: false),
-              ],
-            ),
             Card(
               color: Colors.white,
               margin: EdgeInsets.symmetric(

@@ -29,12 +29,12 @@ dev_dependencies:
   flutter_native_splash: ^2.4.6
   flutter_launcher_icons: ^0.14.1
 
-flutter_icons:
+flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/icons/App_Logo.png
+  image_path: assets/icons/AFProTrack_Logo.png
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: assets/icons/App_Logo.png
+  adaptive_icon_foreground: assets/icons/AFProTrack_Logo.png
 
 # The following section is specific to Flutter packages.
 flutter:
