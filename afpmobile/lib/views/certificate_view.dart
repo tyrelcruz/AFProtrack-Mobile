@@ -153,6 +153,8 @@ class _CertificateViewState extends State<CertificateView> {
                     ? _buildLoadingState()
                     : _errorMessage != null
                     ? _buildErrorState()
+                    : _filteredCertificates.isEmpty
+                    ? _buildEmptyState()
                     : RefreshIndicator(
                       onRefresh: _loadCertificates,
                       child: SingleChildScrollView(
@@ -164,20 +166,18 @@ class _CertificateViewState extends State<CertificateView> {
                             ),
 
                             // Certificates List
-                            _filteredCertificates.isEmpty
-                                ? _buildEmptyState()
-                                : Column(
-                                  children:
-                                      _filteredCertificates.map((certificate) {
-                                        return CertificateCard(
-                                          certificate: certificate,
-                                          onViewDetails:
-                                              () => _showCertificateDetails(
-                                                certificate,
-                                              ),
-                                        );
-                                      }).toList(),
-                                ),
+                            Column(
+                              children:
+                                  _filteredCertificates.map((certificate) {
+                                    return CertificateCard(
+                                      certificate: certificate,
+                                      onViewDetails:
+                                          () => _showCertificateDetails(
+                                            certificate,
+                                          ),
+                                    );
+                                  }).toList(),
+                            ),
 
                             // Bottom padding
                             const SizedBox(height: 16),
@@ -369,9 +369,41 @@ class _CertificateViewState extends State<CertificateView> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header with status badge and close button
+                    // Header with close button
                     Row(
                       children: [
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.black,
+                            size: 24,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Title with status badge on the right
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            certificate.certificateTitle.isNotEmpty
+                                ? certificate.certificateTitle
+                                : certificate.description.isNotEmpty
+                                ? certificate.description
+                                : 'Untitled Certificate',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 22,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -392,31 +424,7 @@ class _CertificateViewState extends State<CertificateView> {
                             ),
                           ),
                         ),
-                        const Spacer(),
-                        GestureDetector(
-                          onTap: () => Navigator.of(context).pop(),
-                          child: const Icon(
-                            Icons.close,
-                            color: Colors.black,
-                            size: 24,
-                          ),
-                        ),
                       ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Title
-                    Text(
-                      certificate.certificateTitle.isNotEmpty
-                          ? certificate.certificateTitle
-                          : certificate.description.isNotEmpty
-                          ? certificate.description
-                          : 'Untitled Certificate',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 22,
-                        color: Colors.black87,
-                      ),
                     ),
                     const SizedBox(height: 20),
 
@@ -631,7 +639,7 @@ class _CertificateViewState extends State<CertificateView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 100,
+            width: 120,
             child: Text(
               '$label:',
               style: TextStyle(
@@ -649,6 +657,8 @@ class _CertificateViewState extends State<CertificateView> {
                 color: Colors.black87,
                 height: 1.3,
               ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
               softWrap: true,
             ),
           ),

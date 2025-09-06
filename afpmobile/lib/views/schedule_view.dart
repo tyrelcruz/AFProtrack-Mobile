@@ -223,6 +223,7 @@ class _ScheduleCard extends StatelessWidget {
                 instructor: program.instructor,
                 location: program.venue,
                 trainingComplete: program.isTrainingComplete,
+                sessionMetadata: program.sessionMetadata,
               ),
         );
       },
@@ -310,6 +311,41 @@ class _ScheduleCard extends StatelessWidget {
                   fontStyle: FontStyle.italic,
                 ),
               ),
+
+              // Show cancellation information if there are cancelled sessions
+              if (program.sessionMetadata.any(
+                (session) => session.status.toLowerCase() == 'cancelled',
+              )) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[50],
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: Colors.orange[200]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.orange[700],
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Some sessions cancelled',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.orange[700],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),

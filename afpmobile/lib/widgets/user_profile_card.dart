@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../utils/responsive_utils.dart';
+import 'skeleton_loading.dart';
 
 class UserProfileCard extends StatelessWidget {
   final String name;
@@ -11,6 +12,7 @@ class UserProfileCard extends StatelessWidget {
   final int readinessLevel;
   final Color cardColor;
   final String? profilePhotoUrl; // Add profile photo URL parameter
+  final bool isLoading; // Add loading parameter
 
   const UserProfileCard({
     Key? key,
@@ -22,6 +24,7 @@ class UserProfileCard extends StatelessWidget {
     required this.readinessLevel,
     this.cardColor = Colors.white,
     this.profilePhotoUrl, // Add to constructor
+    this.isLoading = false, // Add to constructor
   }) : super(key: key);
 
   @override
@@ -94,36 +97,49 @@ class UserProfileCard extends StatelessWidget {
                     color: Colors.grey[200],
                     shape: BoxShape.circle,
                   ),
-                  child: profilePhotoUrl != null
-                      ? ClipOval(
-                          child: Image.network(
-                            profilePhotoUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(
-                                Icons.person,
-                                size: 30,
-                                color: Colors.grey[600],
-                              );
-                            },
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Center(
-                                child: CircularProgressIndicator(
-                                  value: loadingProgress.expectedTotalBytes != null
-                                      ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
-                                      : null,
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    AppColors.armyPrimary,
+                  child:
+                      profilePhotoUrl != null
+                          ? ClipOval(
+                            child: Image.network(
+                              profilePhotoUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(
+                                  Icons.person,
+                                  size: 30,
+                                  color: Colors.grey[600],
+                                );
+                              },
+                              loadingBuilder: (
+                                context,
+                                child,
+                                loadingProgress,
+                              ) {
+                                if (loadingProgress == null) return child;
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    value:
+                                        loadingProgress.expectedTotalBytes !=
+                                                null
+                                            ? loadingProgress
+                                                    .cumulativeBytesLoaded /
+                                                loadingProgress
+                                                    .expectedTotalBytes!
+                                            : null,
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      AppColors.armyPrimary,
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
+                                );
+                              },
+                            ),
+                          )
+                          : Icon(
+                            Icons.person,
+                            size: 30,
+                            color: Colors.grey[600],
                           ),
-                        )
-                      : Icon(Icons.person, size: 30, color: Colors.grey[600]),
                 ),
                 SizedBox(width: 16),
                 // User Details
@@ -221,75 +237,93 @@ class UserProfileCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Training Progress
-                Row(
-                  children: [
-                    Icon(Icons.school, color: Colors.green[600], size: 20),
-                    SizedBox(width: 12),
-                    Text(
-                      'Training Progress',
-                      style: TextStyle(
-                        fontSize: labelFontSize,
-                        color: Colors.grey[700],
-                        fontWeight: FontWeight.w500,
-                      ),
+                isLoading
+                    ? const ProgressBarSkeleton()
+                    : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.school,
+                              color: Colors.green[600],
+                              size: 20,
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              'Training Progress',
+                              style: TextStyle(
+                                fontSize: labelFontSize,
+                                color: Colors.grey[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Spacer(),
+                            Text(
+                              '$trainingProgress%',
+                              style: TextStyle(
+                                fontSize: labelFontSize,
+                                color: Colors.grey[700],
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        LinearProgressIndicator(
+                          value: trainingProgress / 100,
+                          minHeight: 8,
+                          backgroundColor: Colors.grey[200],
+                          color: Colors.green[600],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ],
                     ),
-                    Spacer(),
-                    Text(
-                      '$trainingProgress%',
-                      style: TextStyle(
-                        fontSize: labelFontSize,
-                        color: Colors.grey[700],
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8),
-                LinearProgressIndicator(
-                  value: trainingProgress / 100,
-                  minHeight: 8,
-                  backgroundColor: Colors.grey[200],
-                  color: Colors.green[600],
-                  borderRadius: BorderRadius.circular(4),
-                ),
                 SizedBox(height: 16),
 
                 // Combat Readiness
-                Row(
-                  children: [
-                    Icon(
-                      Icons.fitness_center,
-                      color: Colors.green[600],
-                      size: 20,
+                isLoading
+                    ? const ProgressBarSkeleton()
+                    : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.fitness_center,
+                              color: Colors.green[600],
+                              size: 20,
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              'Combat Readiness',
+                              style: TextStyle(
+                                fontSize: labelFontSize,
+                                color: Colors.grey[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Spacer(),
+                            Text(
+                              '$readinessLevel%',
+                              style: TextStyle(
+                                fontSize: labelFontSize,
+                                color: Colors.grey[700],
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        LinearProgressIndicator(
+                          value: readinessLevel / 100,
+                          minHeight: 8,
+                          backgroundColor: Colors.grey[200],
+                          color: Colors.green[600],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ],
                     ),
-                    SizedBox(width: 12),
-                    Text(
-                      'Combat Readiness',
-                      style: TextStyle(
-                        fontSize: labelFontSize,
-                        color: Colors.grey[700],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Spacer(),
-                    Text(
-                      '$readinessLevel%',
-                      style: TextStyle(
-                        fontSize: labelFontSize,
-                        color: Colors.grey[700],
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8),
-                LinearProgressIndicator(
-                  value: readinessLevel / 100,
-                  minHeight: 8,
-                  backgroundColor: Colors.grey[200],
-                  color: Colors.green[600],
-                  borderRadius: BorderRadius.circular(4),
-                ),
               ],
             ),
           ),

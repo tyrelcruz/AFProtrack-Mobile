@@ -115,7 +115,7 @@ class TrainingProgramCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
-                    program.status,
+                    program.displayStatus,
                     style: TextStyle(
                       color: program.statusTextColor,
                       fontWeight: FontWeight.w600,

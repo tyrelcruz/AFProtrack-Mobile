@@ -101,38 +101,38 @@ class ScheduleProgram {
     }
   }
 
-  // Get badge colors based on status
+  // Get badge colors based on status (matching training program colors)
   Color get badgeColor {
     switch (calculatedStatus.toLowerCase()) {
       case 'upcoming':
-        return const Color(0xFFE6FAF7);
+        return const Color(0xFFFFF3E0); // Light orange background
       case 'in progress':
-        return const Color(0xFFF3F3F3);
+        return const Color(0xFFF3E5F5); // Light purple background
       case 'completed':
-        return const Color(0xFFE8F5E8);
+        return const Color(0xFFE8F5E8); // Light green background
       case 'cancelled':
-        return const Color(0xFFFFEBEE);
+        return const Color(0xFFFFEBEE); // Light red background
       case 'dropped':
-        return const Color(0xFFFFF3E0);
+        return const Color(0xFFFFF3E0); // Light orange background
       default:
-        return const Color(0xFFF3F3F3);
+        return const Color(0xFFE3F2FD); // Light blue background
     }
   }
 
   Color get badgeTextColor {
     switch (calculatedStatus.toLowerCase()) {
       case 'upcoming':
-        return const Color(0xFF00BFA5);
+        return const Color(0xFFF57C00); // Orange text
       case 'in progress':
-        return const Color(0xFF8B8B8B);
+        return const Color(0xFF7B1FA2); // Purple text
       case 'completed':
-        return const Color(0xFF4CAF50);
+        return const Color(0xFF2E7D32); // Green text
       case 'cancelled':
-        return const Color(0xFFF44336);
+        return const Color(0xFFD32F2F); // Red text
       case 'dropped':
-        return const Color(0xFFFF9800);
+        return const Color(0xFFF57C00); // Orange text
       default:
-        return const Color(0xFF8B8B8B);
+        return const Color(0xFF1976D2); // Blue text
     }
   }
 

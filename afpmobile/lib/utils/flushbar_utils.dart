@@ -234,6 +234,9 @@ class _FlushbarWidgetState extends State<_FlushbarWidget>
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final maxWidth = screenWidth > 600 ? 500.0 : screenWidth - 32;
+
     return Positioned(
       top: 0,
       left: 0,
@@ -244,76 +247,111 @@ class _FlushbarWidgetState extends State<_FlushbarWidget>
           opacity: _fadeAnimation,
           child: Material(
             color: Colors.transparent,
-            child: Container(
-              margin: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: widget.backgroundColor,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    offset: const Offset(0, 2),
-                    blurRadius: 8,
+            child: SafeArea(
+              bottom: false,
+              child: Center(
+                child: Container(
+                  width: maxWidth,
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
                   ),
-                ],
-              ),
-              child: SafeArea(
-                bottom: false,
-                child: GestureDetector(
-                  onTap: () {
-                    widget.onTap?.call();
-                    _dismiss();
-                  },
-                  onHorizontalDragEnd: (details) {
-                    if (details.primaryVelocity != null &&
-                        details.primaryVelocity!.abs() > 100) {
+                  decoration: BoxDecoration(
+                    color: widget.backgroundColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        offset: const Offset(0, 4),
+                        blurRadius: 12,
+                        spreadRadius: 0,
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        offset: const Offset(0, 1),
+                        blurRadius: 3,
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: GestureDetector(
+                    onTap: () {
+                      widget.onTap?.call();
                       _dismiss();
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(widget.icon, color: widget.iconColor, size: 28),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (widget.title != null) ...[
+                    },
+                    onHorizontalDragEnd: (details) {
+                      if (details.primaryVelocity != null &&
+                          details.primaryVelocity!.abs() > 100) {
+                        _dismiss();
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: widget.iconColor.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              widget.icon,
+                              color: widget.iconColor,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (widget.title != null) ...[
+                                  Text(
+                                    widget.title!,
+                                    style: TextStyle(
+                                      color: widget.textColor,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                ],
                                 Text(
-                                  widget.title!,
+                                  widget.message,
                                   style: TextStyle(
                                     color: widget.textColor,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 16,
+                                    fontSize: 14,
+                                    height: 1.3,
+                                    fontWeight: FontWeight.w400,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
                               ],
-                              Text(
-                                widget.message,
-                                style: TextStyle(
-                                  color: widget.textColor,
-                                  fontSize: 14,
-                                ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          GestureDetector(
+                            onTap: _dismiss,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: widget.textColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(6),
                               ),
-                            ],
+                              child: Icon(
+                                Icons.close,
+                                color: widget.textColor.withOpacity(0.8),
+                                size: 18,
+                              ),
+                            ),
                           ),
-                        ),
-                        GestureDetector(
-                          onTap: _dismiss,
-                          child: Icon(
-                            Icons.close,
-                            color: widget.textColor.withOpacity(0.7),
-                            size: 20,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
