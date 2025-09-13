@@ -5,9 +5,10 @@ import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'dart:convert';
 import '../models/user_profile.dart';
+import '../models/military_org_data.dart';
 import '../utils/app_colors.dart';
 import '../utils/responsive_utils.dart';
-import '../utils/validation_utils.dart';
+import '../utils/flushbar_utils.dart';
 import '../services/api_service.dart';
 import '../services/token_service.dart';
 import 'package:http_parser/http_parser.dart';
@@ -29,26 +30,40 @@ class EditProfileWidget extends StatefulWidget {
 }
 
 class _EditProfileWidgetState extends State<EditProfileWidget> {
-  late TextEditingController _nameController;
-  late TextEditingController _rankController;
-  late TextEditingController _serviceIdController;
-  late TextEditingController _unitController;
-  late TextEditingController _branchController;
-  late TextEditingController _currentBaseController;
+  late TextEditingController _firstNameController;
+  late TextEditingController _lastNameController;
+  late TextEditingController _suffixController;
+  late TextEditingController _dateOfBirthController;
+  late TextEditingController _addressController;
+  late TextEditingController _contactNumberController;
   late TextEditingController _emailController;
-  late TextEditingController _phoneController;
-  late TextEditingController _dateEnlistedController;
-  late TextEditingController _homeAddressController;
   late TextEditingController _alternateEmailController;
-  late TextEditingController _heightMetersController;
-  late TextEditingController _weightKgController;
+  late TextEditingController _heightController;
+  late TextEditingController _weightController;
   late TextEditingController _ecNameController;
   late TextEditingController _ecAddressController;
   late TextEditingController _ecContactController;
 
-  String? _maritalStatusValue;
   String? _bloodTypeValue;
   String? _relationshipValue;
+  Branch? _selectedBranch;
+  Division? _selectedDivision;
+  Unit? _selectedUnit;
+  Rank? _selectedRank;
+
+  // Military organization data
+  MilitaryOrgData? _militaryOrgData;
+  List<Branch> _branches = [];
+  List<Division> _divisions = [];
+  List<Unit> _units = [];
+  List<Rank> _ranks = [];
+
+  // Loading states (removed - fetching is now silent)
+
+  // Track shown guidance to prevent multiple popups
+  bool _hasShownDivisionGuidance = false;
+  bool _hasShownUnitGuidance = false;
+  bool _hasShownRankGuidance = false;
 
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
@@ -61,38 +76,45 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
     super.initState();
     _initializeControllers();
     _fetchUserProfilePhoto();
+    _loadAllMilitaryOrgData();
   }
 
   void _initializeControllers() {
-    _nameController = TextEditingController(text: widget.profile.name);
-    _rankController = TextEditingController(text: widget.profile.rank);
-    _serviceIdController = TextEditingController(
-      text: widget.profile.serviceId,
+    // Split the name into first and last name
+    final nameParts = widget.profile.name.split(' ');
+    _firstNameController = TextEditingController(
+      text: nameParts.isNotEmpty ? nameParts.first : '',
     );
-    _unitController = TextEditingController(text: widget.profile.unit);
-    _branchController = TextEditingController(text: widget.profile.branch);
-    _currentBaseController = TextEditingController(
-      text: widget.profile.currentBase,
+    _lastNameController = TextEditingController(
+      text: nameParts.length > 1 ? nameParts.skip(1).join(' ') : '',
     );
-    _emailController = TextEditingController(text: widget.profile.email);
-    _phoneController = TextEditingController(text: widget.profile.phone);
-    _dateEnlistedController = TextEditingController(
+    _suffixController = TextEditingController(text: ''); // Default empty
+
+    // Convert date enlisted to date of birth format (this might need adjustment)
+    _dateOfBirthController = TextEditingController(
       text: widget.profile.dateEnlisted,
     );
-    _homeAddressController = TextEditingController(
+
+    _addressController = TextEditingController(
       text: widget.profile.homeAddress,
     );
+    _contactNumberController = TextEditingController(
+      text: widget.profile.phone,
+    );
+    _emailController = TextEditingController(text: widget.profile.email);
     _alternateEmailController = TextEditingController(
       text: widget.profile.alternateEmail ?? '',
     );
-    _maritalStatusValue = widget.profile.maritalStatus;
+
     _bloodTypeValue = widget.profile.bloodType;
-    _heightMetersController = TextEditingController(
+
+    _heightController = TextEditingController(
       text: widget.profile.heightMeters ?? '',
     );
-    _weightKgController = TextEditingController(
+    _weightController = TextEditingController(
       text: widget.profile.weightKg ?? '',
     );
+
     _ecNameController = TextEditingController(
       text: widget.profile.emergencyContact?.fullName ?? '',
     );
@@ -103,23 +125,26 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
       text: widget.profile.emergencyContact?.contactNumber ?? '',
     );
     _relationshipValue = widget.profile.emergencyContact?.relationship;
+
+    // Initialize dropdown selections
+    _selectedBranch = null;
+    _selectedDivision = null;
+    _selectedUnit = null;
+    _selectedRank = null;
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _rankController.dispose();
-    _serviceIdController.dispose();
-    _unitController.dispose();
-    _branchController.dispose();
-    _currentBaseController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _suffixController.dispose();
+    _dateOfBirthController.dispose();
+    _addressController.dispose();
+    _contactNumberController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
-    _dateEnlistedController.dispose();
-    _homeAddressController.dispose();
     _alternateEmailController.dispose();
-    _heightMetersController.dispose();
-    _weightKgController.dispose();
+    _heightController.dispose();
+    _weightController.dispose();
     _ecNameController.dispose();
     _ecAddressController.dispose();
     _ecContactController.dispose();
@@ -144,40 +169,41 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
               title: 'Personal Information',
               fields: [
                 _buildTextField(
-                  controller: _nameController,
-                  label: 'Full Name',
+                  controller: _firstNameController,
+                  label: 'First Name',
                   icon: Icons.person,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your full name';
+                      return 'Please enter your first name';
                     }
                     return null;
                   },
                 ),
                 _buildTextField(
-                  controller: _rankController,
-                  label: 'Rank',
-                  icon: Icons.star,
+                  controller: _lastNameController,
+                  label: 'Last Name',
+                  icon: Icons.person_outline,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your rank';
+                      return 'Please enter your last name';
                     }
                     return null;
                   },
                 ),
                 _buildTextField(
-                  controller: _serviceIdController,
-                  label: 'Service ID',
-                  icon: Icons.badge,
-                  validator: ValidationUtils.validateServiceId,
+                  controller: _suffixController,
+                  label: 'Suffix (Optional)',
+                  icon: Icons.text_fields,
+                  validator: null, // Optional field
                 ),
                 _buildTextField(
-                  controller: _dateEnlistedController,
-                  label: 'Date Enlisted',
+                  controller: _dateOfBirthController,
+                  label: 'Date of Birth',
                   icon: Icons.calendar_today,
+                  readOnly: true,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your enlistment date';
+                      return 'Please enter your date of birth';
                     }
                     return null;
                   },
@@ -190,38 +216,97 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
             _buildSectionCard(
               title: 'Service Information',
               fields: [
-                _buildTextField(
-                  controller: _unitController,
-                  label: 'Unit',
-                  icon: Icons.shield,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your unit';
-                    }
-                    return null;
-                  },
-                ),
-                _buildTextField(
-                  controller: _branchController,
+                _buildDropdown<Branch>(
                   label: 'Branch',
                   icon: Icons.flag,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your branch';
+                  value: _selectedBranch,
+                  items: _branches,
+                  onChanged: (v) {
+                    print('🔄 Branch selected: ${v?.name} (ID: ${v?.id})');
+                    setState(() {
+                      _selectedBranch = v;
+                    });
+                    if (v != null) {
+                      print(
+                        '🔄 Loading divisions and ranks for branch: ${v.name} (${v.id})',
+                      );
+                      _loadDivisionsAndRanksForBranch(v);
+                    } else {
+                      setState(() {
+                        _divisions = [];
+                        _selectedDivision = null;
+                        _units = [];
+                        _selectedUnit = null;
+                        _ranks = [];
+                        _selectedRank = null;
+                      });
                     }
-                    return null;
                   },
+                  validator:
+                      (v) => v == null ? 'Please select your branch' : null,
                 ),
-                _buildTextField(
-                  controller: _currentBaseController,
-                  label: 'Current Base',
-                  icon: Icons.location_on,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your current base';
+                _buildDropdown<Division>(
+                  label: 'Division',
+                  icon: Icons.shield,
+                  value: _selectedDivision,
+                  items: _divisions,
+                  isDisabled: _divisions.isEmpty,
+                  onChanged: (v) {
+                    setState(() {
+                      _selectedDivision = v;
+                    });
+                    if (v != null && _selectedBranch != null) {
+                      _loadUnitsForDivision(v);
+                    } else {
+                      setState(() {
+                        _units = [];
+                        _selectedUnit = null;
+                      });
                     }
-                    return null;
                   },
+                  onTap:
+                      _selectedBranch == null
+                          ? () => _showGuidanceTooltip(
+                            'Please select a Branch first to load available Divisions',
+                            'division',
+                          )
+                          : null,
+                  validator:
+                      (v) => v == null ? 'Please select your division' : null,
+                ),
+                _buildDropdown<Unit>(
+                  label: 'Unit',
+                  icon: Icons.location_on,
+                  value: _selectedUnit,
+                  items: _units,
+                  isDisabled: _units.isEmpty,
+                  onChanged: (v) => setState(() => _selectedUnit = v),
+                  onTap:
+                      _selectedBranch == null || _selectedDivision == null
+                          ? () => _showGuidanceTooltip(
+                            'Please select a Branch and Division first to load available Units',
+                            'unit',
+                          )
+                          : null,
+                  validator:
+                      (v) => v == null ? 'Please select your unit' : null,
+                ),
+                _buildDropdown<Rank>(
+                  label: 'Rank',
+                  icon: Icons.star,
+                  value: _selectedRank,
+                  items: _ranks,
+                  isDisabled: _ranks.isEmpty,
+                  onChanged: (v) => setState(() => _selectedRank = v),
+                  onTap:
+                      _selectedBranch == null
+                          ? () => _showGuidanceTooltip(
+                            'Please select a Branch first to load available Ranks',
+                            'rank',
+                          )
+                          : null,
+                  validator:
+                      (v) => v == null ? 'Please select your rank' : null,
                 ),
               ],
             ),
@@ -232,12 +317,24 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
               title: 'Contact Information',
               fields: [
                 _buildTextField(
-                  controller: _homeAddressController,
-                  label: 'Home Address',
+                  controller: _addressController,
+                  label: 'Address',
                   icon: Icons.home,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your home address';
+                      return 'Please enter your address';
+                    }
+                    return null;
+                  },
+                ),
+                _buildTextField(
+                  controller: _contactNumberController,
+                  label: 'Contact Number',
+                  icon: Icons.phone,
+                  keyboardType: TextInputType.phone,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter your contact number';
                     }
                     return null;
                   },
@@ -247,26 +344,15 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
                   label: 'Email',
                   icon: Icons.email,
                   keyboardType: TextInputType.emailAddress,
+                  readOnly: true,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter your email';
                     }
                     if (!RegExp(
-                      r'^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$',
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                     ).hasMatch(value)) {
                       return 'Please enter a valid email address';
-                    }
-                    return null;
-                  },
-                ),
-                _buildTextField(
-                  controller: _phoneController,
-                  label: 'Phone Number',
-                  icon: Icons.phone,
-                  keyboardType: TextInputType.phone,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your phone number';
                     }
                     return null;
                   },
@@ -279,7 +365,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
                   validator: (value) {
                     if (value != null && value.trim().isNotEmpty) {
                       if (!RegExp(
-                        r'^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$',
+                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                       ).hasMatch(value)) {
                         return 'Please enter a valid alternate email';
                       }
@@ -295,25 +381,6 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
             _buildSectionCard(
               title: 'Additional Information',
               fields: [
-                _buildDropdown<String>(
-                  label: 'Status',
-                  icon: Icons.people_outline,
-                  value: _maritalStatusValue,
-                  items: const [
-                    'Single',
-                    'Married',
-                    'Separated',
-                    'Widowed',
-                    'Annulled',
-                    'Divorced',
-                  ],
-                  onChanged: (v) => setState(() => _maritalStatusValue = v),
-                  validator:
-                      (v) =>
-                          (v == null || v.isEmpty)
-                              ? 'Please select your status'
-                              : null,
-                ),
                 _buildDropdown<String>(
                   label: 'Blood Type',
                   icon: Icons.bloodtype,
@@ -336,24 +403,24 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
                               : null,
                 ),
                 _buildTextField(
-                  controller: _heightMetersController,
-                  label: 'Height (in meters)',
+                  controller: _heightController,
+                  label: 'Height (in cm)',
                   icon: Icons.height,
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your height in meters';
+                      return 'Please enter your height in centimeters';
                     }
                     final v = double.tryParse(value);
                     if (v == null || v <= 0) {
-                      return 'Enter a valid height in meters';
+                      return 'Enter a valid height in centimeters';
                     }
                     return null;
                   },
                 ),
                 _buildTextField(
-                  controller: _weightKgController,
-                  label: 'Weight (in kilograms)',
+                  controller: _weightController,
+                  label: 'Weight (in kg)',
                   icon: Icons.monitor_weight,
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                   validator: (value) {
@@ -391,11 +458,10 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
                   icon: Icons.family_restroom,
                   value: _relationshipValue,
                   items: const [
-                    'Father',
-                    'Mother',
+                    'Spouse',
+                    'Parent',
                     'Sibling',
-                    'Husband',
-                    'Wife',
+                    'Child',
                     'Relative',
                     'Friend',
                     'Other',
@@ -631,33 +697,45 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
     required IconData icon,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
+    bool readOnly = false,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       validator: validator,
+      readOnly: readOnly,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: AppColors.armyPrimary),
+        prefixIcon: Icon(
+          icon,
+          color: readOnly ? Colors.grey : AppColors.armyPrimary,
+        ),
         isDense: true,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.cardBorder),
+          borderSide: BorderSide(
+            color: readOnly ? Colors.grey : AppColors.cardBorder,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.cardBorder),
+          borderSide: BorderSide(
+            color: readOnly ? Colors.grey : AppColors.cardBorder,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.armyPrimary, width: 2),
+          borderSide: BorderSide(
+            color: readOnly ? Colors.grey : AppColors.armyPrimary,
+            width: 2,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: Colors.red, width: 2),
         ),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: readOnly ? Colors.grey[100] : Colors.grey[50],
         contentPadding: EdgeInsets.symmetric(
           horizontal: ResponsiveUtils.isMobile(context) ? 10 : 14,
           vertical: ResponsiveUtils.isMobile(context) ? 10 : 12,
@@ -673,45 +751,157 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
     required T? value,
     required void Function(T?) onChanged,
     String? Function(T?)? validator,
+    VoidCallback? onTap,
+    bool isDisabled = false,
   }) {
-    return DropdownButtonFormField<T>(
-      value: value,
-      items:
-          items
-              .map(
-                (e) => DropdownMenuItem<T>(value: e, child: Text(e.toString())),
-              )
-              .toList(),
-      onChanged: onChanged,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: AppColors.armyPrimary),
-        isDense: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.cardBorder),
+    // Safety check: ensure the current value exists in the items list
+    T? safeValue = value;
+    if (value != null && !items.contains(value)) {
+      print('⚠️ Invalid value detected for $label: $value, clearing selection');
+      safeValue = null;
+    }
+
+    return GestureDetector(
+      onTap: onTap,
+      child: DropdownButtonFormField<T>(
+        value: safeValue,
+        hint: Text(
+          isDisabled ? 'No $label available' : 'Select $label',
+          overflow: TextOverflow.ellipsis,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.cardBorder),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.armyPrimary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.red, width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.grey[50],
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: ResponsiveUtils.isMobile(context) ? 10 : 14,
-          vertical: ResponsiveUtils.isMobile(context) ? 10 : 12,
+        items:
+            items.map((e) {
+              return DropdownMenuItem<T>(
+                value: e,
+                child: Container(
+                  width: double.infinity,
+                  child: Text(
+                    e.toString(),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+              );
+            }).toList(),
+        onChanged: isDisabled ? null : onChanged,
+        validator: validator,
+        isExpanded: true,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(
+            icon,
+            color: isDisabled ? Colors.grey : AppColors.armyPrimary,
+          ),
+          isDense: true,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: AppColors.cardBorder),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(
+              color: isDisabled ? Colors.grey[300]! : AppColors.cardBorder,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(
+              color: isDisabled ? Colors.grey[300]! : AppColors.armyPrimary,
+              width: 2,
+            ),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.red, width: 2),
+          ),
+          filled: true,
+          fillColor: isDisabled ? Colors.grey[100] : Colors.grey[50],
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: ResponsiveUtils.isMobile(context) ? 10 : 14,
+            vertical: ResponsiveUtils.isMobile(context) ? 10 : 12,
+          ),
         ),
       ),
     );
+  }
+
+  int? _parseHeight(String heightString) {
+    if (heightString.isEmpty) return null;
+
+    final height = double.tryParse(heightString);
+    if (height == null) return null;
+
+    // Backend expects height in cm as integer
+    // If user enters in meters (e.g., 1.75), convert to cm
+    if (height < 10) {
+      // Likely entered in meters, convert to cm
+      return (height * 100).round();
+    } else {
+      // Likely entered in cm, use as is
+      return height.round();
+    }
+  }
+
+  int? _parseWeight(String weightString) {
+    if (weightString.isEmpty) return null;
+
+    final weight = double.tryParse(weightString);
+    if (weight == null) return null;
+
+    // Backend expects weight as integer
+    final weightInt = weight.round();
+
+    // Weight should be reasonable (between 30-200 kg)
+    if (weightInt < 30 || weightInt > 200) {
+      print('⚠️ Unusual weight value: $weightInt kg');
+    }
+
+    return weightInt;
+  }
+
+  bool _validateRequiredFields(Map<String, dynamic> data) {
+    final requiredFields = [
+      'firstName',
+      'lastName',
+      'address',
+      'contactNumber',
+      'branchId',
+      'divisionId',
+      'unitId',
+      'rankId',
+      'bloodType',
+      'emergencyContactName',
+      'emergencyContactRelationship',
+      'emergencyContactAddress',
+      'emergencyContactNumber',
+    ];
+
+    for (final field in requiredFields) {
+      final value = data[field];
+      if (value == null || value.toString().trim().isEmpty) {
+        print('❌ Missing required field: $field');
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  String _getMimeType(String fileName) {
+    final extension = fileName.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'gif':
+        return 'image/gif';
+      case 'webp':
+        return 'image/webp';
+      default:
+        return 'image/png';
+    }
   }
 
   Widget _buildActionButtons() {
@@ -884,20 +1074,16 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
           errorMessage = 'Error picking image: ${e.message}';
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 4),
-        ),
+      FlushbarUtils.showError(
+        context,
+        message: errorMessage,
+        duration: const Duration(seconds: 4),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error picking image: ${e.toString()}'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 4),
-        ),
+      FlushbarUtils.showError(
+        context,
+        message: 'Error picking image: ${e.toString()}',
+        duration: const Duration(seconds: 4),
       );
     }
   }
@@ -952,7 +1138,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
         throw Exception('File does not exist or is not accessible');
       }
 
-      // Create multipart request for file upload using the direct upload route
+      // Create multipart request for file upload using the correct route
       final uri = Uri.parse(
         '${ApiService.baseUrl}/upload/profile-photo/direct',
       );
@@ -965,24 +1151,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
       }
 
       // Determine the correct MIME type based on file extension
-      String mimeType = 'image/png'; // default
-      final extension = fileName.split('.').last.toLowerCase();
-      switch (extension) {
-        case 'jpg':
-        case 'jpeg':
-          mimeType = 'image/jpeg';
-          break;
-        case 'png':
-          mimeType = 'image/png';
-          break;
-        case 'gif':
-          mimeType = 'image/gif';
-          break;
-        case 'webp':
-          mimeType = 'image/webp';
-          break;
-      }
-
+      final mimeType = _getMimeType(fileName);
       print('Using MIME type: $mimeType');
 
       // Add the file with the correct field name 'file' and proper MIME type
@@ -1017,22 +1186,16 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
           });
 
           // Update the profile with the new photo URL
-          final updatedProfile = widget.profile.copyWith(
+          widget.profile.copyWith(
             profilePictureUrl: data['data']['cloudinaryUrl'],
           );
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                data['message'] ?? 'Profile photo uploaded successfully',
-              ),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 3),
-            ),
+          FlushbarUtils.showSuccess(
+            context,
+            message: data['message'] ?? 'Profile photo uploaded successfully',
+            duration: const Duration(seconds: 3),
           );
 
-          // Don't call onSave here since the photo upload already updated the backend
-          // Just update the local profile state
           print(
             'Profile photo uploaded successfully. Photo URL: ${data['data']['cloudinaryUrl']}',
           );
@@ -1041,14 +1204,10 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
             _isLoadingProfilePhoto = false;
           });
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                data['message'] ?? 'Failed to upload profile photo',
-              ),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 4),
-            ),
+          FlushbarUtils.showError(
+            context,
+            message: data['message'] ?? 'Failed to upload profile photo',
+            duration: const Duration(seconds: 4),
           );
         }
       } else {
@@ -1057,15 +1216,12 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
         });
 
         final data = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
+        FlushbarUtils.showError(
+          context,
+          message:
               data['message'] ??
-                  'Failed to upload profile photo (Status: ${response.statusCode})',
-            ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-          ),
+              'Failed to upload profile photo (Status: ${response.statusCode})',
+          duration: const Duration(seconds: 4),
         );
       }
     } catch (e) {
@@ -1078,12 +1234,10 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
 
       print('Upload error: ${e.toString()}');
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error uploading profile photo: ${e.toString()}'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 4),
-        ),
+      FlushbarUtils.showError(
+        context,
+        message: 'Error uploading profile photo: ${e.toString()}',
+        duration: const Duration(seconds: 4),
       );
     }
   }
@@ -1112,9 +1266,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
             });
 
             // Also update the widget's profile data if available
-            final updatedProfile = widget.profile.copyWith(
-              profilePictureUrl: photoUrl,
-            );
+            widget.profile.copyWith(profilePictureUrl: photoUrl);
             print('🔄 Profile updated with new photo URL');
           } else {
             print('🔄 No photo URL found in response data');
@@ -1138,17 +1290,246 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
     }
   }
 
-  void _removeProfilePhoto() {
+  Future<void> _removeProfilePhoto() async {
+    try {
+      setState(() {
+        _isLoadingProfilePhoto = true;
+        _selectedImageFile = null;
+        _currentProfilePhotoUrl = null;
+      });
+
+      // Call API to remove profile photo
+      final result = await ApiService.removeUserProfilePhoto();
+
+      if (result['success']) {
+        // Update the profile data
+        widget.profile.copyWith(profilePictureUrl: null);
+
+        FlushbarUtils.showSuccess(
+          context,
+          message: 'Profile photo removed successfully',
+          duration: const Duration(seconds: 3),
+        );
+      } else {
+        FlushbarUtils.showError(
+          context,
+          message: result['message'] ?? 'Failed to remove profile photo',
+          duration: const Duration(seconds: 3),
+        );
+      }
+    } catch (e) {
+      FlushbarUtils.showError(
+        context,
+        message: 'Error removing profile photo: ${e.toString()}',
+        duration: const Duration(seconds: 3),
+      );
+    } finally {
+      setState(() {
+        _isLoadingProfilePhoto = false;
+      });
+    }
+  }
+
+  // Load all military organization data
+  Future<void> _loadAllMilitaryOrgData() async {
+    try {
+      print('🔄 Loading all military organization data...');
+      final result = await ApiService.getAllMilitaryOrgData();
+
+      if (result['success']) {
+        final data = result['data'];
+        print(
+          '🔄 Raw API data received: ${data.toString().substring(0, 200)}...',
+        );
+
+        try {
+          _militaryOrgData = MilitaryOrgData.fromJson(data);
+
+          setState(() {
+            _branches = _militaryOrgData!.branches;
+          });
+
+          print('🔄 Loaded ${_branches.length} branches');
+
+          // Try to match existing profile data with the loaded data
+          _matchExistingProfileData();
+        } catch (e) {
+          print('❌ Error parsing military org data: $e');
+          FlushbarUtils.showError(
+            context,
+            message:
+                'Error parsing military organization data: ${e.toString()}',
+            duration: const Duration(seconds: 3),
+          );
+        }
+      } else {
+        print('❌ Failed to load military org data: ${result['message']}');
+        FlushbarUtils.showError(
+          context,
+          message:
+              'Failed to load military organization data: ${result['message']}',
+          duration: const Duration(seconds: 3),
+        );
+      }
+    } catch (e) {
+      print('❌ Error loading military org data: $e');
+      FlushbarUtils.showError(
+        context,
+        message: 'Error loading military organization data: ${e.toString()}',
+        duration: const Duration(seconds: 3),
+      );
+    }
+  }
+
+  // Match existing profile data with loaded military org data
+  void _matchExistingProfileData() {
+    if (_militaryOrgData == null) return;
+
+    // Try to match branch
+    final branchName = widget.profile.branch;
+    if (branchName.isNotEmpty) {
+      _selectedBranch = _branches.firstWhere(
+        (branch) => branch.name == branchName,
+        orElse: () => _branches.first,
+      );
+
+      if (_selectedBranch != null) {
+        // Load divisions and ranks for the matched branch
+        _loadDivisionsAndRanksForBranch(_selectedBranch!);
+
+        // Try to match division (UserProfile doesn't have division, so we'll skip this)
+        final divisionName = null; // widget.profile.division;
+        if (divisionName != null && divisionName.isNotEmpty) {
+          try {
+            _selectedDivision = _selectedBranch!.divisions.firstWhere(
+              (division) => division.name == divisionName,
+            );
+          } catch (e) {
+            _selectedDivision =
+                _selectedBranch!.divisions.isNotEmpty
+                    ? _selectedBranch!.divisions.first
+                    : null;
+          }
+
+          if (_selectedDivision != null) {
+            // Load units for the matched division
+            _loadUnitsForDivision(_selectedDivision!);
+
+            // Try to match unit
+            final unitName = widget.profile.unit;
+            if (unitName.isNotEmpty) {
+              try {
+                _selectedUnit = _selectedDivision!.units.firstWhere(
+                  (unit) => unit.name == unitName,
+                );
+              } catch (e) {
+                _selectedUnit =
+                    _selectedDivision!.units.isNotEmpty
+                        ? _selectedDivision!.units.first
+                        : null;
+              }
+            }
+          }
+        }
+
+        // Try to match rank
+        final rankName = widget.profile.rank;
+        if (rankName.isNotEmpty) {
+          try {
+            _selectedRank = _selectedBranch!.ranks.firstWhere(
+              (rank) => rank.name == rankName,
+            );
+          } catch (e) {
+            _selectedRank =
+                _selectedBranch!.ranks.isNotEmpty
+                    ? _selectedBranch!.ranks.first
+                    : null;
+          }
+        }
+      }
+    }
+  }
+
+  // Load divisions and ranks for a specific branch
+  void _loadDivisionsAndRanksForBranch(Branch branch) {
+    print('🔄 Loading divisions and ranks for branch: ${branch.name}');
+    print('🔄 Divisions count: ${branch.divisions.length}');
+    print('🔄 Ranks count: ${branch.ranks.length}');
+
     setState(() {
-      _selectedImageFile = null;
+      _divisions = branch.divisions;
+      _ranks = branch.ranks;
+      // Clear ALL dependent selections to prevent invalid values
+      _selectedDivision = null;
+      _selectedUnit = null;
+      _selectedRank = null; // Clear rank selection too!
+      _units = [];
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profile photo removed. Save changes to apply.'),
-        backgroundColor: Colors.orange,
-      ),
+    // Debug: Check for duplicate rank names
+    final rankNames = _ranks.map((r) => r.name).toList();
+    final uniqueRankNames = rankNames.toSet();
+    if (rankNames.length != uniqueRankNames.length) {
+      print('⚠️ Duplicate rank names detected in ${branch.name}:');
+      final duplicates =
+          rankNames
+              .where(
+                (name) =>
+                    rankNames.indexOf(name) != rankNames.lastIndexOf(name),
+              )
+              .toSet();
+      for (final duplicate in duplicates) {
+        print(
+          '   - "$duplicate" appears ${rankNames.where((n) => n == duplicate).length} times',
+        );
+      }
+    }
+
+    print(
+      '🔄 Updated state - divisions: ${_divisions.length}, ranks: ${_ranks.length}',
     );
+  }
+
+  // Load units for a specific division
+  void _loadUnitsForDivision(Division division) {
+    print('🔄 Loading units for division: ${division.name}');
+    print('🔄 Units count: ${division.units.length}');
+
+    setState(() {
+      _units = division.units;
+      // Clear dependent selection
+      _selectedUnit = null;
+    });
+
+    print('🔄 Updated state - units: ${_units.length}');
+  }
+
+  // Show guidance tooltip for dependent dropdowns (only once per session)
+  void _showGuidanceTooltip(String message, String guidanceType) {
+    bool hasShown = false;
+
+    switch (guidanceType) {
+      case 'division':
+        hasShown = _hasShownDivisionGuidance;
+        if (!hasShown) _hasShownDivisionGuidance = true;
+        break;
+      case 'unit':
+        hasShown = _hasShownUnitGuidance;
+        if (!hasShown) _hasShownUnitGuidance = true;
+        break;
+      case 'rank':
+        hasShown = _hasShownRankGuidance;
+        if (!hasShown) _hasShownRankGuidance = true;
+        break;
+    }
+
+    if (!hasShown) {
+      FlushbarUtils.showInfo(
+        context,
+        message: message,
+        duration: const Duration(seconds: 3),
+      );
+    }
   }
 
   void _handleSave() async {
@@ -1161,43 +1542,115 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
     });
 
     try {
-      // Create updated profile
-      final updatedProfile = widget.profile.copyWith(
-        name: _nameController.text.trim(),
-        rank: _rankController.text.trim(),
-        serviceId: _serviceIdController.text.trim(),
-        unit: _unitController.text.trim(),
-        branch: _branchController.text.trim(),
-        currentBase: _currentBaseController.text.trim(),
-        email: _emailController.text.trim(),
-        phone: _phoneController.text.trim(),
-        dateEnlisted: _dateEnlistedController.text.trim(),
-        homeAddress: _homeAddressController.text.trim(),
-        alternateEmail:
+      // Prepare data for the new API format
+      final profileData = {
+        'firstName': _firstNameController.text.trim(),
+        'lastName': _lastNameController.text.trim(),
+        'suffix':
+            _suffixController.text.trim().isEmpty
+                ? null
+                : _suffixController.text.trim(),
+        'address': _addressController.text.trim(),
+        'contactNumber': _contactNumberController.text.trim(),
+        'alternateEmail':
             _alternateEmailController.text.trim().isEmpty
                 ? null
                 : _alternateEmailController.text.trim(),
-        maritalStatus: _maritalStatusValue,
-        bloodType: _bloodTypeValue,
-        heightMeters: _heightMetersController.text.trim(),
-        weightKg: _weightKgController.text.trim(),
-        emergencyContact: EmergencyContact(
-          fullName: _ecNameController.text.trim(),
-          address: _ecAddressController.text.trim(),
-          contactNumber: _ecContactController.text.trim(),
-          relationship: _relationshipValue ?? '',
-        ),
+        'branchId': _selectedBranch?.id ?? '',
+        'divisionId': _selectedDivision?.id ?? '',
+        'unitId': _selectedUnit?.id ?? '',
+        'rankId': _selectedRank?.id ?? '',
+        'bloodType': _bloodTypeValue ?? '',
+        'height': _parseHeight(_heightController.text.trim()),
+        'weight': _parseWeight(_weightController.text.trim()),
+        'emergencyContactName': _ecNameController.text.trim(),
+        'emergencyContactRelationship': _relationshipValue ?? '',
+        'emergencyContactAddress': _ecAddressController.text.trim(),
+        'emergencyContactNumber': _ecContactController.text.trim(),
+      };
+
+      print('🔄 Sending profile update data: $profileData');
+      print('🔄 Branch ID: ${_selectedBranch?.id} (${_selectedBranch?.name})');
+      print(
+        '🔄 Division ID: ${_selectedDivision?.id} (${_selectedDivision?.name})',
+      );
+      print('🔄 Unit ID: ${_selectedUnit?.id} (${_selectedUnit?.name})');
+      print('🔄 Rank ID: ${_selectedRank?.id} (${_selectedRank?.name})');
+      print('🔄 Height: ${_parseHeight(_heightController.text.trim())}');
+      print('🔄 Weight: ${_parseWeight(_weightController.text.trim())}');
+      print('🔄 Raw height input: "${_heightController.text.trim()}"');
+      print('🔄 Raw weight input: "${_weightController.text.trim()}"');
+      print(
+        '🔄 All required fields present: ${_validateRequiredFields(profileData)}',
       );
 
-      // Call the save callback
-      widget.onSave(updatedProfile);
+      // Call the new API method
+      final result = await ApiService.updateUserProfileMobile(profileData);
+
+      if (result['success']) {
+        // Create updated profile for local state
+        final fullName =
+            '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
+                .trim();
+        final updatedProfile = widget.profile.copyWith(
+          name: fullName,
+          email: _emailController.text.trim(),
+          phone: _contactNumberController.text.trim(),
+          homeAddress: _addressController.text.trim(),
+          alternateEmail:
+              _alternateEmailController.text.trim().isEmpty
+                  ? null
+                  : _alternateEmailController.text.trim(),
+          bloodType: _bloodTypeValue,
+          heightMeters: _heightController.text.trim(),
+          weightKg: _weightController.text.trim(),
+          emergencyContact: EmergencyContact(
+            fullName: _ecNameController.text.trim(),
+            address: _ecAddressController.text.trim(),
+            contactNumber: _ecContactController.text.trim(),
+            relationship: _relationshipValue ?? '',
+          ),
+        );
+
+        // Show success message
+        FlushbarUtils.showSuccess(
+          context,
+          message: result['message'] ?? 'Profile updated successfully',
+          duration: const Duration(seconds: 3),
+        );
+
+        // Call the save callback
+        widget.onSave(updatedProfile);
+      } else {
+        // Show detailed error message
+        final errorMessage = result['message'] ?? 'Unknown error';
+        final errors = result['errors'];
+
+        print('❌ Profile update failed: $errorMessage');
+        if (errors != null) {
+          print('❌ Detailed errors: $errors');
+        }
+
+        // Additional debugging for military org data
+        print('🔍 Debugging military org data:');
+        print('   Branch: ${_selectedBranch?.name} (${_selectedBranch?.id})');
+        print(
+          '   Division: ${_selectedDivision?.name} (${_selectedDivision?.id})',
+        );
+        print('   Unit: ${_selectedUnit?.name} (${_selectedUnit?.id})');
+        print('   Rank: ${_selectedRank?.name} (${_selectedRank?.id})');
+
+        FlushbarUtils.showError(
+          context,
+          message: 'Failed to update profile: $errorMessage',
+          duration: const Duration(seconds: 5),
+        );
+      }
     } catch (e) {
       // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to update profile: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
+      FlushbarUtils.showError(
+        context,
+        message: 'Failed to update profile: ${e.toString()}',
       );
     } finally {
       setState(() {

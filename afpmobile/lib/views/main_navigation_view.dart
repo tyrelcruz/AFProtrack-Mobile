@@ -22,16 +22,25 @@ class _MainNavigationViewState extends State<MainNavigationView>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  final List<Widget> _pages = [
-    const HomeView(),
-    const ScheduleView(),
-    const TrainingView(),
-    const CertificateView(),
-  ];
+  // Global key for home view to access its methods
+  late final GlobalKey<State<HomeView>> _homeViewKey;
+
+  late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
+
+    // Initialize global key for home view
+    _homeViewKey = GlobalKey<State<HomeView>>();
+
+    // Initialize pages with the home view key
+    _pages = [
+      HomeView(key: _homeViewKey),
+      const ScheduleView(),
+      const TrainingView(),
+      const CertificateView(),
+    ];
 
     // Initialize entrance animations
     _entranceController = AnimationController(

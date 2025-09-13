@@ -8,6 +8,7 @@ class AppBarWidget extends StatefulWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final bool showLeading;
   final Widget? leading;
+  final VoidCallback? onProfileReturn;
 
   const AppBarWidget({
     Key? key,
@@ -15,6 +16,7 @@ class AppBarWidget extends StatefulWidget implements PreferredSizeWidget {
     this.actions,
     this.showLeading = false,
     this.leading,
+    this.onProfileReturn,
   }) : super(key: key);
 
   @override
@@ -120,6 +122,11 @@ class _AppBarWidgetState extends State<AppBarWidget> {
                         builder: (context) => const ProfileView(),
                       ),
                     );
+
+                    // Call the callback when returning from profile view
+                    if (widget.onProfileReturn != null) {
+                      widget.onProfileReturn!();
+                    }
                   },
                 ),
               ],
@@ -127,7 +134,4 @@ class _AppBarWidgetState extends State<AppBarWidget> {
       ),
     );
   }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

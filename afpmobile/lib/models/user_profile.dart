@@ -204,22 +204,30 @@ class UserProfile {
 
   // Convert to backend API format for updates
   Map<String, dynamic> toBackendFormat() {
+    final nameParts = name.split(' ');
+    final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+    final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+
     return {
-      'firstName': name.split(' ').first,
-      'lastName': name.split(' ').skip(1).join(' '),
-      'rank': rank,
-      'serviceId': serviceId,
-      'unit': unit,
-      'branchOfService': branch,
-      'email': email,
-      'contactNumber': phone,
+      'firstName': firstName,
+      'lastName': lastName,
+      'suffix': '', // Will be handled separately in the form
+      'dateOfBirth': dateEnlisted, // This might need conversion
       'address': homeAddress,
+      'contactNumber': phone,
+      'email': email,
       'alternateEmail': alternateEmail,
-      'maritalStatus': maritalStatus,
+      'branchId': '', // Will need to be mapped from branch
+      'divisionId': '', // Will need to be mapped from unit
+      'unitId': '', // Will need to be mapped from unit
+      'rankId': '', // Will need to be mapped from rank
       'bloodType': bloodType,
-      'heightMeters':
-          heightMeters != null ? double.tryParse(heightMeters!) : null,
-      'weightKg': weightKg != null ? double.tryParse(weightKg!) : null,
+      'height': heightMeters != null ? double.tryParse(heightMeters!) : null,
+      'weight': weightKg != null ? double.tryParse(weightKg!) : null,
+      'emergencyContactName': emergencyContact?.fullName ?? '',
+      'emergencyContactRelationship': emergencyContact?.relationship ?? '',
+      'emergencyContactAddress': emergencyContact?.address ?? '',
+      'emergencyContactNumber': emergencyContact?.contactNumber ?? '',
     };
   }
 

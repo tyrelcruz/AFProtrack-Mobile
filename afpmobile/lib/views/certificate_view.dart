@@ -153,31 +153,31 @@ class _CertificateViewState extends State<CertificateView> {
                     ? _buildLoadingState()
                     : _errorMessage != null
                     ? _buildErrorState()
-                    : _filteredCertificates.isEmpty
-                    ? _buildEmptyState()
                     : RefreshIndicator(
                       onRefresh: _loadCertificates,
                       child: SingleChildScrollView(
                         child: Column(
                           children: [
-                            // Upload Certificate Section
+                            // Upload Certificate Section - Always visible
                             UploadCertificateWidget(
                               onUpload: () => _showUploadDialog(),
                             ),
 
-                            // Certificates List
-                            Column(
-                              children:
-                                  _filteredCertificates.map((certificate) {
-                                    return CertificateCard(
-                                      certificate: certificate,
-                                      onViewDetails:
-                                          () => _showCertificateDetails(
-                                            certificate,
-                                          ),
-                                    );
-                                  }).toList(),
-                            ),
+                            // Certificates List or Empty State
+                            _filteredCertificates.isEmpty
+                                ? _buildEmptyState()
+                                : Column(
+                                  children:
+                                      _filteredCertificates.map((certificate) {
+                                        return CertificateCard(
+                                          certificate: certificate,
+                                          onViewDetails:
+                                              () => _showCertificateDetails(
+                                                certificate,
+                                              ),
+                                        );
+                                      }).toList(),
+                                ),
 
                             // Bottom padding
                             const SizedBox(height: 16),

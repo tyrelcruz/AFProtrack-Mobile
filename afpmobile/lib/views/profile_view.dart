@@ -5,6 +5,7 @@ import '../models/user_profile.dart';
 import '../services/token_service.dart';
 import '../services/profile_service.dart';
 import '../services/api_service.dart';
+import '../widgets/skeleton_loading.dart';
 import 'login_view.dart';
 import 'edit_profile_view.dart';
 
@@ -17,6 +18,7 @@ class ProfileView extends StatefulWidget {
 
 class _ProfileViewState extends State<ProfileView> {
   UserProfile? _userProfile;
+  Map<String, dynamic>? _completeUserData;
   bool _isLoading = true;
   String? _errorMessage;
   String? _profilePhotoUrl;
@@ -36,11 +38,15 @@ class _ProfileViewState extends State<ProfileView> {
     });
 
     try {
+      // Load both the profile and complete user data
       final profile = await ProfileService.getCurrentUserProfile();
+      final completeData = await ApiService.getCompleteUserDetails();
 
       if (mounted) {
         setState(() {
           _userProfile = profile;
+          _completeUserData =
+              completeData['success'] ? completeData['data'] : null;
           _isLoading = false;
         });
         // Refresh profile photo after loading profile
@@ -82,12 +88,14 @@ class _ProfileViewState extends State<ProfileView> {
           } else {
             print('👤 Profile: No photo URL found in response data');
             setState(() {
+              _profilePhotoUrl = null; // Clear the photo URL
               _isLoadingProfilePhoto = false;
             });
           }
         } else {
           print('👤 Profile: No profile photo found for user');
           setState(() {
+            _profilePhotoUrl = null; // Clear the photo URL
             _isLoadingProfilePhoto = false;
           });
         }
@@ -96,12 +104,14 @@ class _ProfileViewState extends State<ProfileView> {
           '👤 Profile: Failed to fetch profile photo: ${result['message']}',
         );
         setState(() {
+          _profilePhotoUrl = null; // Clear the photo URL on error
           _isLoadingProfilePhoto = false;
         });
       }
     } catch (e) {
       print('👤 Profile: Error fetching profile photo: ${e.toString()}');
       setState(() {
+        _profilePhotoUrl = null; // Clear the photo URL on error
         _isLoadingProfilePhoto = false;
       });
     }
@@ -153,7 +163,7 @@ class _ProfileViewState extends State<ProfileView> {
 
       body:
           _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const ProfileViewSkeleton()
               : _errorMessage != null
               ? Center(
                 child: Column(
@@ -231,63 +241,60 @@ class _ProfileViewState extends State<ProfileView> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Profile picture
-          GestureDetector(
-            onTap: _showProfilePictureDialog,
-            child: Container(
-              width: profilePictureSize,
-              height: profilePictureSize,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-              ),
-              child:
-                  _isLoadingProfilePhoto
-                      ? Center(
-                        child: SizedBox(
-                          width: profileIconSize * 0.5,
-                          height: profileIconSize * 0.5,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
-                            ),
+          Container(
+            width: profilePictureSize,
+            height: profilePictureSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+            ),
+            child:
+                _isLoadingProfilePhoto
+                    ? Center(
+                      child: SizedBox(
+                        width: profileIconSize * 0.5,
+                        height: profileIconSize * 0.5,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
                           ),
                         ),
-                      )
-                      : _profilePhotoUrl != null
-                      ? ClipOval(
-                        child: Image.network(
-                          _profilePhotoUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(
-                              Icons.person,
-                              size: profileIconSize,
-                              color: Colors.white,
-                            );
-                          },
-                        ),
-                      )
-                      : _userProfile?.profilePictureUrl != null
-                      ? ClipOval(
-                        child: Image.network(
-                          _userProfile!.profilePictureUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(
-                              Icons.person,
-                              size: profileIconSize,
-                              color: Colors.white,
-                            );
-                          },
-                        ),
-                      )
-                      : Icon(
-                        Icons.person,
-                        size: profileIconSize,
-                        color: Colors.white,
                       ),
-            ),
+                    )
+                    : _profilePhotoUrl != null
+                    ? ClipOval(
+                      child: Image.network(
+                        _profilePhotoUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.person,
+                            size: profileIconSize,
+                            color: Colors.white,
+                          );
+                        },
+                      ),
+                    )
+                    : _userProfile?.profilePictureUrl != null
+                    ? ClipOval(
+                      child: Image.network(
+                        _userProfile!.profilePictureUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.person,
+                            size: profileIconSize,
+                            color: Colors.white,
+                          );
+                        },
+                      ),
+                    )
+                    : Icon(
+                      Icons.person,
+                      size: profileIconSize,
+                      color: Colors.white,
+                    ),
           ),
           SizedBox(width: 26),
           // Name and essentials
@@ -370,16 +377,6 @@ class _ProfileViewState extends State<ProfileView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Container(
-                width: 42,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ),
             const SizedBox(height: 16),
             Text(
               'PROFILE OVERVIEW',
@@ -390,26 +387,33 @@ class _ProfileViewState extends State<ProfileView> {
               ),
             ),
             const SizedBox(height: 16),
-            // Overview rows
-            _buildOverviewRow('Home Address', _userProfile!.homeAddress),
-            _buildOverviewRow('Email', _userProfile!.email),
-            if ((_userProfile!.alternateEmail ?? '').isNotEmpty)
+            // Most important information only
+            if (_completeUserData != null) ...[
               _buildOverviewRow(
-                'Alternate Email',
-                _userProfile!.alternateEmail ?? '',
+                'Service ID',
+                _completeUserData!['serviceId'] ?? '-',
               ),
-            _buildOverviewRow('Phone', _userProfile!.phone),
-            _buildOverviewRow('Date Enlisted', _userProfile!.dateEnlisted),
-            _buildOverviewRow('Blood Type', _userProfile!.bloodType ?? '-'),
-            _buildOverviewRow('Status', _userProfile!.maritalStatus ?? '-'),
-            _buildOverviewRow(
-              'Height',
-              (_userProfile!.heightMeters ?? '-') + ' m',
-            ),
-            _buildOverviewRow(
-              'Weight',
-              (_userProfile!.weightKg ?? '-') + ' kg',
-            ),
+              _buildOverviewRow('Rank', _completeUserData!['rank'] ?? '-'),
+              _buildOverviewRow(
+                'Branch of Service',
+                _completeUserData!['branchOfService'] ?? '-',
+              ),
+              _buildOverviewRow(
+                'Division',
+                _completeUserData!['division'] ?? '-',
+              ),
+              _buildOverviewRow('Unit', _completeUserData!['unit'] ?? '-'),
+              _buildOverviewRow('Email', _completeUserData!['email'] ?? '-'),
+              _buildOverviewRow(
+                'Contact Number',
+                _completeUserData!['contactNumber'] ?? '-',
+              ),
+            ] else ...[
+              // Fallback to existing data if complete data not available
+              _buildOverviewRow('Email', _userProfile!.email),
+              _buildOverviewRow('Phone', _userProfile!.phone),
+              _buildOverviewRow('Date Enlisted', _userProfile!.dateEnlisted),
+            ],
             const SizedBox(height: 16),
             Container(height: 1, color: Colors.grey[300]),
             const SizedBox(height: 16),
@@ -440,6 +444,28 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
               ],
             ),
+            const SizedBox(height: 20),
+            // View All Information Button
+            if (_completeUserData != null)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _showCompleteUserDetails,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.armyPrimary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'View All Information',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 16),
             // Push logout button to bottom
             const Spacer(),
             // Actions
@@ -506,46 +532,6 @@ class _ProfileViewState extends State<ProfileView> {
           style: TextStyle(color: Colors.grey[600], fontSize: 13),
         ),
       ],
-    );
-  }
-
-  void _showProfilePictureDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Change Profile Picture'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: Icon(Icons.camera_alt),
-                title: Text('Take Photo'),
-                onTap: () {
-                  Navigator.pop(context);
-                  // TODO: Implement camera functionality
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.photo_library),
-                title: Text('Choose from Gallery'),
-                onTap: () {
-                  Navigator.pop(context);
-                  // TODO: Implement gallery picker functionality
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cancel'),
-            ),
-          ],
-        );
-      },
     );
   }
 
@@ -680,6 +666,8 @@ class _ProfileViewState extends State<ProfileView> {
                         });
                         // Refresh profile data from backend to ensure consistency
                         _loadUserProfile();
+                        // Also refresh profile photo to reflect any changes
+                        _fetchProfilePhoto();
                       }
                     }
                   },
@@ -703,6 +691,241 @@ class _ProfileViewState extends State<ProfileView> {
         );
       },
     );
+  }
+
+  void _showCompleteUserDetails() {
+    if (_completeUserData == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.85,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Complete User Information',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.armyPrimary,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+              // Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildDetailSection('Personal Information', [
+                        _buildDetailRow(
+                          'Full Name',
+                          _completeUserData!['fullName'] ?? '-',
+                        ),
+                        _buildDetailRow(
+                          'Service ID',
+                          _completeUserData!['serviceId'] ?? '-',
+                        ),
+                        _buildDetailRow(
+                          'Email',
+                          _completeUserData!['email'] ?? '-',
+                        ),
+                        _buildDetailRow(
+                          'Alternate Email',
+                          _completeUserData!['alternateEmail'] ?? '-',
+                        ),
+                        _buildDetailRow(
+                          'Contact Number',
+                          _completeUserData!['contactNumber'] ?? '-',
+                        ),
+                        _buildDetailRow(
+                          'Date of Birth',
+                          _formatDate(_completeUserData!['dateOfBirth']),
+                        ),
+                        _buildDetailRow(
+                          'Address',
+                          _completeUserData!['address'] ?? '-',
+                        ),
+                        _buildDetailRow(
+                          'Blood Type',
+                          _completeUserData!['bloodType'] ?? '-',
+                        ),
+                        _buildDetailRow(
+                          'Height',
+                          '${_completeUserData!['height'] ?? '-'} cm',
+                        ),
+                        _buildDetailRow(
+                          'Weight',
+                          '${_completeUserData!['weight'] ?? '-'} kg',
+                        ),
+                      ]),
+                      const SizedBox(height: 20),
+                      _buildDetailSection('Military Information', [
+                        _buildDetailRow(
+                          'Rank',
+                          _completeUserData!['rank'] ?? '-',
+                        ),
+                        _buildDetailRow(
+                          'Branch of Service',
+                          _completeUserData!['branchOfService'] ?? '-',
+                        ),
+                        _buildDetailRow(
+                          'Division',
+                          _completeUserData!['division'] ?? '-',
+                        ),
+                        _buildDetailRow(
+                          'Unit',
+                          _completeUserData!['unit'] ?? '-',
+                        ),
+                      ]),
+                      const SizedBox(height: 20),
+                      _buildDetailSection('Emergency Contact', [
+                        _buildDetailRow(
+                          'Name',
+                          _completeUserData!['emergencyContactName'] ?? '-',
+                        ),
+                        _buildDetailRow(
+                          'Relationship',
+                          _completeUserData!['emergencyContactRelationship'] ??
+                              '-',
+                        ),
+                        _buildDetailRow(
+                          'Contact Number',
+                          _completeUserData!['emergencyContactNumber'] ?? '-',
+                        ),
+                        _buildDetailRow(
+                          'Address',
+                          _completeUserData!['emergencyContactAddress'] ?? '-',
+                        ),
+                      ]),
+                      const SizedBox(height: 20),
+                      _buildDetailSection('Account Information', [
+                        _buildDetailRow(
+                          'Role',
+                          _completeUserData!['role'] ?? '-',
+                        ),
+                        _buildDetailRow(
+                          'Account Status',
+                          _completeUserData!['accountStatus'] ?? '-',
+                        ),
+                        _buildDetailRow(
+                          'Is Active',
+                          _completeUserData!['isActive'] == true ? 'Yes' : 'No',
+                        ),
+                        _buildDetailRow(
+                          'Is Verified',
+                          _completeUserData!['isVerified'] == true
+                              ? 'Yes'
+                              : 'No',
+                        ),
+                        _buildDetailRow(
+                          'Created At',
+                          _formatDate(_completeUserData!['createdAt']),
+                        ),
+                        _buildDetailRow(
+                          'Last Login',
+                          _formatDate(_completeUserData!['lastLogin']),
+                        ),
+                      ]),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailSection(String title, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.armyPrimary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...children,
+      ],
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.w400),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(dynamic dateValue) {
+    if (dateValue == null) return '-';
+    try {
+      final date = DateTime.parse(dateValue.toString());
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return dateValue.toString();
+    }
   }
 
   void _showLogoutDialog() {
