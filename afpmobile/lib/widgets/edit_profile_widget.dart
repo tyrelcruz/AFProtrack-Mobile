@@ -70,6 +70,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
   bool _isLoadingProfilePhoto = false;
   File? _selectedImageFile;
   String? _currentProfilePhotoUrl;
+  Map<String, dynamic>? _completeUserData;
 
   @override
   void initState() {
@@ -77,6 +78,7 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
     _initializeControllers();
     _fetchUserProfilePhoto();
     _loadAllMilitaryOrgData();
+    _fetchCompleteUserDetails();
   }
 
   void _initializeControllers() {
@@ -979,50 +981,192 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
   }
 
   void _showProfilePictureDialog() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Change Profile Picture'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Take Photo'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.camera);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Choose from Gallery'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.gallery);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.remove_circle_outline),
-                title: const Text('Remove Current Photo'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _removeProfilePhoto();
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Cancel'),
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
             ),
-          ],
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle bar
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(top: 12, bottom: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+
+                // Title
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
+                  child: Text(
+                    'Change Profile Picture',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                // Options
+                _buildActionOption(
+                  icon: Icons.camera_alt,
+                  title: 'Take Photo',
+                  subtitle: 'Use your camera to take a new photo',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.camera);
+                  },
+                ),
+
+                _buildActionOption(
+                  icon: Icons.photo_library,
+                  title: 'Choose from Gallery',
+                  subtitle: 'Select a photo from your gallery',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.gallery);
+                  },
+                ),
+
+                if (_currentProfilePhotoUrl != null ||
+                    _selectedImageFile != null)
+                  _buildActionOption(
+                    icon: Icons.delete_outline,
+                    title: 'Remove Current Photo',
+                    subtitle: 'Remove your current profile picture',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _removeProfilePhoto();
+                    },
+                    isDestructive: true,
+                  ),
+
+                const SizedBox(height: 20),
+
+                // Cancel button
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Colors.grey[300]!),
+                      ),
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
         );
       },
+    );
+  }
+
+  Widget _buildActionOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color:
+                        isDestructive
+                            ? Colors.red[50]
+                            : AppColors.armyPrimary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    color:
+                        isDestructive ? Colors.red[600] : AppColors.armyPrimary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color:
+                              isDestructive
+                                  ? Colors.red[600]
+                                  : Colors.grey[800],
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1242,6 +1386,62 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
     }
   }
 
+  Future<void> _fetchCompleteUserDetails() async {
+    try {
+      print('🔄 Fetching complete user details...');
+      final result = await ApiService.getCompleteUserDetails();
+
+      if (result['success']) {
+        _completeUserData = result['data'];
+        print(
+          '🔄 Complete user data received: ${_completeUserData?.keys.toList()}',
+        );
+
+        // Update controllers with complete user data
+        _updateControllersWithCompleteData();
+
+        // Try to match military org data if it's already loaded
+        if (_militaryOrgData != null) {
+          _matchExistingProfileData();
+        }
+      } else {
+        print('❌ Failed to fetch complete user details: ${result['message']}');
+      }
+    } catch (e) {
+      print('❌ Error fetching complete user details: ${e.toString()}');
+    }
+  }
+
+  void _updateControllersWithCompleteData() {
+    if (_completeUserData == null) return;
+
+    // Update text controllers with complete data
+    _firstNameController.text = _completeUserData!['firstName'] ?? '';
+    _lastNameController.text = _completeUserData!['lastName'] ?? '';
+    _suffixController.text = _completeUserData!['suffix'] ?? '';
+    _dateOfBirthController.text = _completeUserData!['dateOfBirth'] ?? '';
+    _addressController.text = _completeUserData!['address'] ?? '';
+    _contactNumberController.text = _completeUserData!['contactNumber'] ?? '';
+    _emailController.text = _completeUserData!['email'] ?? '';
+    _alternateEmailController.text = _completeUserData!['alternateEmail'] ?? '';
+    _heightController.text = _completeUserData!['height']?.toString() ?? '';
+    _weightController.text = _completeUserData!['weight']?.toString() ?? '';
+
+    // Update dropdown values
+    _bloodTypeValue = _completeUserData!['bloodType'];
+
+    // Update emergency contact
+    if (_completeUserData!['emergencyContact'] != null) {
+      final ec = _completeUserData!['emergencyContact'];
+      _ecNameController.text = ec['fullName'] ?? '';
+      _ecAddressController.text = ec['address'] ?? '';
+      _ecContactController.text = ec['contactNumber'] ?? '';
+      _relationshipValue = ec['relationship'];
+    }
+
+    setState(() {});
+  }
+
   Future<void> _fetchUserProfilePhoto() async {
     setState(() {
       _isLoadingProfilePhoto = true;
@@ -1385,69 +1585,82 @@ class _EditProfileWidgetState extends State<EditProfileWidget> {
   void _matchExistingProfileData() {
     if (_militaryOrgData == null) return;
 
+    // Use complete user data if available, otherwise fall back to widget.profile
+    final branchName =
+        _completeUserData?['branchOfService'] ?? widget.profile.branch;
+    final divisionName = _completeUserData?['division'];
+    final unitName = _completeUserData?['unit'] ?? widget.profile.unit;
+    final rankName = _completeUserData?['rank'] ?? widget.profile.rank;
+
+    print('🔄 Matching military org data:');
+    print('   Branch: $branchName');
+    print('   Division: $divisionName');
+    print('   Unit: $unitName');
+    print('   Rank: $rankName');
+
     // Try to match branch
-    final branchName = widget.profile.branch;
-    if (branchName.isNotEmpty) {
-      _selectedBranch = _branches.firstWhere(
-        (branch) => branch.name == branchName,
-        orElse: () => _branches.first,
-      );
+    if (branchName != null && branchName.isNotEmpty) {
+      try {
+        _selectedBranch = _branches.firstWhere(
+          (branch) => branch.name == branchName,
+        );
+        print('✅ Matched branch: ${_selectedBranch?.name}');
 
-      if (_selectedBranch != null) {
-        // Load divisions and ranks for the matched branch
-        _loadDivisionsAndRanksForBranch(_selectedBranch!);
+        if (_selectedBranch != null) {
+          // Load divisions and ranks for the matched branch
+          _loadDivisionsAndRanksForBranch(_selectedBranch!);
 
-        // Try to match division (UserProfile doesn't have division, so we'll skip this)
-        final divisionName = null; // widget.profile.division;
-        if (divisionName != null && divisionName.isNotEmpty) {
-          try {
-            _selectedDivision = _selectedBranch!.divisions.firstWhere(
-              (division) => division.name == divisionName,
-            );
-          } catch (e) {
-            _selectedDivision =
-                _selectedBranch!.divisions.isNotEmpty
-                    ? _selectedBranch!.divisions.first
-                    : null;
+          // Try to match division
+          if (divisionName != null && divisionName.isNotEmpty) {
+            try {
+              _selectedDivision = _divisions.firstWhere(
+                (division) => division.name == divisionName,
+              );
+              print('✅ Matched division: ${_selectedDivision?.name}');
+
+              if (_selectedDivision != null) {
+                // Load units for the matched division
+                _loadUnitsForDivision(_selectedDivision!);
+
+                // Try to match unit
+                if (unitName != null && unitName.isNotEmpty) {
+                  try {
+                    _selectedUnit = _units.firstWhere(
+                      (unit) => unit.name == unitName,
+                    );
+                    print('✅ Matched unit: ${_selectedUnit?.name}');
+                  } catch (e) {
+                    print('❌ Could not match unit: $unitName');
+                    _selectedUnit = null;
+                  }
+                }
+              }
+            } catch (e) {
+              print('❌ Could not match division: $divisionName');
+              _selectedDivision = null;
+            }
           }
 
-          if (_selectedDivision != null) {
-            // Load units for the matched division
-            _loadUnitsForDivision(_selectedDivision!);
-
-            // Try to match unit
-            final unitName = widget.profile.unit;
-            if (unitName.isNotEmpty) {
-              try {
-                _selectedUnit = _selectedDivision!.units.firstWhere(
-                  (unit) => unit.name == unitName,
-                );
-              } catch (e) {
-                _selectedUnit =
-                    _selectedDivision!.units.isNotEmpty
-                        ? _selectedDivision!.units.first
-                        : null;
-              }
+          // Try to match rank
+          if (rankName != null && rankName.isNotEmpty) {
+            try {
+              _selectedRank = _ranks.firstWhere(
+                (rank) => rank.name == rankName,
+              );
+              print('✅ Matched rank: ${_selectedRank?.name}');
+            } catch (e) {
+              print('❌ Could not match rank: $rankName');
+              _selectedRank = null;
             }
           }
         }
-
-        // Try to match rank
-        final rankName = widget.profile.rank;
-        if (rankName.isNotEmpty) {
-          try {
-            _selectedRank = _selectedBranch!.ranks.firstWhere(
-              (rank) => rank.name == rankName,
-            );
-          } catch (e) {
-            _selectedRank =
-                _selectedBranch!.ranks.isNotEmpty
-                    ? _selectedBranch!.ranks.first
-                    : null;
-          }
-        }
+      } catch (e) {
+        print('❌ Could not match branch: $branchName');
+        _selectedBranch = null;
       }
     }
+
+    setState(() {});
   }
 
   // Load divisions and ranks for a specific branch
