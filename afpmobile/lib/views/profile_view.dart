@@ -315,8 +315,14 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
                 const SizedBox(height: 12),
                 _buildHeaderMeta('AFPIC NO:', _userProfile!.serviceId),
-                _buildHeaderMeta('UNIT:', _userProfile!.unit),
-                _buildHeaderMeta('BRANCH', _userProfile!.branch),
+                _buildHeaderMeta(
+                  'UNIT:',
+                  _completeUserData?['unit'] ?? _userProfile!.unit,
+                ),
+                _buildHeaderMeta(
+                  'BRANCH:',
+                  _completeUserData?['branchOfService'] ?? _userProfile!.branch,
+                ),
               ],
             ),
           ),
