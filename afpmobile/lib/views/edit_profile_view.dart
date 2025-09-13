@@ -41,54 +41,9 @@ class _EditProfileViewState extends State<EditProfileView> {
       _currentProfile = updatedProfile;
     });
 
-    // Show loading indicator
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return const Center(child: CircularProgressIndicator());
-      },
-    );
-
-    try {
-      // Save the profile to backend
-      final success = await ProfileService.updateUserProfile(updatedProfile);
-
-      // Hide loading indicator
-      Navigator.of(context).pop();
-
-      if (success) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-
-        // Navigate back to profile view with updated profile
-        Navigator.of(context).pop(updatedProfile);
-      } else {
-        // Show error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update profile'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      // Hide loading indicator
-      Navigator.of(context).pop();
-
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error updating profile: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    // Profile is already updated by the EditProfileWidget, so we just navigate back
+    // Navigate back to profile view with updated profile
+    Navigator.of(context).pop(updatedProfile);
   }
 
   void _handleCancel() {

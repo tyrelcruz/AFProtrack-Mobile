@@ -439,6 +439,30 @@ class ApiService {
     }
   }
 
+  // Get complete user details for profile view
+  static Future<Map<String, dynamic>> getCompleteUserDetails() async {
+    try {
+      final headers = await _headers;
+      final response = await http.get(
+        Uri.parse('$baseUrl/users/me'),
+        headers: headers,
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data['data']};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch user details',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
   // Update user profile
   static Future<Map<String, dynamic>> updateUserProfile(
     String userId,
@@ -451,6 +475,53 @@ class ApiService {
         headers: headers,
         body: jsonEncode(userData),
       );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': data['data'],
+          'message': data['message'] ?? 'Profile updated successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to update profile',
+          'errors': data['errors'],
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Update user profile using mobile endpoint
+  static Future<Map<String, dynamic>> updateUserProfileMobile(
+    Map<String, dynamic> userData,
+  ) async {
+    try {
+      final headers = await _headers;
+      final url = '$baseUrl/users/mobile/profile';
+
+      print('Making profile update request to: $url');
+      print('Request body: ${jsonEncode(userData)}');
+      print('Request headers: $headers');
+
+      final response = await http
+          .put(Uri.parse(url), headers: headers, body: jsonEncode(userData))
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw Exception(
+                'Request timed out. Please check your connection and try again.',
+              );
+            },
+          );
+
+      print('Profile update response status: ${response.statusCode}');
+      print('Profile update response body: ${response.body}');
+      print('Profile update response headers: ${response.headers}');
 
       final data = jsonDecode(response.body);
 
@@ -689,6 +760,34 @@ class ApiService {
     }
   }
 
+  // Remove user profile photo
+  static Future<Map<String, dynamic>> removeUserProfilePhoto() async {
+    try {
+      final headers = await _headers;
+      final response = await http.delete(
+        Uri.parse('$baseUrl/users/profile-photo'),
+        headers: headers,
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Profile photo removed successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to remove profile photo',
+          'errors': data['errors'],
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
   // Get profile photo upload signature (for direct upload)
   static Future<Map<String, dynamic>> getProfilePhotoUploadSignature() async {
     try {
@@ -719,6 +818,75 @@ class ApiService {
       }
     } catch (e) {
       print('🔍 Error fetching upload signature: $e');
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get all military organization data in hierarchical structure
+  static Future<Map<String, dynamic>> getAllMilitaryOrgData() async {
+    try {
+      final headers = await _headers;
+      final url = '$baseUrl/military-org/mobile/dropdown/all';
+      print('🔍 Fetching all military org data from: $url');
+
+      final response = await http.get(Uri.parse(url), headers: headers);
+      print('🔍 All military org response status: ${response.statusCode}');
+      print('🔍 All military org response body: ${response.body}');
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': data['data'],
+          'message':
+              data['message'] ?? 'Military org data retrieved successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to retrieve military org data',
+        };
+      }
+    } catch (e) {
+      print('Failed to load military org data: ${e.toString()}');
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get all military organization data without authentication (for signup)
+  static Future<Map<String, dynamic>> getAllMilitaryOrgDataPublic() async {
+    try {
+      final headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+      final url = '$baseUrl/military-org/mobile/dropdown/all';
+      print('🔍 Fetching all military org data (public) from: $url');
+
+      final response = await http.get(Uri.parse(url), headers: headers);
+      print(
+        '🔍 All military org (public) response status: ${response.statusCode}',
+      );
+      print('🔍 All military org (public) response body: ${response.body}');
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': data['data'],
+          'message':
+              data['message'] ?? 'Military org data retrieved successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to retrieve military org data',
+        };
+      }
+    } catch (e) {
+      print('Failed to load military org data (public): ${e.toString()}');
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }

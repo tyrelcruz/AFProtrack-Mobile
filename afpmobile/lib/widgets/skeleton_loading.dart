@@ -446,3 +446,274 @@ class ProfileOverviewSkeleton extends StatelessWidget {
     );
   }
 }
+
+// Complete profile view skeleton that matches the profile view structure
+class ProfileViewSkeleton extends StatelessWidget {
+  const ProfileViewSkeleton({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 768;
+
+    // Calculate responsive sizes
+    final profilePictureSize = isMobile ? 120.0 : 140.0;
+    final profileIconSize = isMobile ? 60.0 : 70.0;
+    final cardWidth = width - (isMobile ? 16.0 : 32.0);
+    final horizontalPadding = isMobile ? 16.0 : 32.0;
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        backgroundColor: Colors.grey[300],
+        elevation: 0,
+        title: SkeletonLoading(
+          width: 120,
+          height: 20,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        automaticallyImplyLeading: false,
+      ),
+      body: Stack(
+        children: [
+          // Top header background skeleton
+          Container(
+            height: isMobile ? 480 : 440,
+            width: double.infinity,
+            color: Colors.grey[300],
+          ),
+          // Content without scrolling
+          Column(
+            children: [
+              // Header content skeleton
+              _buildHeaderSkeleton(
+                context,
+                profilePictureSize: profilePictureSize,
+                profileIconSize: profileIconSize,
+                horizontalPadding: horizontalPadding,
+              ),
+              const SizedBox(height: 5),
+              // Overview card skeleton
+              Expanded(
+                child: _buildOverviewCardSkeleton(
+                  context,
+                  cardWidth: cardWidth,
+                  horizontalPadding: horizontalPadding,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderSkeleton(
+    BuildContext context, {
+    required double profilePictureSize,
+    required double profileIconSize,
+    required double horizontalPadding,
+  }) {
+    final isMobile = MediaQuery.of(context).size.width < 768;
+    final topPadding = isMobile ? 8.0 : 12.0;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(
+        horizontalPadding,
+        topPadding,
+        horizontalPadding,
+        horizontalPadding,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Profile picture skeleton
+          Container(
+            width: profilePictureSize,
+            height: profilePictureSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+            ),
+            child: SkeletonLoading(
+              width: profilePictureSize,
+              height: profilePictureSize,
+              borderRadius: BorderRadius.circular(profilePictureSize / 2),
+            ),
+          ),
+          const SizedBox(width: 20),
+          // Profile info skeleton
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Name skeleton
+                SkeletonLoading(
+                  width: 180,
+                  height: 24,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                const SizedBox(height: 8),
+                // Rank skeleton
+                SkeletonLoading(
+                  width: 120,
+                  height: 18,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                const SizedBox(height: 8),
+                // Service ID skeleton
+                SkeletonLoading(
+                  width: 100,
+                  height: 16,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                const SizedBox(height: 8),
+                // Unit skeleton
+                SkeletonLoading(
+                  width: 160,
+                  height: 16,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewCardSkeleton(
+    BuildContext context, {
+    required double cardWidth,
+    required double horizontalPadding,
+  }) {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(28),
+          topRight: Radius.circular(28),
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          horizontalPadding,
+          20,
+          horizontalPadding,
+          20,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Overview title skeleton
+              SkeletonLoading(
+                width: 120,
+                height: 20,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              const SizedBox(height: 20),
+
+              // Profile details skeleton
+              _buildDetailRowSkeleton("Service ID", 100),
+              _buildDetailRowSkeleton("Rank", 80),
+              _buildDetailRowSkeleton("Branch of Service", 120),
+              _buildDetailRowSkeleton("Division", 100),
+              _buildDetailRowSkeleton("Unit", 140),
+              _buildDetailRowSkeleton("Email", 180),
+              _buildDetailRowSkeleton("Contact Number", 120),
+
+              const SizedBox(height: 24),
+
+              // View All Information button skeleton
+              SkeletonLoading(
+                width: double.infinity,
+                height: 48,
+                borderRadius: BorderRadius.circular(12),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Additional sections skeleton
+              _buildSectionSkeleton("Personal Information", 3),
+              const SizedBox(height: 16),
+              _buildSectionSkeleton("Military Information", 4),
+              const SizedBox(height: 16),
+              _buildSectionSkeleton("Emergency Contact", 3),
+
+              // Add some bottom padding to prevent overflow
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRowSkeleton(String label, double valueWidth) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Label skeleton
+          SkeletonLoading(
+            width: 120,
+            height: 16,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          const SizedBox(width: 8),
+          // Value skeleton
+          Expanded(
+            child: SkeletonLoading(
+              width: valueWidth,
+              height: 16,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionSkeleton(String title, int itemCount) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section title skeleton
+        SkeletonLoading(
+          width: 150,
+          height: 18,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        const SizedBox(height: 12),
+        // Section items skeleton
+        ...List.generate(
+          itemCount,
+          (index) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                SkeletonLoading(
+                  width: 100,
+                  height: 14,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SkeletonLoading(
+                    width: 120,
+                    height: 14,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

@@ -79,6 +79,12 @@ class _HomeViewState extends State<HomeView> {
     await _loadCurrentTrainingPrograms();
   }
 
+  /// Refresh all user data (can be called when returning from profile edit)
+  Future<void> refreshUserData() async {
+    await _loadUserData();
+    await _fetchProfilePhoto();
+  }
+
   /// Simulate loading for stats and career components
   Future<void> _loadStatsAndCareer() async {
     // Simulate loading time for stats and career data
@@ -136,24 +142,28 @@ class _HomeViewState extends State<HomeView> {
           } else {
             print('🏠 Home: No photo URL found in response data');
             setState(() {
+              _profilePhotoUrl = null; // Clear the photo URL
               _isLoadingProfilePhoto = false;
             });
           }
         } else {
           print('🏠 Home: No profile photo found for user');
           setState(() {
+            _profilePhotoUrl = null; // Clear the photo URL
             _isLoadingProfilePhoto = false;
           });
         }
       } else {
         print('🏠 Home: Failed to fetch profile photo: ${result['message']}');
         setState(() {
+          _profilePhotoUrl = null; // Clear the photo URL on error
           _isLoadingProfilePhoto = false;
         });
       }
     } catch (e) {
       print('🏠 Home: Error fetching profile photo: ${e.toString()}');
       setState(() {
+        _profilePhotoUrl = null; // Clear the photo URL on error
         _isLoadingProfilePhoto = false;
       });
     }
@@ -194,7 +204,12 @@ class _HomeViewState extends State<HomeView> {
     final width = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: AppColors.appBackground,
-      appBar: const AppBarWidget(),
+      appBar: AppBarWidget(
+        onProfileReturn: () {
+          // Refresh user data when returning from profile view
+          refreshUserData();
+        },
+      ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
